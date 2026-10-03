@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The in-process profiler agent. It is loaded into a target application through
+    DOTNET_STARTUP_HOOKS, patches HttpClient with Harmony, and streams each call back to
+    DevTools over a named pipe. It is never referenced by the app at run time: the app only
+    copies its output next to itself and hands the path to the target process.
+
+    net6.0, deliberately: a startup-hook assembly must target a framework no newer than the
+    runtime that loads it, and net6.0 rolls forward onto the .NET 6, 8, 9 and 10 runtimes a
+    target app is likely to use. No Windows TFM — the agent touches nothing Windows-only.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>DevTools.Profiler.Agent</RootNamespace>
+    <AssemblyName>DevTools.Profiler.Agent</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Loaded into other processes, so it carries its dependencies (0Harmony.dll) beside it. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Not part of the app's own build-time strictness; it is a tiny standalone payload. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" />
+  </ItemGroup>
+
+</Project>

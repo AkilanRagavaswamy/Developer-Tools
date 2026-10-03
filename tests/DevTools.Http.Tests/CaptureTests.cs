@@ -460,3 +460,69 @@ public sealed class SystemProxyTests
         Assert.InRange(port, 1, 65535);
     }
 }
+
+/// <summary>
+/// The launch-and-attach backend's wire contract: the agent runs in another process and sends
+/// JSON down a pipe, so the field names on the two sides are the one thing that silently breaks.
+/// This pins the host's reading of that JSON.
+/// </summary>
+public sealed class LaunchProfilerTests
+{
+    [Fact]
+    public void Parses_an_agent_payload_into_an_exchange()
+    {
+        var json = System.Text.Encoding.UTF8.GetBytes("""
+            {
+              "StartedAtUnixMs": 1700000000000,
+              "Method": "POST",
+              "Url": "https://api.example.com/v1/things?q=1",
+              "Host": "api.example.com",
+              "PathAndQuery": "/v1/things?q=1",
+              "HttpVersion": "2.0",
+              "IsSecure": true,
+              "RequestHeaders": [ { "Name": "Accept", "Value": "application/json" } ],
+              "RequestBody": "eyJhIjoxfQ==",
+              "StatusCode": 201,
+              "ReasonPhrase": "Created",
+              "ResponseHeaders": [ { "Name": "Content-Type", "Value": "application/json" } ],
+              "ResponseBody": "eyJvayI6dHJ1ZX0=",
+              "ResponseMediaType": "application/json",
+              "DurationMs": 42.5,
+              "ProcessId": 1234,
+              "ProcessName": "SampleApp",
+              "Failed": false,
+              "Error": null
+            }
+            """);
+
+        var exchange = LaunchProfiler.Parse(json, index: 7);
+
+        Assert.Equal(7, exchange.Index);
+        Assert.Equal("POST", exchange.Method);
+        Assert.Equal("api.example.com", exchange.Host);
+        Assert.Equal("/v1/things?q=1", exchange.PathAndQuery);
+        Assert.True(exchange.IsSecure);
+        Assert.Equal(201, exchange.StatusCode);
+        Assert.Equal("application/json", exchange.ResponseMediaType);
+        Assert.Equal(TimeSpan.FromMilliseconds(42.5), exchange.Duration);
+        Assert.Equal(1234, exchange.ProcessId);
+        Assert.Equal("SampleApp", exchange.ProcessName);
+        Assert.Equal(CaptureOutcome.Complete, exchange.Outcome);
+        Assert.Equal("""{"a":1}""", System.Text.Encoding.UTF8.GetString(exchange.RequestBody));
+        Assert.Equal("""{"ok":true}""", System.Text.Encoding.UTF8.GetString(exchange.ResponseBody));
+        Assert.Equal("Accept", Assert.Single(exchange.RequestHeaders).Name);
+    }
+
+    [Fact]
+    public void A_failed_payload_becomes_a_failed_exchange()
+    {
+        var json = System.Text.Encoding.UTF8.GetBytes("""
+            { "Method": "GET", "Url": "https://x/y", "Failed": true, "Error": "boom" }
+            """);
+
+        var exchange = LaunchProfiler.Parse(json, index: 1);
+
+        Assert.Equal(CaptureOutcome.Failed, exchange.Outcome);
+        Assert.Equal("boom", exchange.Error);
+    }
+}

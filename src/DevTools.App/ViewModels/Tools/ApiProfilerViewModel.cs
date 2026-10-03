@@ -62,10 +62,12 @@ public enum ExchangeView
 /// people actually arrive with is "what is this app calling, and why is it slow", and that
 /// cannot be answered by a URL you already knew about.
 ///
-/// The constraint that shapes the whole screen: a Windows proxy setting is per user, not per
-/// process. Everything on the machine routes through the capture proxy while it runs, so the
-/// process dropdown is a <em>filter</em> over what arrives, not a restriction on what is
-/// captured. The UI says so rather than implying otherwise.
+/// There are two ways to listen. In <see cref="CaptureBackend.Proxy"/>, a Windows proxy setting
+/// is per user, not per process: everything on the machine routes through the capture proxy while
+/// it runs, so the process dropdown is a <em>filter</em> over what arrives, not a restriction on
+/// what is captured, and https needs a trusted certificate. In <see cref="CaptureBackend.Launch"/>,
+/// the agent is loaded into a .NET app DevTools starts and reads its calls from the inside — https
+/// in the clear, nothing changed on the machine, but only that one app is seen.
 /// </remarks>
 public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
 {
@@ -96,6 +98,73 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
     public override string ToolId => "api-profiler";
 
     public override string RunLabel => "Start listening";
+
+    // ---------------------------------------------------------------- backend
+
+    /// <summary>
+    /// How calls are captured: a machine-wide proxy, or the agent loaded into an app we launch.
+    /// </summary>
+    /// <remarks>
+    /// The two answer different questions. The proxy sees any program already running, at the cost
+    /// of a system proxy setting and a certificate for https. Launch sees only a .NET app DevTools
+    /// starts, but reads it from the inside — https bodies in the clear, nothing changed on the
+    /// machine. Proxy stays the default so the tool behaves as it did unless you choose otherwise.
+    /// </remarks>
+    [ObservableProperty]
+    public partial CaptureBackend Backend { get; set; } = CaptureBackend.Proxy;
+
+    public int BackendIndex
+    {
+        get => (int)Backend;
+        set => Backend = (CaptureBackend)Math.Clamp(value, 0, 1);
+    }
+
+    public bool IsProxyMode => Backend == CaptureBackend.Proxy;
+
+    public bool IsLaunchMode => Backend == CaptureBackend.Launch;
+
+    /// <summary>The backend cannot be switched mid-capture; stop first.</summary>
+    public bool CanChooseBackend => !IsListening;
+
+    [ObservableProperty]
+    public partial string LaunchExePath { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LaunchArguments { get; set; } = string.Empty;
+
+    public string LaunchFileName =>
+        string.IsNullOrWhiteSpace(LaunchExePath) ? string.Empty : Path.GetFileName(LaunchExePath);
+
+    public string LaunchNotice =>
+        "Launch starts a .NET application with the profiler agent loaded, and reads the calls it " +
+        "makes from inside the process — https bodies included, with nothing changed on the machine. " +
+        "It only sees the app launched here, and only a .NET 6+ one; for anything else, use Proxy.";
+
+    partial void OnBackendChanged(CaptureBackend value)
+    {
+        OnPropertyChanged(nameof(BackendIndex));
+        OnPropertyChanged(nameof(IsProxyMode));
+        OnPropertyChanged(nameof(IsLaunchMode));
+        OnOptionChanged();
+    }
+
+    partial void OnLaunchExePathChanged(string value)
+    {
+        OnPropertyChanged(nameof(LaunchFileName));
+        OnOptionChanged();
+    }
+
+    partial void OnLaunchArgumentsChanged(string value) => OnOptionChanged();
+
+    [RelayCommand]
+    private async Task BrowseForExeAsync()
+    {
+        var path = await Services.Files.PickFilePathAsync(".exe");
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            LaunchExePath = path;
+        }
+    }
 
     // ---------------------------------------------------------------- processes
 
@@ -186,6 +255,7 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
     {
         RaiseProxyNotice();
         OnPropertyChanged(nameof(StartLabel));
+        OnPropertyChanged(nameof(CanChooseBackend));
     }
 
     partial void OnRoutesAutomaticallyChanged(bool value) => RaiseProxyNotice();
@@ -289,6 +359,13 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
         IsCertificateTrusted = _session.LoadCertificate(_config.Current.CertificateThumbprint) && _session.CanDecryptTls;
         IsListening = _session.State == DevTools.Http.Capture.CaptureState.Running;
 
+        // A capture started earlier and still running keeps the shell in the matching mode.
+        if (IsListening)
+        {
+            Backend = _session.Backend;
+            RoutesAutomatically = _session.RoutesAutomatically;
+        }
+
         if (Processes.Count == 0)
         {
             RefreshProcesses();
@@ -315,6 +392,12 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
     {
         if (IsListening)
         {
+            return;
+        }
+
+        if (Backend == CaptureBackend.Launch)
+        {
+            StartLaunch();
             return;
         }
 
@@ -355,6 +438,40 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
         SetInfo(routing + tls);
     }
 
+    /// <summary>
+    /// Launches the chosen application with the agent attached. Nothing on the machine changes, so
+    /// there is no restore to arm and no certificate to install.
+    /// </summary>
+    private void StartLaunch()
+    {
+        if (string.IsNullOrWhiteSpace(LaunchExePath))
+        {
+            SetError("Choose a .NET application to launch.");
+            return;
+        }
+
+        var started = _session.StartLaunch(LaunchExePath, LaunchArguments, workingDirectory: null);
+
+        if (!started.IsSuccess)
+        {
+            SetError(started.Error!);
+            return;
+        }
+
+        var info = started.Value!;
+        RoutesAutomatically = true;
+        IsListening = true;
+
+        // Put the launched process at the top of the filter and select it, so Only this process
+        // narrows to exactly what was started.
+        var entry = new ProcessEntry(info.ProcessId, info.ProcessName, true);
+        Processes.Insert(0, entry);
+        SelectedProcess = entry;
+
+        SetInfo($"Launched {info.ProcessName} ({info.ProcessId}). Its HTTP calls appear as it makes them, " +
+                "https bodies included. The app keeps running when you stop capturing.");
+    }
+
     [RelayCommand]
     private async Task StopListeningAsync()
     {
@@ -363,8 +480,22 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
             return;
         }
 
+        var wasLaunch = _session.Backend == CaptureBackend.Launch;
+
         var stopped = _session.Stop();
         IsListening = false;
+
+        if (wasLaunch)
+        {
+            if (!stopped.IsSuccess)
+            {
+                SetError(stopped.Error!);
+                return;
+            }
+
+            SetInfo("Stopped capturing. The launched application is left running.");
+            return;
+        }
 
         await _config.DisarmRestoreAsync();
 
@@ -652,6 +783,9 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
         base.CaptureState(state);
         state.Set("onlyProcess", OnlySelectedProcess);
         state.Set("filter", Filter);
+        state.Set("backend", Backend);
+        state.Set("launchExe", LaunchExePath);
+        state.Set("launchArgs", LaunchArguments);
     }
 
     protected override void RestoreState(ToolState state)
@@ -659,12 +793,18 @@ public sealed partial class ApiProfilerViewModel : JobToolViewModelBase
         base.RestoreState(state);
         OnlySelectedProcess = state.GetBool("onlyProcess", true);
         Filter = state.GetString("filter");
+        Backend = state.GetEnum("backend", CaptureBackend.Proxy);
+        LaunchExePath = state.GetString("launchExe");
+        LaunchArguments = state.GetString("launchArgs");
     }
 
     protected override void ResetOptions()
     {
         Filter = string.Empty;
         OnlySelectedProcess = true;
+        Backend = CaptureBackend.Proxy;
+        LaunchExePath = string.Empty;
+        LaunchArguments = string.Empty;
         ClearCaptures();
     }
 }

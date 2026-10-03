@@ -20,6 +20,12 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup Label="API Profiler agent">
+    <!-- Harmony patches HttpClient in the launched process, so the profiler can read calls
+         from inside the app instead of routing the whole machine through a proxy. -->
+    <PackageVersion Include="Lib.Harmony" Version="2.3.3" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
     <!-- The C# generator's acceptance test compiles its own output. -->

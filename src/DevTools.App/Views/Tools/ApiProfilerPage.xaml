@@ -40,6 +40,15 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <tkp:Segmented
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Capture backend"
+                    IsEnabled="{x:Bind ViewModel.CanChooseBackend, Mode=OneWay}"
+                    SelectedIndex="{x:Bind ViewModel.BackendIndex, Mode=TwoWay}"
+                    ToolTipService.ToolTip="How calls are captured. The backend cannot change while listening.">
+                    <tkp:SegmentedItem Content="Proxy" ToolTipService.ToolTip="A local proxy the machine is pointed at. Sees any app." />
+                    <tkp:SegmentedItem Content="Launch app" ToolTipService.ToolTip="Loads the agent into a .NET app DevTools starts. Reads https from inside." />
+                </tkp:Segmented>
 
                 <ComboBox
                     Grid.Column="1"
@@ -102,7 +111,7 @@
                     Grid.Column="5"
                     Width="220"
                     AutomationProperties.Name="Filter by host, path or status"
-                    PlaceholderText="Filter host, path or status"
+                    PlaceholderText="Filter host, path or status" Padding="5,7,0,0"
                     Style="{StaticResource DevToolsInlineTextBoxStyle}"
                     Text="{x:Bind ViewModel.Filter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
@@ -139,7 +148,8 @@
                 Background="{ThemeResource DevToolsInfoBackgroundBrush}"
                 BorderBrush="{ThemeResource DevToolsInfoBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource DevToolsCardCornerRadius}">
+                CornerRadius="{StaticResource DevToolsCardCornerRadius}"
+                Visibility="{x:Bind ViewModel.IsProxyMode, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -198,14 +208,70 @@
                 </Grid>
             </Border>
 
-            <!-- The https caveat, only while it applies. -->
+            <!--
+                Launch mode: choose the application to start with the agent attached. No machine
+                changes, so there is no proxy notice or certificate — just what to run.
+            -->
+            <Border
+                Padding="12,8"
+                Background="{ThemeResource DevToolsInfoBackgroundBrush}"
+                BorderBrush="{ThemeResource DevToolsInfoBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource DevToolsCardCornerRadius}"
+                Visibility="{x:Bind ViewModel.IsLaunchMode, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="1.2*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="Application to launch"
+                            FontFamily="{StaticResource DevToolsMonospaceFont}"
+                            IsEnabled="{x:Bind ViewModel.CanChooseBackend, Mode=OneWay}"
+                            PlaceholderText="Path to a .NET application (.exe)" Padding="5,7,0,0"
+                            Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                            Text="{x:Bind ViewModel.LaunchExePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <Button
+                            Grid.Column="1"
+                            AutomationProperties.Name="Browse for an application"
+                            Command="{x:Bind ViewModel.BrowseForExeCommand}"
+                            Content="Browse…"
+                            IsEnabled="{x:Bind ViewModel.CanChooseBackend, Mode=OneWay}"
+                            Style="{StaticResource DevToolsInlineButtonStyle}" />
+
+                        <TextBox
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="Command-line arguments"
+                            FontFamily="{StaticResource DevToolsMonospaceFont}"
+                            IsEnabled="{x:Bind ViewModel.CanChooseBackend, Mode=OneWay}"
+                            PlaceholderText="Arguments (optional)" Padding="5,7,0,0"
+                            Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                            Text="{x:Bind ViewModel.LaunchArguments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind ViewModel.LaunchNotice}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- The https caveat, only while it applies and only in proxy mode. -->
             <InfoBar
                 Grid.Row="1"
                 IsClosable="False"
                 IsOpen="{x:Bind ViewModel.NeedsCertificate, Mode=OneWay}"
                 Message="Without a trusted DevTools root certificate, https calls are recorded as tunnels: host, size and timing, but no headers or body. Installing one lets anything signed with it be trusted by your account, so remove it when you are done."
                 Severity="Warning"
-                Title="https bodies cannot be read yet" />
+                Title="https bodies cannot be read yet"
+                Visibility="{x:Bind ViewModel.IsProxyMode, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
             <Grid Grid.Row="2" ColumnSpacing="10">
                 <Grid.ColumnDefinitions>

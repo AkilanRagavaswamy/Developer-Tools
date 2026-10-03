@@ -49,7 +49,11 @@ public sealed partial class ShellViewModel : ObservableObject
             RaiseActiveToolChanged();
         });
 
-        _chrome.ActiveChanged += (_, _) => UiDispatcher.Run(RaiseActiveToolChanged);
+        _chrome.ActiveChanged += (_, _) => UiDispatcher.Run(() =>
+        {
+            RaiseActiveToolChanged();
+            PruneActiveToolSuggestion();
+        });
     }
 
     // ---------------------------------------------------------------- title bar
@@ -219,9 +223,18 @@ public sealed partial class ShellViewModel : ObservableObject
             return;
         }
 
+        // Never suggest the tool you are already in: if you copied a URL while the API Builder is
+        // open, you are plainly already using it, and a banner pointing back at it is just noise.
+        var activeToolId = _chrome.Active?.ToolId;
+
         Suggestions.Clear();
         foreach (var hit in hits)
         {
+            if (string.Equals(hit.ToolId, activeToolId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             if (_catalog.ById(hit.ToolId) is { } tool)
             {
                 Suggestions.Add(new SuggestionItem(tool.Id, tool.Name, tool.Glyph, tool.GlyphFont));
@@ -236,6 +249,31 @@ public sealed partial class ShellViewModel : ObservableObject
 
         SuggestionMessage = $"The clipboard looks like {hits[0].Label}.";
         IsSuggestionOpen = true;
+    }
+
+    /// <summary>
+    /// Drops the open suggestion once you navigate into the tool it points at, and closes the
+    /// banner if that leaves nothing — the suggestion has served its purpose by then.
+    /// </summary>
+    private void PruneActiveToolSuggestion()
+    {
+        if (!IsSuggestionOpen || _chrome.Active?.ToolId is not { } activeToolId)
+        {
+            return;
+        }
+
+        for (var i = Suggestions.Count - 1; i >= 0; i--)
+        {
+            if (string.Equals(Suggestions[i].ToolId, activeToolId, StringComparison.OrdinalIgnoreCase))
+            {
+                Suggestions.RemoveAt(i);
+            }
+        }
+
+        if (Suggestions.Count == 0)
+        {
+            IsSuggestionOpen = false;
+        }
     }
 
     /// <summary>Human-readable summary of the app and its runtime, shown in Settings and About.</summary>

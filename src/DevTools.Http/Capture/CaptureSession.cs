@@ -19,6 +19,16 @@ public enum CaptureState
     Running,
 }
 
+/// <summary>How a capture gets at an application's calls.</summary>
+public enum CaptureBackend
+{
+    /// <summary>A local proxy the machine is pointed at. Sees any app, needs a certificate for https.</summary>
+    Proxy,
+
+    /// <summary>The profiler agent, loaded into a .NET app DevTools launches. Sees https in the clear.</summary>
+    Launch,
+}
+
 /// <summary>
 /// Runs a capture: the proxy, the Windows proxy setting, and putting the setting back.
 /// </summary>
@@ -33,6 +43,7 @@ public sealed class CaptureSession : IDisposable
     private readonly object _gate = new();
 
     private CaptureProxy? _proxy;
+    private LaunchProfiler? _launch;
     private CaptureCertificates? _certificates;
     private ProxyState? _previousProxy;
     private bool _disposed;
@@ -41,6 +52,9 @@ public sealed class CaptureSession : IDisposable
     public event EventHandler<CapturedExchange>? Captured;
 
     public CaptureState State { get; private set; } = CaptureState.Stopped;
+
+    /// <summary>Which backend is running, meaningful only while <see cref="State"/> is Running.</summary>
+    public CaptureBackend Backend { get; private set; } = CaptureBackend.Proxy;
 
     public int Port { get; private set; }
 
@@ -169,9 +183,46 @@ public sealed class CaptureSession : IDisposable
             }
 
             _proxy = proxy;
+            Backend = CaptureBackend.Proxy;
             State = CaptureState.Running;
 
             return OperationResult<int>.Ok(Port);
+        }
+    }
+
+    /// <summary>
+    /// Starts a launch-and-attach capture: runs the given application with the profiler agent
+    /// loaded and reports the calls it makes. Nothing on the machine is changed, and https bodies
+    /// are readable without a certificate because the agent reads them inside the process.
+    /// </summary>
+    public OperationResult<LaunchInfo> StartLaunch(string executablePath, string? arguments, string? workingDirectory)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        lock (_gate)
+        {
+            if (State == CaptureState.Running)
+            {
+                return OperationResult<LaunchInfo>.Fail("Stop the current capture before launching an application.");
+            }
+
+            var launch = new LaunchProfiler();
+            launch.Captured += OnCaptured;
+
+            var started = launch.Start(executablePath, arguments, workingDirectory);
+            if (!started.IsSuccess)
+            {
+                launch.Captured -= OnCaptured;
+                launch.Dispose();
+                return started;
+            }
+
+            _launch = launch;
+            Backend = CaptureBackend.Launch;
+            RoutesAutomatically = true;
+            State = CaptureState.Running;
+
+            return started;
         }
     }
 
@@ -183,6 +234,15 @@ public sealed class CaptureSession : IDisposable
     {
         lock (_gate)
         {
+            if (_launch is { } launch)
+            {
+                launch.Captured -= OnCaptured;
+                launch.Dispose();
+                _launch = null;
+                State = CaptureState.Stopped;
+                return OperationResult<bool>.Ok(true);
+            }
+
             if (State == CaptureState.Stopped && _previousProxy is null)
             {
                 return OperationResult<bool>.Ok(true);
