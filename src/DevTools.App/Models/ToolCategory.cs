@@ -1,13 +1,8 @@
 namespace DevTools.App.Models;
 
 /// <summary>
-/// The three groups the dashboard is organised by.
+/// The three groups the dashboard and the navigation pane are organised by.
 /// </summary>
-/// <remarks>
-/// The navigation pane lists the six tools flat (FR-S01) — six items do not need collapsible
-/// groups, and hiding half of them behind a expander would make the app slower to use, not
-/// tidier. The categories exist for the dashboard, where they give the cards a reading order.
-/// </remarks>
 public enum ToolCategory
 {
     Json,
@@ -27,18 +22,29 @@ public static class ToolCategoryInfo
 
     public static string DisplayName(ToolCategory category) => category switch
     {
-        ToolCategory.Json => "JSON",
-        ToolCategory.Vector => "Vector",
-        ToolCategory.Api => "API",
+        ToolCategory.Json => "JSON Tools",
+        ToolCategory.Vector => "Media Tools",
+        ToolCategory.Api => "API Tools",
+        _ => category.ToString(),
+    };
+
+    /// <summary>The group heading in the navigation pane.</summary>
+    public static string NavigationName(ToolCategory category) => category switch
+    {
+        ToolCategory.Json => "JSON Tools",
+        ToolCategory.Vector => "Media Tools",
+        ToolCategory.Api => "API Tools",
         _ => category.ToString(),
     };
 
     /// <summary>Segoe Fluent Icons glyph for the category header.</summary>
     public static string Glyph(ToolCategory category) => category switch
     {
-        ToolCategory.Json => "",
-        ToolCategory.Vector => "",
-        ToolCategory.Api => "",
-        _ => "",
+        // Not the glyph of any tool inside the group, so a group and its first tool never
+        // look the same in the compact pane.
+        ToolCategory.Json => "\uE943",
+        ToolCategory.Vector => "",
+        ToolCategory.Api => "",
+        _ => "",
     };
 }

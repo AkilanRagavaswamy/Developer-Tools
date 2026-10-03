@@ -65,13 +65,12 @@
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Style="{StaticResource CaptionTextBlockStyle}"
-                    Text="DevTools" />
+                    Text="Developer Tools" />
 
                 <FontIcon
                     Grid.Column="3"
                     Margin="6,0,2,0"
                     FontSize="11"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                     Glyph="&#xE76C;"
                     Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
@@ -108,16 +107,11 @@
                 Orientation="Horizontal"
                 Spacing="2">
 
-                <Button
-                    AutomationProperties.Name="Pin or unpin this tool"
-                    Command="{x:Bind ViewModel.ToggleActiveFavoriteCommand}"
-                    Style="{StaticResource DevToolsCaptionButtonStyle}"
-                    ToolTipService.ToolTip="Pin or unpin this tool (Ctrl+D)"
-                    Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                    <FontIcon
-                        FontSize="14"
-                        Foreground="{ThemeResource DevToolsAccentBrush}"
-                        Glyph="{x:Bind ViewModel.ActiveToolIsFavorite, Mode=OneWay, Converter={StaticResource FavoriteGlyph}}" />
+                <Button AutomationProperties.Name="Pin or unpin this tool" Command="{x:Bind ViewModel.ToggleActiveFavoriteCommand}"
+                        Style="{StaticResource DevToolsCaptionButtonStyle}" ToolTipService.ToolTip="Pin or unpin this tool (Ctrl+D)"
+                        Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <FontIcon FontSize="14" Foreground="{ThemeResource DevToolsAccentBrush}"
+                              Glyph="{x:Bind ViewModel.ActiveToolIsFavorite, Mode=OneWay, Converter={StaticResource FavoriteGlyph}}" />
                 </Button>
 
                 <Button

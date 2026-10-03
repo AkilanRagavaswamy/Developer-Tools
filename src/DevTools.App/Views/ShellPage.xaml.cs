@@ -21,6 +21,7 @@ public sealed partial class ShellPage : UserControl
     private const string HomeTag = "__home";
     private const string SettingsTag = "__settings";
     private const string FavoritesHeaderTag = "__favorites";
+    private const string GroupTagPrefix = "__group:";
 
     private readonly INavigationService _navigation;
     private readonly ToolCatalog _catalog;
@@ -91,8 +92,8 @@ public sealed partial class ShellPage : UserControl
     // ------------------------------------------------------------- navigation
 
     /// <summary>
-    /// Builds the pane: Home, the favorites group when there are any, then the eight
-    /// categories, each holding its tools. Rebuilt whenever favorites change.
+    /// Builds the pane: Home, the favorites group when there are any, then each category
+    /// holding its tools, with Settings in the footer. Rebuilt whenever favorites change.
     /// </summary>
     private void BuildNavigation()
     {
@@ -108,33 +109,53 @@ public sealed partial class ShellPage : UserControl
                 Tag = HomeTag,
             });
 
-            if (ViewModel.Favorites.Count > 0)
+            //if (ViewModel.Favorites.Count > 0)
+            //{
+            //    var favorites = new NavigationViewItem
+            //    {
+            //        Content = "Favorites",
+            //        Icon = new FontIcon { Glyph = "" },
+            //        Tag = FavoritesHeaderTag,
+            //        SelectsOnInvoked = false,
+            //        IsExpanded = true,
+            //    };
+
+            //    foreach (var tool in ViewModel.Favorites)
+            //    {
+            //        favorites.MenuItems.Add(CreateToolItem(tool));
+            //    }
+
+            //    Nav.MenuItems.Add(favorites);
+            //}
+
+            Nav.MenuItems.Add(new NavigationViewItemSeparator());
+
+            // Tools sit under their category. The groups start expanded, so every tool is still
+            // one click away; in the compact pane a group opens as a flyout of its tools.
+            foreach (var category in ToolCategoryInfo.All)
             {
-                var favorites = new NavigationViewItem
+                if (!_catalog.ByCategory.TryGetValue(category, out var tools) || tools.Count == 0)
                 {
-                    Content = "Favorites",
-                    Icon = new FontIcon { Glyph = "" },
-                    Tag = FavoritesHeaderTag,
+                    continue;
+                }
+
+                var group = new NavigationViewItem
+                {
+                    Content = ToolCategoryInfo.NavigationName(category),
+                    Icon = new FontIcon { Glyph = ToolCategoryInfo.Glyph(category) },
+                    Tag = GroupTagPrefix + category,
                     SelectsOnInvoked = false,
                     IsExpanded = true,
                 };
 
-                foreach (var tool in ViewModel.Favorites)
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(group, ToolCategoryInfo.NavigationName(category));
+
+                foreach (var tool in tools)
                 {
-                    favorites.MenuItems.Add(CreateToolItem(tool));
+                    group.MenuItems.Add(CreateToolItem(tool));
                 }
 
-                Nav.MenuItems.Add(favorites);
-            }
-
-            Nav.MenuItems.Add(new NavigationViewItemSeparator());
-
-            // The six tools are listed flat (FR-S01). Collapsible category groups earn their
-            // keep at thirty-two tools; at six they would hide half the app behind a chevron
-            // and make every tool one click further away.
-            foreach (var tool in _catalog.All)
-            {
-                Nav.MenuItems.Add(CreateToolItem(tool));
+                Nav.MenuItems.Add(group);
             }
 
             Nav.FooterMenuItems.Clear();
