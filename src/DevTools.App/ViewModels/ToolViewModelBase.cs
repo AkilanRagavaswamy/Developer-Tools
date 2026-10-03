@@ -43,6 +43,10 @@ public abstract partial class ToolViewModelBase : ObservableObject
         Services = services;
 
         MessageSeverity = ToolMessageSeverity.Informational;
+
+        // Known from the start rather than at activation, so nothing that looks before then
+        // sees a pinned tool as unpinned.
+        IsFavorite = services.Favorites.IsFavorite(ToolId);
     }
 
     protected ToolServices Services { get; }
@@ -78,7 +82,41 @@ public abstract partial class ToolViewModelBase : ObservableObject
     /// <summary>Label for that button — "Run", "Send", "Start".</summary>
     public virtual string RunLabel => "Run";
 
-    partial void OnMessageChanged(string? value) => OnPropertyChanged(nameof(HasMessage));
+    partial void OnMessageChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasMessage));
+        ScheduleMessageAutoHide(value);
+    }
+
+    /// <summary>
+    /// How long a message stays up before it clears itself, or <see langword="null"/> to keep it
+    /// until the next one. Off by default; a tool opts in.
+    /// </summary>
+    protected virtual TimeSpan? MessageAutoHideDelay => null;
+
+    private int _messageVersion;
+
+    /// <summary>
+    /// Clears the message after <see cref="MessageAutoHideDelay"/>, unless it has been replaced
+    /// meanwhile. The message itself is cleared rather than the banner hidden, so a newer message
+    /// always shows for its full time and a hidden one cannot linger in the view model.
+    /// </summary>
+    private async void ScheduleMessageAutoHide(string? value)
+    {
+        var version = ++_messageVersion;
+
+        if (string.IsNullOrEmpty(value) || MessageAutoHideDelay is not { } delay)
+        {
+            return;
+        }
+
+        await Task.Delay(delay);
+
+        if (version == _messageVersion)
+        {
+            UiDispatcher.Run(ClearMessage);
+        }
+    }
 
     /// <summary>Set while state is being restored, so a restore does not look like an edit.</summary>
     protected bool IsRestoring { get; private set; }

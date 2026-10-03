@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml;
 namespace DevTools.App.ViewModels;
 
 /// <summary>A tool offered by the clipboard suggestion banner.</summary>
-public sealed record SuggestionItem(string ToolId, string Name, string Glyph);
+public sealed record SuggestionItem(string ToolId, string Name, string Glyph, Microsoft.UI.Xaml.Media.FontFamily GlyphFont);
 
 /// <summary>
 /// Drives the shell: the search index behind both the title-bar box and the command palette,
@@ -64,7 +64,12 @@ public sealed partial class ShellViewModel : ObservableObject
     /// <summary>The one-line description, shown beside the name when the window is wide enough.</summary>
     public string ActiveToolSubtitle => _chrome.Active?.Subtitle ?? string.Empty;
 
-    public bool ActiveToolIsFavorite => _chrome.Active?.IsFavorite ?? false;
+    /// <summary>
+    /// Read from the favourites list, not from the tool. The tool is published to the title bar
+    /// before it activates, and it only learns its own favourite state during activation — so
+    /// asking the tool made a pinned tool open with an unpinned star.
+    /// </summary>
+    public bool ActiveToolIsFavorite => _chrome.Active is { } tool && _favorites.IsFavorite(tool.ToolId);
 
     private void RaiseActiveToolChanged()
     {
@@ -219,7 +224,7 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             if (_catalog.ById(hit.ToolId) is { } tool)
             {
-                Suggestions.Add(new SuggestionItem(tool.Id, tool.Name, tool.Glyph));
+                Suggestions.Add(new SuggestionItem(tool.Id, tool.Name, tool.Glyph, tool.GlyphFont));
             }
         }
 

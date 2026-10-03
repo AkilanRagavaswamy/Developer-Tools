@@ -235,7 +235,7 @@
                                         <DataTemplate x:DataType="vm:SuggestionItem">
                                             <Button Click="OnSuggestionClick" Tag="{x:Bind ToolId}">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <FontIcon FontSize="14" Glyph="{x:Bind Glyph}" Foreground="{ThemeResource SystemAccentColor}" />
+                                                    <FontIcon FontFamily="{x:Bind GlyphFont}" FontSize="14" Glyph="{x:Bind Glyph}" Foreground="{ThemeResource SystemAccentColor}" />
                                                     <TextBlock Text="{x:Bind Name}" />
                                                 </StackPanel>
                                             </Button>
@@ -320,6 +320,7 @@
                                     <FontIcon
                                         FontSize="16"
                                         Foreground="{ThemeResource DevToolsAccentBrush}"
+                                        FontFamily="{x:Bind Tool.GlyphFont}"
                                         Glyph="{x:Bind Tool.Glyph}" />
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="{x:Bind Tool.Name}" />

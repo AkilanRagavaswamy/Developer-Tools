@@ -14,6 +14,15 @@ public sealed record ToolDescriptor(
     Type PageType,
     IReadOnlyList<string> Keywords)
 {
+    /// <summary>The font every glyph is drawn in unless a tool says otherwise.</summary>
+    public static Microsoft.UI.Xaml.Media.FontFamily SymbolFont { get; } = new("Segoe Fluent Icons,Segoe MDL2 Assets");
+
+    /// <summary>
+    /// The font <see cref="Glyph"/> is drawn in. A tool whose job no symbol says — JSON to C#
+    /// produces C#, and the icon font has no mark for that — can draw its glyph as text instead.
+    /// </summary>
+    public Microsoft.UI.Xaml.Media.FontFamily GlyphFont { get; init; } = SymbolFont;
+
     /// <summary>
     /// The initials used for acronym search — "JSON Formatter" becomes "jf", so typing
     /// <c>jf</c> in the palette finds it.

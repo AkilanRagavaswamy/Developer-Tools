@@ -10,62 +10,87 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <DataTemplate x:Key="ToolCardTemplate" x:DataType="models:ToolDescriptor">
-            <Button
-                AutomationProperties.HelpText="{x:Bind Description}"
-                AutomationProperties.Name="{x:Bind Name}"
-                Click="OnToolCardClick"
-                Style="{StaticResource DevToolsToolCardStyle}"
-                Tag="{x:Bind Id}"
-                ToolTipService.ToolTip="{x:Bind Description}">
-                <Button.ContextFlyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem
-                            Click="OnToggleFavoriteClick"
-                            Tag="{x:Bind Id}"
-                            Text="Toggle favorite">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE734;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                    </MenuFlyout>
-                </Button.ContextFlyout>
+        <!--
+            The star is a sibling laid over the card's corner, not a child of the card button: a
+            button inside a button cannot be reached by keyboard or announced on its own. The
+            card reserves a column on the right so the name never runs under the star.
+        -->
+        <DataTemplate x:Key="ToolCardTemplate" x:DataType="vm:ToolCard">
+            <Grid>
+                <Button
+                    HorizontalAlignment="Stretch"
+                    AutomationProperties.HelpText="{x:Bind Tool.Description}"
+                    AutomationProperties.Name="{x:Bind Tool.Name}"
+                    Click="OnToolCardClick"
+                    Style="{StaticResource DevToolsToolCardStyle}"
+                    Tag="{x:Bind Tool.Id}"
+                    ToolTipService.ToolTip="{x:Bind Tool.Description}">
+                    <Button.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem
+                                Click="OnToggleFavoriteClick"
+                                Tag="{x:Bind Tool.Id}"
+                                Text="{x:Bind FavoriteLabel, Mode=OneWay}">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="{x:Bind FavoriteGlyph, Mode=OneWay}" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </Button.ContextFlyout>
 
-                <Grid Width="228" ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                    <Grid Width="228" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="20" />
+                        </Grid.ColumnDefinitions>
 
-                    <Border
-                        Width="34"
-                        Height="34"
-                        VerticalAlignment="Top"
-                        Background="{ThemeResource DevToolsCardBackgroundBrush}"
-                        BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="6">
-                        <FontIcon
-                            FontSize="16"
-                            Foreground="{ThemeResource DevToolsAccentBrush}"
-                            Glyph="{x:Bind Glyph}" />
-                    </Border>
-
-                    <StackPanel Grid.Column="1" Spacing="2">
-                        <TextBlock
-                            Style="{StaticResource BodyStrongTextBlockStyle}"
-                            Text="{x:Bind Name}"
-                            TextTrimming="CharacterEllipsis"
-                            TextWrapping="NoWrap" />
-                        <TextBlock
+                        <Border
+                            Width="34"
                             Height="34"
-                            Style="{StaticResource DevToolsCaptionStyle}"
-                            Text="{x:Bind Description}"
-                            TextTrimming="CharacterEllipsis"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Button>
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource DevToolsCardBackgroundBrush}"
+                            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                            <FontIcon
+                                FontSize="16"
+                                Foreground="{ThemeResource DevToolsAccentBrush}"
+                                FontFamily="{x:Bind Tool.GlyphFont}"
+                                Glyph="{x:Bind Tool.Glyph}" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="{x:Bind Tool.Name}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                            <TextBlock
+                                Height="34"
+                                Style="{StaticResource DevToolsCaptionStyle}"
+                                Text="{x:Bind Tool.Description}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Button>
+
+                <Button
+                    Margin="0,6,6,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="{x:Bind FavoriteLabel, Mode=OneWay}"
+                    Click="OnToggleFavoriteClick"
+                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                    Tag="{x:Bind Tool.Id}"
+                    ToolTipService.ToolTip="{x:Bind FavoriteLabel, Mode=OneWay}">
+                    <FontIcon
+                        FontSize="14"
+                        Foreground="{ThemeResource DevToolsAccentBrush}"
+                        Glyph="{x:Bind FavoriteGlyph, Mode=OneWay}" />
+                </Button>
+            </Grid>
         </DataTemplate>
     </Page.Resources>
 

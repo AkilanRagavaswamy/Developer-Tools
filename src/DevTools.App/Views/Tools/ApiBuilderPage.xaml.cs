@@ -19,15 +19,6 @@ public sealed partial class ApiBuilderPage : ToolPageBase
 
     public ApiBuilderViewModel ViewModel { get; }
 
-    /// <summary>Opening a request is a click, not a selection: clicking the open one reloads it.</summary>
-    private void OnTreeItemClick(object sender, ItemClickEventArgs e)
-    {
-        if (e.ClickedItem is TreeEntry entry)
-        {
-            ViewModel.OpenTreeEntryCommand.Execute(entry.Id);
-        }
-    }
-
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ApiBuilderViewModel.IsImageResponse))

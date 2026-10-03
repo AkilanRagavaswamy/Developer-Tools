@@ -6,8 +6,31 @@ using DevTools.App.Services;
 
 namespace DevTools.App.ViewModels;
 
+/// <summary>
+/// A tool as a dashboard card: the tool itself plus whether it is pinned, which the card's
+/// star follows as favourites change.
+/// </summary>
+public sealed partial class ToolCard : ObservableObject
+{
+    public ToolCard(ToolDescriptor tool, bool isFavorite)
+    {
+        Tool = tool;
+        IsFavorite = isFavorite;
+    }
+
+    public ToolDescriptor Tool { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FavoriteGlyph), nameof(FavoriteLabel))]
+    public partial bool IsFavorite { get; set; }
+
+    public string FavoriteGlyph => IsFavorite ? "" : "";
+
+    public string FavoriteLabel => IsFavorite ? "Remove from favorites" : "Add to favorites";
+}
+
 /// <summary>One category section on the dashboard.</summary>
-public sealed class ToolGroup(ToolCategory category, IEnumerable<ToolDescriptor> tools)
+public sealed class ToolGroup(ToolCategory category, IEnumerable<ToolCard> tools)
 {
     public ToolCategory Category { get; } = category;
 
@@ -15,7 +38,7 @@ public sealed class ToolGroup(ToolCategory category, IEnumerable<ToolDescriptor>
 
     public string Glyph { get; } = ToolCategoryInfo.Glyph(category);
 
-    public IReadOnlyList<ToolDescriptor> Tools { get; } = [.. tools];
+    public IReadOnlyList<ToolCard> Tools { get; } = [.. tools];
 
     public string CountLabel => Tools.Count == 1 ? "1 tool" : $"{Tools.Count} tools";
 }
@@ -36,9 +59,16 @@ public sealed partial class HomeViewModel : ObservableObject
         _favorites = favorites;
         _navigation = navigation;
 
+        // One card per tool, shared by its category and the Favorites row, so pinning from
+        // either place updates the star in both.
+        _cards = _catalog.All.ToDictionary(
+            t => t.Id,
+            t => new ToolCard(t, _favorites.IsFavorite(t.Id)),
+            StringComparer.OrdinalIgnoreCase);
+
         Groups = [.. ToolCategoryInfo.All
             .Where(c => _catalog.ByCategory.ContainsKey(c))
-            .Select(c => new ToolGroup(c, _catalog.ByCategory[c]))];
+            .Select(c => new ToolGroup(c, _catalog.ByCategory[c].Select(t => _cards[t.Id])))];
 
         // Through the dispatcher: the favourites load finishes on a thread-pool thread, and
         // Refresh touches collections the UI is bound to (see UiDispatcher).
@@ -47,9 +77,11 @@ public sealed partial class HomeViewModel : ObservableObject
         Refresh();
     }
 
+    private readonly Dictionary<string, ToolCard> _cards;
+
     public IReadOnlyList<ToolGroup> Groups { get; }
 
-    public ObservableCollection<ToolDescriptor> FavoriteTools { get; } = [];
+    public ObservableCollection<ToolCard> FavoriteTools { get; } = [];
 
     public int TotalTools => _catalog.All.Count;
 
@@ -65,12 +97,17 @@ public sealed partial class HomeViewModel : ObservableObject
 
     public void Refresh()
     {
+        foreach (var card in _cards.Values)
+        {
+            card.IsFavorite = _favorites.IsFavorite(card.Tool.Id);
+        }
+
         FavoriteTools.Clear();
         foreach (var id in _favorites.Ids)
         {
-            if (_catalog.ById(id) is { } tool)
+            if (_cards.TryGetValue(id, out var card))
             {
-                FavoriteTools.Add(tool);
+                FavoriteTools.Add(card);
             }
         }
 

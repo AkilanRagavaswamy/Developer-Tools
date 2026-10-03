@@ -11,7 +11,6 @@
     xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
     xmlns:tools="using:DevTools.App.ViewModels.Tools"
     xmlns:views="using:DevTools.App.Views"
-    xmlns:workspace="using:DevTools.Http.Workspace"
     mc:Ignorable="d">
 
     <controls:ToolShell
@@ -20,1067 +19,888 @@
         Message="{x:Bind ViewModel.Message, Mode=OneWay}"
         MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}">
 
-        <Grid ColumnSpacing="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" MinWidth="520" />
-            </Grid.ColumnDefinitions>
+        <Grid RowSpacing="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="200" />
+            </Grid.RowDefinitions>
 
-            <!--
-                Collections. Collapsible, because the rail is worth 232 px only while you are
-                moving between requests; once you are editing one, that width is better spent on
-                the body. The collapsed state keeps the reopen button in exactly the same place.
-            -->
-            <Border
-                Width="232"
-                Style="{StaticResource DevToolsPreviewCardStyle}"
-                Visibility="{x:Bind ViewModel.IsCollectionsOpen, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid
-                        Height="38"
-                        Padding="12,0,6,0"
-                        BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                        BorderThickness="0,0,0,1">
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            Text="Collections" />
-
-                        <StackPanel
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="2">
-                            <Button
-                                Width="26"
-                                Height="26"
-                                MinWidth="26"
-                                Padding="0"
-                                AutomationProperties.Name="Start a new request"
-                                Command="{x:Bind ViewModel.NewRequestCommand}"
-                                Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                ToolTipService.ToolTip="New request">
-                                <FontIcon FontSize="13" Glyph="&#xE710;" />
-                            </Button>
-                            <Button
-                                Width="26"
-                                Height="26"
-                                MinWidth="26"
-                                Padding="0"
-                                AutomationProperties.Name="Collapse the collections panel"
-                                Command="{x:Bind ViewModel.ToggleCollectionsCommand}"
-                                Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                ToolTipService.ToolTip="Hide collections">
-                                <FontIcon FontSize="13" Glyph="&#xE76B;" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBox
-                        Grid.Row="1"
-                        Margin="8,8,8,6"
-                        AutomationProperties.Name="Filter requests"
-                        PlaceholderText="Filter requests"
-                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
-                        Text="{x:Bind ViewModel.CollectionFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <!-- Method, URL, Send. The resolved URL sits under it so variables are never a guess. -->
+            <StackPanel Spacing="6">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
                     <ComboBox
-                        Grid.Row="2"
-                        Margin="8,0,8,6"
-                        HorizontalAlignment="Stretch"
-                        AutomationProperties.Name="Active environment"
-                        DisplayMemberPath="Name"
-                        ItemsSource="{x:Bind ViewModel.Environments, Mode=OneWay}"
-                        PlaceholderText="No environment"
-                        SelectedItem="{x:Bind ViewModel.ActiveEnvironment, Mode=TwoWay}"
-                        Style="{StaticResource DevToolsInlineComboStyle}" />
-
-                    <ListView
-                        Grid.Row="3"
-                        Padding="6,0"
-                        AutomationProperties.Name="Saved requests"
-                        ItemClick="OnTreeItemClick"
-                        IsItemClickEnabled="True"
-                        ItemsSource="{x:Bind ViewModel.Tree, Mode=OneWay}"
-                        SelectionMode="Single">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="MinHeight" Value="26" />
-                                <Setter Property="Padding" Value="6,0" />
-                            </Style>
-                        </ListView.ItemContainerStyle>
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="tools:TreeEntry">
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Width="{x:Bind Indent}" />
-
-                                    <!-- A folder gets a folder glyph; a request gets its verb, coloured. -->
-                                    <FontIcon
-                                        Grid.Column="1"
-                                        Width="32"
-                                        FontSize="12"
-                                        Foreground="{ThemeResource DevToolsWarnForegroundBrush}"
-                                        Glyph="&#xE8B7;"
-                                        Visibility="{x:Bind IsFolder, Converter={StaticResource BoolToVisibility}}" />
-
-                                    <TextBlock
-                                        Grid.Column="1"
-                                        Width="32"
-                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
-                                        FontSize="9.5"
-                                        FontWeight="Bold"
-                                        Foreground="{x:Bind Method, Converter={StaticResource MethodBrush}}"
-                                        Text="{x:Bind Method, Converter={StaticResource MethodBadge}}"
-                                        Visibility="{x:Bind IsFolder, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
-
-                                    <TextBlock
-                                        Grid.Column="2"
-                                        VerticalAlignment="Center"
-                                        FontSize="12"
-                                        Text="{x:Bind Name}"
-                                        TextTrimming="CharacterEllipsis"
-                                        ToolTipService.ToolTip="{x:Bind Name}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-
-                    <Grid
-                        Grid.Row="4"
-                        Padding="8"
-                        BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                        BorderThickness="0,1,0,0"
-                        ColumnSpacing="6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button
-                            HorizontalAlignment="Stretch"
-                            AutomationProperties.Name="Import a collection"
-                            Command="{x:Bind ViewModel.ImportCollectionCommand}"
-                            Content="Import"
-                            Style="{StaticResource DevToolsInlineButtonStyle}"
-                            ToolTipService.ToolTip="OpenAPI 3, Postman v2.1 or a DevTools collection" />
-                        <Button
-                            Grid.Column="1"
-                            HorizontalAlignment="Stretch"
-                            AutomationProperties.Name="Export the collection"
-                            Command="{x:Bind ViewModel.ExportCollectionCommand}"
-                            Content="Export"
-                            Style="{StaticResource DevToolsInlineButtonStyle}" />
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <!-- The reopen handle, in the same place the panel's own collapse button was. -->
-            <Button
-                Width="32"
-                VerticalAlignment="Top"
-                AutomationProperties.Name="Show the collections panel"
-                Command="{x:Bind ViewModel.ToggleCollectionsCommand}"
-                Style="{StaticResource DevToolsToolbarButtonStyle}"
-                ToolTipService.ToolTip="Show collections"
-                Visibility="{x:Bind ViewModel.IsCollectionsOpen, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
-                <FontIcon FontSize="13" Glyph="&#xE76C;" />
-            </Button>
-
-            <Grid Grid.Column="1" RowSpacing="10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" MinHeight="200" />
-                </Grid.RowDefinitions>
-
-                <!-- Method, URL, Send. The resolved URL sits under it so variables are never a guess. -->
-                <StackPanel Spacing="6">
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <ComboBox
-                            Height="34"
-                            MinWidth="104"
-                            AutomationProperties.Name="HTTP method"
-                            FontFamily="{StaticResource DevToolsMonospaceFont}"
-                            FontWeight="SemiBold"
-                            SelectedIndex="{x:Bind ViewModel.MethodIndex, Mode=TwoWay}">
-                            <ComboBoxItem Content="GET" />
-                            <ComboBoxItem Content="POST" />
-                            <ComboBoxItem Content="PUT" />
-                            <ComboBoxItem Content="PATCH" />
-                            <ComboBoxItem Content="DELETE" />
-                            <ComboBoxItem Content="HEAD" />
-                            <ComboBoxItem Content="OPTIONS" />
-                        </ComboBox>
-
-                        <TextBox
-                            Grid.Column="1"
-                            Height="34"
-                            VerticalContentAlignment="Center"
-                            AutomationProperties.Name="Request URL"
-                            FontFamily="{StaticResource DevToolsMonospaceFont}"
-                            PlaceholderText="https://{{host}}/v1/things"
-                            Text="{x:Bind ViewModel.Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <Button
-                            Grid.Column="2"
-                            Height="34"
-                            Padding="20,0"
-                            AutomationProperties.Name="Send the request"
-                            Command="{x:Bind ViewModel.StartCommand}"
-                            Style="{StaticResource AccentButtonStyle}"
-                            ToolTipService.ToolTip="Send (Ctrl+Enter)">
-                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                <TextBlock Text="Send" />
-                                <FontIcon FontSize="13" Glyph="&#xE72A;" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button
-                            Grid.Column="3"
-                            Height="34"
-                            Padding="13,0"
-                            AutomationProperties.Name="Save the current request to the collection"
-                            Command="{x:Bind ViewModel.SaveToCollectionCommand}"
-                            Content="Save" />
-
-                        <DropDownButton
-                            Grid.Column="4"
-                            Width="34"
-                            Height="34"
-                            Padding="0"
-                            AutomationProperties.Name="More actions">
-                            <FontIcon FontSize="14" Glyph="&#xE712;" />
-                            <DropDownButton.Flyout>
-                                <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                    <MenuFlyoutItem
-                                        Command="{x:Bind ViewModel.ImportCurlCommand}"
-                                        Text="Paste cURL" />
-                                    <MenuFlyoutItem
-                                        Command="{x:Bind ViewModel.CopyAsCurlCommand}"
-                                        Text="Copy as cURL" />
-                                    <MenuFlyoutSeparator />
-                                    <MenuFlyoutItem
-                                        Command="{x:Bind ViewModel.ProfileThisCommand}"
-                                        Text="Profile this request" />
-                                    <MenuFlyoutSeparator />
-                                    <MenuFlyoutItem
-                                        Command="{x:Bind ViewModel.StopCommand}"
-                                        Text="Stop" />
-                                </MenuFlyout>
-                            </DropDownButton.Flyout>
-                        </DropDownButton>
-                    </Grid>
-
-                    <TextBlock
-                        Margin="2,0,0,0"
+                        Height="34"
+                        MinWidth="104"
+                        AutomationProperties.Name="HTTP method"
                         FontFamily="{StaticResource DevToolsMonospaceFont}"
-                        FontSize="11.5"
-                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                        Text="{x:Bind ViewModel.ResolvedUrlPreview, Mode=OneWay}"
-                        TextTrimming="CharacterEllipsis"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.ResolvedUrlPreview, Mode=OneWay}" />
-                </StackPanel>
+                        FontWeight="SemiBold"
+                        SelectedIndex="{x:Bind ViewModel.MethodIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="GET" />
+                        <ComboBoxItem Content="POST" />
+                        <ComboBoxItem Content="PUT" />
+                        <ComboBoxItem Content="PATCH" />
+                        <ComboBoxItem Content="DELETE" />
+                        <ComboBoxItem Content="HEAD" />
+                        <ComboBoxItem Content="OPTIONS" />
+                    </ComboBox>
 
-                <!--
-                    Request. The counts on the tabs are the point: a tab strip hides what is in
-                    the tabs you are not looking at, and a header left on from the last request
-                    is the usual reason this one behaves differently.
-                -->
-                <Border
-                    Grid.Row="1"
-                    Height="290"
-                    Style="{StaticResource DevToolsPreviewCardStyle}">
-                    <Pivot AutomationProperties.Name="Request sections">
-                        <Pivot.Resources>
-                            <x:Double x:Key="PivotHeaderItemFontSize">12.5</x:Double>
-                            <!-- Tabs need air between them; the default Pivot spacing is for a page title. -->
-                            <Thickness x:Key="PivotHeaderItemMargin">0,0,20,0</Thickness>
-                            <Thickness x:Key="PivotItemMargin">12,0,12,12</Thickness>
-                        </Pivot.Resources>
+                    <TextBox
+                        Grid.Column="1"
+                        Height="34"
+                        VerticalContentAlignment="Center"
+                        AutomationProperties.Name="Request URL"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        PlaceholderText="https://{{host}}/v1/things"
+                        Text="{x:Bind ViewModel.Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                        <PivotItem>
-                            <PivotItem.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <TextBlock Text="Params" />
-                                    <TextBlock
-                                        Foreground="{ThemeResource DevToolsPassForegroundBrush}"
-                                        Text="{x:Bind ViewModel.EnabledQueryCount, Mode=OneWay}"
-                                        Visibility="{x:Bind ViewModel.HasQueryCount, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-                            </PivotItem.Header>
+                    <Button
+                        Grid.Column="2"
+                        Height="34"
+                        Padding="20,0"
+                        AutomationProperties.Name="Send the request"
+                        Command="{x:Bind ViewModel.StartCommand}"
+                        Style="{StaticResource AccentButtonStyle}"
+                        ToolTipService.ToolTip="Send (Ctrl+Enter)">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <TextBlock Text="Send" />
+                            <FontIcon FontSize="13" Glyph="&#xE72A;" />
+                        </StackPanel>
+                    </Button>
 
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
+                    <DropDownButton
+                        Grid.Column="3"
+                        Width="34"
+                        Height="34"
+                        Padding="0"
+                        AutomationProperties.Name="More actions">
+                        <FontIcon FontSize="14" Glyph="&#xE712;" />
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                <MenuFlyoutItem
+                                    Command="{x:Bind ViewModel.NewRequestCommand}"
+                                    Text="New request" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem
+                                    Command="{x:Bind ViewModel.ImportCurlCommand}"
+                                    Text="Paste cURL" />
+                                <MenuFlyoutItem
+                                    Command="{x:Bind ViewModel.CopyAsCurlCommand}"
+                                    Text="Copy as cURL" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem
+                                    Command="{x:Bind ViewModel.ProfileThisCommand}"
+                                    Text="Profile this request" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem
+                                    Command="{x:Bind ViewModel.StopCommand}"
+                                    Text="Stop" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </Grid>
 
-                                <Grid
-                                    Height="26"
-                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                                    BorderThickness="0,0,0,1"
-                                    ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="34" />
-                                        <ColumnDefinition Width="1.1*" />
-                                        <ColumnDefinition Width="1.4*" />
-                                        <ColumnDefinition Width="1.3*" />
-                                        <ColumnDefinition Width="32" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="KEY" />
-                                    <TextBlock Grid.Column="2" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="VALUE" />
-                                    <TextBlock Grid.Column="3" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="DESCRIPTION" />
-                                </Grid>
+                <TextBlock
+                    Margin="2,0,0,0"
+                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                    FontSize="11.5"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Text="{x:Bind ViewModel.ResolvedUrlPreview, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTipService.ToolTip="{x:Bind ViewModel.ResolvedUrlPreview, Mode=OneWay}" />
+            </StackPanel>
 
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{x:Bind ViewModel.Query, Mode=OneWay}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="tools:EditableRow">
-                                                <Grid ColumnSpacing="8" Padding="0,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="1.1*" />
-                                                        <ColumnDefinition Width="1.4*" />
-                                                        <ColumnDefinition Width="1.3*" />
-                                                        <ColumnDefinition Width="32" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <CheckBox
-                                                        MinWidth="0"
-                                                        AutomationProperties.Name="Send this parameter"
-                                                        IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
-                                                    <TextBox Grid.Column="1" AutomationProperties.Name="Parameter name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <TextBox Grid.Column="2" AutomationProperties.Name="Parameter value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="value" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <TextBox Grid.Column="3" AutomationProperties.Name="What this parameter is for" PlaceholderText="description" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <Button
-                                                        Grid.Column="4"
-                                                        Width="26"
-                                                        Height="26"
-                                                        MinWidth="26"
-                                                        Padding="0"
-                                                        AutomationProperties.Name="Delete this parameter"
-                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveQueryCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                                        ToolTipService.ToolTip="Delete">
-                                                        <FontIcon FontSize="13" Glyph="&#xE74D;" />
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
+            <!--
+                Request. The counts on the tabs are the point: a tab strip hides what is in
+                the tabs you are not looking at, and a header left on from the last request
+                is the usual reason this one behaves differently.
+            -->
+            <Border
+                Grid.Row="1"
+                Height="290"
+                Style="{StaticResource DevToolsPreviewCardStyle}">
+                <Pivot AutomationProperties.Name="Request sections">
+                    <Pivot.Resources>
+                        <x:Double x:Key="PivotHeaderItemFontSize">12.5</x:Double>
+                        <!-- Tabs need air between them; the default Pivot spacing is for a page title. -->
+                        <Thickness x:Key="PivotHeaderItemMargin">0,0,20,0</Thickness>
+                        <Thickness x:Key="PivotItemMargin">12,0,12,12</Thickness>
+                    </Pivot.Resources>
 
-                                <Button
-                                    Grid.Row="2"
-                                    Margin="0,6,0,0"
-                                    HorizontalAlignment="Left"
-                                    AutomationProperties.Name="Add a query parameter"
-                                    Command="{x:Bind ViewModel.AddQueryCommand}"
-                                    Content="Add parameter"
-                                    Style="{StaticResource DevToolsInlineButtonStyle}" />
-                            </Grid>
-                        </PivotItem>
-
-                        <PivotItem>
-                            <PivotItem.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="Auth" />
-                                    <Ellipse
-                                        Width="5"
-                                        Height="5"
-                                        VerticalAlignment="Center"
-                                        Fill="{ThemeResource DevToolsPassForegroundBrush}"
-                                        Visibility="{x:Bind ViewModel.HasAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-                            </PivotItem.Header>
-
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <StackPanel Spacing="10">
-                                    <tkp:WrapPanel HorizontalSpacing="16" VerticalSpacing="10">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Scheme" />
-                                            <ComboBox
-                                                MinWidth="200"
-                                                AutomationProperties.Name="Authentication scheme"
-                                                SelectedIndex="{x:Bind ViewModel.AuthKindIndex, Mode=TwoWay}"
-                                                Style="{StaticResource DevToolsInlineComboStyle}">
-                                                <ComboBoxItem Content="None" />
-                                                <ComboBoxItem Content="Basic" />
-                                                <ComboBoxItem Content="Bearer token" />
-                                                <ComboBoxItem Content="API key" />
-                                                <ComboBoxItem Content="OAuth 2.0 client credentials" />
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsBasicAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="User name" />
-                                            <TextBox MinWidth="170" AutomationProperties.Name="User name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.AuthUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsApiKeyAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Key name" />
-                                            <TextBox MinWidth="170" AutomationProperties.Name="API key name" PlaceholderText="X-Api-Key" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.ApiKeyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsApiKeyAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Sent in" />
-                                            <ComboBox MinWidth="130" AutomationProperties.Name="Where the API key is sent" SelectedIndex="{x:Bind ViewModel.ApiKeyInIndex, Mode=TwoWay}" Style="{StaticResource DevToolsInlineComboStyle}">
-                                                <ComboBoxItem Content="Header" />
-                                                <ComboBoxItem Content="Query string" />
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Token URL" />
-                                            <TextBox MinWidth="240" AutomationProperties.Name="OAuth token URL" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.TokenUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Client id" />
-                                            <TextBox MinWidth="170" AutomationProperties.Name="OAuth client id" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.ClientId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Scope" />
-                                            <TextBox MinWidth="170" AutomationProperties.Name="OAuth scope" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.Scope, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.NeedsSecret, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="{x:Bind ViewModel.SecretLabel, Mode=OneWay}" />
-                                            <PasswordBox MinWidth="200" AutomationProperties.Name="Secret" Password="{x:Bind ViewModel.SecretValue, Mode=TwoWay}" />
-                                        </StackPanel>
-
-                                        <StackPanel VerticalAlignment="Bottom" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                            <Button
-                                                AutomationProperties.Name="Request an access token"
-                                                Command="{x:Bind ViewModel.GetTokenCommand}"
-                                                Content="Get token"
-                                                Style="{StaticResource DevToolsInlineButtonStyle}"
-                                                ToolTipService.ToolTip="Exchanges the client credentials for an access token and stores it in the credential vault." />
-                                        </StackPanel>
-                                    </tkp:WrapPanel>
-
-                                    <TextBlock
-                                        FontSize="12"
-                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                        Text="Secrets are kept in the Windows credential vault, never in the collection file. Exporting a collection leaves them out."
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </ScrollViewer>
-                        </PivotItem>
-
-                        <PivotItem>
-                            <PivotItem.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <TextBlock Text="Headers" />
-                                    <TextBlock
-                                        Foreground="{ThemeResource DevToolsPassForegroundBrush}"
-                                        Text="{x:Bind ViewModel.EnabledHeaderCount, Mode=OneWay}"
-                                        Visibility="{x:Bind ViewModel.HasHeaderCount, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-                            </PivotItem.Header>
-
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <Grid
-                                    Height="26"
-                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                                    BorderThickness="0,0,0,1"
-                                    ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="34" />
-                                        <ColumnDefinition Width="1.1*" />
-                                        <ColumnDefinition Width="1.4*" />
-                                        <ColumnDefinition Width="1.3*" />
-                                        <ColumnDefinition Width="32" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="KEY" />
-                                    <TextBlock Grid.Column="2" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="VALUE" />
-                                    <TextBlock Grid.Column="3" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="DESCRIPTION" />
-                                </Grid>
-
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{x:Bind ViewModel.Headers, Mode=OneWay}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="tools:EditableRow">
-                                                <Grid ColumnSpacing="8" Padding="0,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="1.1*" />
-                                                        <ColumnDefinition Width="1.4*" />
-                                                        <ColumnDefinition Width="1.3*" />
-                                                        <ColumnDefinition Width="32" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <CheckBox
-                                                        MinWidth="0"
-                                                        AutomationProperties.Name="Send this header"
-                                                        IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
-                                                    <TextBox Grid.Column="1" AutomationProperties.Name="Header name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="Accept" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <TextBox Grid.Column="2" AutomationProperties.Name="Header value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="application/json" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <TextBox Grid.Column="3" AutomationProperties.Name="What this header is for" PlaceholderText="description" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <Button
-                                                        Grid.Column="4"
-                                                        Width="26"
-                                                        Height="26"
-                                                        MinWidth="26"
-                                                        Padding="0"
-                                                        AutomationProperties.Name="Delete this header"
-                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveHeaderCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                                        ToolTipService.ToolTip="Delete">
-                                                        <FontIcon FontSize="13" Glyph="&#xE74D;" />
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-
-                                <Button
-                                    Grid.Row="2"
-                                    Margin="0,6,0,0"
-                                    HorizontalAlignment="Left"
-                                    AutomationProperties.Name="Add a header"
-                                    Command="{x:Bind ViewModel.AddHeaderCommand}"
-                                    Content="Add header"
-                                    Style="{StaticResource DevToolsInlineButtonStyle}" />
-                            </Grid>
-                        </PivotItem>
-
-                        <PivotItem>
-                            <PivotItem.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="Body" />
-                                    <Ellipse
-                                        Width="5"
-                                        Height="5"
-                                        VerticalAlignment="Center"
-                                        Fill="{ThemeResource DevToolsPassForegroundBrush}"
-                                        Visibility="{x:Bind ViewModel.HasBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-                            </PivotItem.Header>
-
-                            <Grid RowSpacing="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <ComboBox
-                                        MinWidth="180"
-                                        AutomationProperties.Name="Body type"
-                                        SelectedIndex="{x:Bind ViewModel.BodyKindIndex, Mode=TwoWay}"
-                                        Style="{StaticResource DevToolsInlineComboStyle}">
-                                        <ComboBoxItem Content="No body" />
-                                        <ComboBoxItem Content="JSON" />
-                                        <ComboBoxItem Content="Raw text" />
-                                        <ComboBoxItem Content="Form (urlencoded)" />
-                                        <ComboBoxItem Content="Multipart form-data" />
-                                        <ComboBoxItem Content="Binary file" />
-                                    </ComboBox>
-
-                                    <Button
-                                        AutomationProperties.Name="Add a form field"
-                                        Command="{x:Bind ViewModel.AddFormFieldCommand}"
-                                        Content="Add field"
-                                        Style="{StaticResource DevToolsInlineButtonStyle}"
-                                        Visibility="{x:Bind ViewModel.IsFormBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                    <Button
-                                        AutomationProperties.Name="Add a multipart part"
-                                        Command="{x:Bind ViewModel.AddPartCommand}"
-                                        Content="Add part"
-                                        Style="{StaticResource DevToolsInlineButtonStyle}"
-                                        Visibility="{x:Bind ViewModel.IsMultipartBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                    <Button
-                                        AutomationProperties.Name="Choose the file to send"
-                                        Command="{x:Bind ViewModel.ChooseBinaryFileCommand}"
-                                        Content="Choose file…"
-                                        Style="{StaticResource DevToolsInlineButtonStyle}"
-                                        Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                    <TextBox
-                                        MinWidth="200"
-                                        AutomationProperties.Name="Content type for the binary body"
-                                        PlaceholderText="application/octet-stream"
-                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
-                                        Text="{x:Bind ViewModel.BinaryContentType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                </StackPanel>
-
-                                <TextBox
-                                    Grid.Row="1"
-                                    AcceptsReturn="True"
-                                    AutomationProperties.Name="Request body"
-                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
-                                    PlaceholderText="The request body. JSON is validated as you type."
-                                    ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                    Text="{x:Bind ViewModel.BodyText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    TextWrapping="Wrap"
-                                    Visibility="{x:Bind ViewModel.IsTextBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                <ScrollViewer
-                                    Grid.Row="1"
-                                    VerticalScrollBarVisibility="Auto"
-                                    Visibility="{x:Bind ViewModel.IsFormBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <ItemsControl ItemsSource="{x:Bind ViewModel.FormFields, Mode=OneWay}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="tools:EditableRow">
-                                                <Grid ColumnSpacing="8" Padding="0,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="2*" />
-                                                        <ColumnDefinition Width="32" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <CheckBox MinWidth="0" AutomationProperties.Name="Send this field" IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
-                                                    <TextBox Grid.Column="1" AutomationProperties.Name="Field name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <TextBox Grid.Column="2" AutomationProperties.Name="Field value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="value" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    <Button
-                                                        Grid.Column="3"
-                                                        Width="26"
-                                                        Height="26"
-                                                        MinWidth="26"
-                                                        Padding="0"
-                                                        AutomationProperties.Name="Delete this field"
-                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveFormFieldCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                                        ToolTipService.ToolTip="Delete">
-                                                        <FontIcon FontSize="13" Glyph="&#xE74D;" />
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-
-                                <ScrollViewer
-                                    Grid.Row="1"
-                                    VerticalScrollBarVisibility="Auto"
-                                    Visibility="{x:Bind ViewModel.IsMultipartBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <ItemsControl ItemsSource="{x:Bind ViewModel.Parts, Mode=OneWay}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="tools:MultipartRow">
-                                                <Grid ColumnSpacing="8" Padding="0,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="34" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="2*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="32" />
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <CheckBox MinWidth="0" AutomationProperties.Name="Send this part" IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
-
-                                                    <TextBox
-                                                        Grid.Column="1"
-                                                        AutomationProperties.Name="Part name"
-                                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
-                                                        PlaceholderText="name"
-                                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
-                                                        Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                                                    <!-- A part is either a value or a file, never both. -->
-                                                    <TextBox
-                                                        Grid.Column="2"
-                                                        AutomationProperties.Name="Part value"
-                                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
-                                                        PlaceholderText="value"
-                                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
-                                                        Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                        Visibility="{x:Bind IsFile, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
-
-                                                    <TextBlock
-                                                        Grid.Column="2"
-                                                        VerticalAlignment="Center"
-                                                        Text="{x:Bind FileLabel, Mode=OneWay}"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        Visibility="{x:Bind IsFile, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                                    <Button
-                                                        Grid.Column="3"
-                                                        AutomationProperties.Name="Attach a file to this part"
-                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.ChoosePartFileCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Content="File…"
-                                                        Style="{StaticResource DevToolsInlineButtonStyle}" />
-
-                                                    <Button
-                                                        Grid.Column="4"
-                                                        Width="26"
-                                                        Height="26"
-                                                        MinWidth="26"
-                                                        Padding="0"
-                                                        AutomationProperties.Name="Delete this part"
-                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.RemovePartCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource DevToolsToolbarButtonStyle}"
-                                                        ToolTipService.ToolTip="Delete">
-                                                        <FontIcon FontSize="13" Glyph="&#xE74D;" />
-                                                    </Button>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-
-                                <StackPanel
-                                    Grid.Row="1"
-                                    VerticalAlignment="Top"
-                                    Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <TextBlock
-                                        Style="{StaticResource DevToolsCaptionStyle}"
-                                        Text="The whole file is sent as the request body." />
-                                    <TextBlock
-                                        Margin="0,4,0,0"
-                                        Text="{x:Bind ViewModel.BinaryFilePath, Mode=OneWay}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-
+                    <PivotItem>
+                        <PivotItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Params" />
                                 <TextBlock
-                                    Grid.Row="2"
-                                    Style="{StaticResource DevToolsCaptionStyle}"
-                                    Text="{x:Bind ViewModel.BodyValidationText, Mode=OneWay}"
-                                    TextWrapping="Wrap" />
-                            </Grid>
-                        </PivotItem>
-
-                        <PivotItem Header="Settings">
-                            <tkp:WrapPanel HorizontalSpacing="16" VerticalSpacing="10">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Name" />
-                                    <TextBox MinWidth="220" AutomationProperties.Name="Request name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.RequestName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-
-                                <StackPanel Spacing="4">
-                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Timeout (s)" />
-                                    <NumberBox MinWidth="110" AutomationProperties.Name="Timeout in seconds" Maximum="600" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.TimeoutSeconds, Mode=TwoWay}" />
-                                </StackPanel>
-
-                                <StackPanel VerticalAlignment="Bottom" Spacing="6">
-                                    <CheckBox AutomationProperties.Name="Follow redirects" Content="Follow redirects" IsChecked="{x:Bind ViewModel.FollowRedirects, Mode=TwoWay}" />
-                                    <CheckBox AutomationProperties.Name="Ignore TLS certificate errors for this request" Content="Ignore certificate errors" IsChecked="{x:Bind ViewModel.IgnoreCertificateErrors, Mode=TwoWay}" />
-                                </StackPanel>
-                            </tkp:WrapPanel>
-                        </PivotItem>
-
-                    </Pivot>
-                </Border>
-
-                <!--
-                    Response, shaped like the request above it: a strip of facts, then a left nav
-                    of sections. Mirroring the two halves means the eye learns one layout, and
-                    Body / Headers / Cookies / Timings read the same going out and coming back.
-                -->
-                <Border Grid.Row="2" Style="{StaticResource DevToolsPreviewCardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Grid
-                            Height="36"
-                            Padding="12,0"
-                            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                            BorderThickness="0,0,0,1">
-                            <StackPanel
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal"
-                                Spacing="14">
-                                <TextBlock
-                                    FontSize="12.5"
-                                    FontWeight="SemiBold"
-                                    Text="Response" />
-                                <TextBlock
-                                    FontSize="12"
-                                    FontWeight="SemiBold"
                                     Foreground="{ThemeResource DevToolsPassForegroundBrush}"
-                                    Text="{x:Bind ViewModel.ResponseStatusText, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.ResponseIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-                                <TextBlock
-                                    FontSize="12"
-                                    FontWeight="SemiBold"
-                                    Foreground="{ThemeResource DevToolsWarnForegroundBrush}"
-                                    Text="{x:Bind ViewModel.ResponseStatusText, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.ResponseIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
-                                <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.ResponseTimeText, Mode=OneWay}" />
-                                <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.ResponseSizeText, Mode=OneWay}" />
+                                    Text="{x:Bind ViewModel.EnabledQueryCount, Mode=OneWay}"
+                                    Visibility="{x:Bind ViewModel.HasQueryCount, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                             </StackPanel>
+                        </PivotItem.Header>
 
-                            <StackPanel
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal"
-                                Spacing="6">
-                                <Button Height="26" Padding="10,0" AutomationProperties.Name="Copy the response" Command="{x:Bind ViewModel.CopyResponseCommand}" Content="Copy" FontSize="12" />
-                                <Button Height="26" Padding="10,0" AutomationProperties.Name="Open the response in the JSON formatter" Command="{x:Bind ViewModel.FormatResponseCommand}" Content="Format" FontSize="12" />
-                                <Button Height="26" Padding="10,0" AutomationProperties.Name="Generate a C# model from the response" Command="{x:Bind ViewModel.GenerateModelCommand}" Content="Generate model" FontSize="12" />
-                                <Button Height="26" Padding="10,0" AutomationProperties.Name="Compare this response with the previous one" Command="{x:Bind ViewModel.CompareWithPreviousCommand}" Content="Compare" FontSize="12" />
-                            </StackPanel>
-                        </Grid>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="138" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <ListView
-                                Padding="6,8"
-                                AutomationProperties.Name="Response sections"
+                            <Grid
+                                Height="26"
                                 BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                                BorderThickness="0,0,1,0"
-                                SelectedIndex="{x:Bind ViewModel.ResponseViewIndex, Mode=TwoWay}"
-                                SelectionMode="Single">
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="MinHeight" Value="28" />
-                                        <Setter Property="Padding" Value="9,0" />
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                    </Style>
-                                </ListView.ItemContainerStyle>
+                                BorderThickness="0,0,0,1"
+                                ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="1.1*" />
+                                    <ColumnDefinition Width="1.4*" />
+                                    <ColumnDefinition Width="1.3*" />
+                                    <ColumnDefinition Width="32" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="1" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="KEY" />
+                                <TextBlock Grid.Column="2" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="VALUE" />
+                                <TextBlock Grid.Column="3" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="DESCRIPTION" />
+                            </Grid>
 
-                                <ListViewItem>
-                                    <TextBlock FontSize="12" Text="Body" />
-                                </ListViewItem>
-                                <ListViewItem>
-                                    <Grid>
-                                        <TextBlock FontSize="12" Text="Headers" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontSize="12"
-                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                            Text="{x:Bind ViewModel.ResponseHeaderCount, Mode=OneWay}" />
-                                    </Grid>
-                                </ListViewItem>
-                                <ListViewItem>
-                                    <Grid>
-                                        <TextBlock FontSize="12" Text="Cookies" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontSize="12"
-                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                            Text="{x:Bind ViewModel.ResponseCookieCount, Mode=OneWay}" />
-                                    </Grid>
-                                </ListViewItem>
-                                <ListViewItem>
-                                    <TextBlock FontSize="12" Text="Timings" />
-                                </ListViewItem>
-                                <ListViewItem>
-                                    <Grid>
-                                        <TextBlock FontSize="12" Text="History" />
-                                        <TextBlock
-                                            HorizontalAlignment="Right"
-                                            FontSize="12"
-                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                            Text="{x:Bind ViewModel.HistoryCount, Mode=OneWay}" />
-                                    </Grid>
-                                </ListViewItem>
-                            </ListView>
-
-                            <Grid Grid.Column="1">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <!-- Pretty / Raw / Preview, only where they mean something. -->
-                                <Grid
-                                    Height="30"
-                                    Padding="10,0"
-                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
-                                    BorderThickness="0,0,0,1"
-                                    Visibility="{x:Bind ViewModel.IsBodyView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <tkp:Segmented
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Left"
-                                        AutomationProperties.Name="How to show the body"
-                                        SelectedIndex="{x:Bind ViewModel.BodyPresentationIndex, Mode=TwoWay}">
-                                        <tkp:SegmentedItem Content="Pretty" />
-                                        <tkp:SegmentedItem Content="Raw" />
-                                        <tkp:SegmentedItem Content="Preview" />
-                                    </tkp:Segmented>
-
-                                    <TextBlock
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        FontSize="11.5"
-                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                        Text="{x:Bind ViewModel.ResponseMediaType, Mode=OneWay}" />
-                                </Grid>
-
-                                <controls:CodeEditor
-                                    Grid.Row="1"
-                                    CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
-                                    Header="Body"
-                                    IsReadOnly="True"
-                                    PlaceholderText="Send the request to see the response here."
-                                    ShowFooter="Collapsed"
-                                    ShowHeader="Collapsed"
-                                    Syntax="{x:Bind ViewModel.ResponseSyntax, Mode=OneWay}"
-                                    Text="{x:Bind ViewModel.ResponseText, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsPrettyBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                <controls:CodeEditor
-                                    Grid.Row="1"
-                                    CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
-                                    Header="Body"
-                                    IsReadOnly="True"
-                                    PlaceholderText="Send the request to see the response here."
-                                    ShowFooter="Collapsed"
-                                    ShowHeader="Collapsed"
-                                    Text="{x:Bind ViewModel.RawResponseText, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsRawBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
-
-                                <!--
-                                    Preview. An image body is shown as the image; anything else
-                                    is shown as text. Deliberately not a web view: rendering an
-                                    arbitrary API response in a browser control would run that
-                                    response's script inside this app, which is a poor trade for
-                                    a nicer look at some HTML.
-                                -->
-                                <Grid
-                                    Grid.Row="1"
-                                    Visibility="{x:Bind ViewModel.IsPreviewBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <controls:CheckerboardPanel Visibility="{x:Bind ViewModel.IsImageResponse, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                        <Image
-                                            x:Name="ImagePreview"
-                                            Margin="16"
-                                            AutomationProperties.Name="Response image"
-                                            Stretch="Uniform" />
-                                    </controls:CheckerboardPanel>
-
-                                    <TextBlock
-                                        Margin="16"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Text="{x:Bind ViewModel.PreviewNotice, Mode=OneWay}"
-                                        TextAlignment="Center"
-                                        TextWrapping="Wrap"
-                                        Visibility="{x:Bind ViewModel.IsImageResponse, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
-                                </Grid>
-
-                                <ListView
-                                    Grid.Row="1"
-                                    Grid.RowSpan="2"
-                                    AutomationProperties.Name="Response headers"
-                                    ItemsSource="{x:Bind ViewModel.ResponseHeaders, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsHeadersView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="http:KeyValueItem">
-                                            <Grid ColumnSpacing="12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="2*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Name}" />
-                                                <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Value}" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-
-                                <ListView
-                                    Grid.Row="1"
-                                    Grid.RowSpan="2"
-                                    AutomationProperties.Name="Response cookies"
-                                    ItemsSource="{x:Bind ViewModel.ResponseCookies, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsCookiesView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="http:CookieItem">
-                                            <Grid ColumnSpacing="12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="2*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Name}" />
-                                                <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Value}" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-
-                                <ItemsControl
-                                    Grid.Row="1"
-                                    Grid.RowSpan="2"
-                                    Padding="12"
-                                    AutomationProperties.Name="Response timings"
-                                    ItemsSource="{x:Bind ViewModel.ResponseTiming, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsTimingView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.Query, Mode=OneWay}">
                                     <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="tools:SegmentRow">
-                                            <Grid ColumnSpacing="12" Padding="0,4">
+                                        <DataTemplate x:DataType="tools:EditableRow">
+                                            <Grid ColumnSpacing="8" Padding="0,3">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="1.1*" />
+                                                    <ColumnDefinition Width="1.4*" />
+                                                    <ColumnDefinition Width="1.3*" />
+                                                    <ColumnDefinition Width="32" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock FontSize="12" Text="{x:Bind Name}" />
-                                                <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Mean}" />
+                                                <CheckBox
+                                                    MinWidth="0" VerticalAlignment="Center"
+                                                    AutomationProperties.Name="Send this parameter"
+                                                    IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
+                                                <TextBox Grid.Column="1" AutomationProperties.Name="Parameter name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Grid.Column="2" AutomationProperties.Name="Parameter value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="value" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Grid.Column="3" AutomationProperties.Name="What this parameter is for" PlaceholderText="description" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="26"
+                                                    Height="26"
+                                                    MinWidth="26"
+                                                    Padding="0"
+                                                    AutomationProperties.Name="Delete this parameter"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveQueryCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete">
+                                                    <FontIcon FontSize="13" Glyph="&#xE74D;" />
+                                                </Button>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                            </ScrollViewer>
 
-                                <ListView
-                                    Grid.Row="1"
-                                    Grid.RowSpan="2"
-                                    AutomationProperties.Name="Earlier responses"
-                                    ItemsSource="{x:Bind ViewModel.History, Mode=OneWay}"
-                                    Visibility="{x:Bind ViewModel.IsHistoryView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="http:ResponseRecord">
-                                            <Grid ColumnSpacing="12">
+                            <Button
+                                Grid.Row="2"
+                                Margin="0,6,0,0"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.Name="Add a query parameter"
+                                Command="{x:Bind ViewModel.AddQueryCommand}"
+                                Content="Add parameter"
+                                Style="{StaticResource DevToolsInlineButtonStyle}" />
+                        </Grid>
+                    </PivotItem>
+
+                    <PivotItem>
+                        <PivotItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Auth" />
+                                <Ellipse
+                                    Width="5"
+                                    Height="5"
+                                    VerticalAlignment="Center"
+                                    Fill="{ThemeResource DevToolsPassForegroundBrush}"
+                                    Visibility="{x:Bind ViewModel.HasAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                        </PivotItem.Header>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="10">
+                                <tkp:WrapPanel HorizontalSpacing="16" VerticalSpacing="10">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Scheme" />
+                                        <ComboBox
+                                            MinWidth="200"
+                                            AutomationProperties.Name="Authentication scheme"
+                                            SelectedIndex="{x:Bind ViewModel.AuthKindIndex, Mode=TwoWay}"
+                                            Style="{StaticResource DevToolsInlineComboStyle}">
+                                            <ComboBoxItem Content="None" />
+                                            <ComboBoxItem Content="Basic" />
+                                            <ComboBoxItem Content="Bearer token" />
+                                            <ComboBoxItem Content="API key" />
+                                            <ComboBoxItem Content="OAuth 2.0 client credentials" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsBasicAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="User name" />
+                                        <TextBox MinWidth="170" AutomationProperties.Name="User name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.AuthUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsApiKeyAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Key name" />
+                                        <TextBox MinWidth="170" AutomationProperties.Name="API key name" PlaceholderText="X-Api-Key" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.ApiKeyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsApiKeyAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Sent in" />
+                                        <ComboBox MinWidth="130" AutomationProperties.Name="Where the API key is sent" SelectedIndex="{x:Bind ViewModel.ApiKeyInIndex, Mode=TwoWay}" Style="{StaticResource DevToolsInlineComboStyle}">
+                                            <ComboBoxItem Content="Header" />
+                                            <ComboBoxItem Content="Query string" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Token URL" />
+                                        <TextBox MinWidth="240" AutomationProperties.Name="OAuth token URL" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.TokenUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Client id" />
+                                        <TextBox MinWidth="170" AutomationProperties.Name="OAuth client id" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.ClientId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Scope" />
+                                        <TextBox MinWidth="170" AutomationProperties.Name="OAuth scope" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.Scope, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.NeedsSecret, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="{x:Bind ViewModel.SecretLabel, Mode=OneWay}" />
+                                        <PasswordBox MinWidth="200" AutomationProperties.Name="Secret" Password="{x:Bind ViewModel.SecretValue, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <StackPanel VerticalAlignment="Bottom" Visibility="{x:Bind ViewModel.IsOAuthAuth, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <Button
+                                            AutomationProperties.Name="Request an access token"
+                                            Command="{x:Bind ViewModel.GetTokenCommand}"
+                                            Content="Get token"
+                                            Style="{StaticResource DevToolsInlineButtonStyle}"
+                                            ToolTipService.ToolTip="Exchanges the client credentials for an access token and stores it in the credential vault." />
+                                    </StackPanel>
+                                </tkp:WrapPanel>
+
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Text="Secrets are kept in the Windows credential vault, never in the collection file. Exporting a collection leaves them out."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </PivotItem>
+
+                    <PivotItem>
+                        <PivotItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="Headers" />
+                                <TextBlock
+                                    Foreground="{ThemeResource DevToolsPassForegroundBrush}"
+                                    Text="{x:Bind ViewModel.EnabledHeaderCount, Mode=OneWay}"
+                                    Visibility="{x:Bind ViewModel.HasHeaderCount, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                        </PivotItem.Header>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid
+                                Height="26"
+                                BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="1.1*" />
+                                    <ColumnDefinition Width="1.4*" />
+                                    <ColumnDefinition Width="1.3*" />
+                                    <ColumnDefinition Width="32" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="1" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="KEY" />
+                                <TextBlock Grid.Column="2" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="VALUE" />
+                                <TextBlock Grid.Column="3" Style="{StaticResource DevToolsColumnHeaderStyle}" Text="DESCRIPTION" />
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.Headers, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="tools:EditableRow">
+                                            <Grid ColumnSpacing="8" Padding="0,3">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="1.1*" />
+                                                    <ColumnDefinition Width="1.4*" />
+                                                    <ColumnDefinition Width="1.3*" />
+                                                    <ColumnDefinition Width="32" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind StatusLine}" />
-                                                <TextBlock Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind StartedAt}" />
+                                                <CheckBox
+                                                    MinWidth="0" VerticalAlignment="Center"
+                                                    AutomationProperties.Name="Send this header"
+                                                    IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
+                                                <TextBox Grid.Column="1" AutomationProperties.Name="Header name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="Accept" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Grid.Column="2" AutomationProperties.Name="Header value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="application/json" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Grid.Column="3" AutomationProperties.Name="What this header is for" PlaceholderText="description" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="26"
+                                                    Height="26"
+                                                    MinWidth="26"
+                                                    Padding="0"
+                                                    AutomationProperties.Name="Delete this header"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveHeaderCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete">
+                                                    <FontIcon FontSize="13" Glyph="&#xE74D;" />
+                                                </Button>
                                             </Grid>
                                         </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Button
+                                Grid.Row="2"
+                                Margin="0,6,0,0"
+                                HorizontalAlignment="Left"
+                                AutomationProperties.Name="Add a header"
+                                Command="{x:Bind ViewModel.AddHeaderCommand}"
+                                Content="Add header"
+                                Style="{StaticResource DevToolsInlineButtonStyle}" />
+                        </Grid>
+                    </PivotItem>
+
+                    <PivotItem>
+                        <PivotItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Body" />
+                                <Ellipse
+                                    Width="5"
+                                    Height="5"
+                                    VerticalAlignment="Center"
+                                    Fill="{ThemeResource DevToolsPassForegroundBrush}"
+                                    Visibility="{x:Bind ViewModel.HasBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                        </PivotItem.Header>
+
+                        <Grid RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ComboBox
+                                    MinWidth="180"
+                                    AutomationProperties.Name="Body type"
+                                    SelectedIndex="{x:Bind ViewModel.BodyKindIndex, Mode=TwoWay}"
+                                    Style="{StaticResource DevToolsInlineComboStyle}">
+                                    <ComboBoxItem Content="No body" />
+                                    <ComboBoxItem Content="JSON" />
+                                    <ComboBoxItem Content="Raw text" />
+                                    <ComboBoxItem Content="Form (urlencoded)" />
+                                    <ComboBoxItem Content="Multipart form-data" />
+                                    <ComboBoxItem Content="Binary file" />
+                                </ComboBox>
+
+                                <Button
+                                    AutomationProperties.Name="Add a form field"
+                                    Command="{x:Bind ViewModel.AddFormFieldCommand}"
+                                    Content="Add field"
+                                    Style="{StaticResource DevToolsInlineButtonStyle}"
+                                    Visibility="{x:Bind ViewModel.IsFormBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                                <Button
+                                    AutomationProperties.Name="Add a multipart part"
+                                    Command="{x:Bind ViewModel.AddPartCommand}"
+                                    Content="Add part"
+                                    Style="{StaticResource DevToolsInlineButtonStyle}"
+                                    Visibility="{x:Bind ViewModel.IsMultipartBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                                <Button
+                                    AutomationProperties.Name="Choose the file to send"
+                                    Command="{x:Bind ViewModel.ChooseBinaryFileCommand}"
+                                    Content="Choose file…"
+                                    Style="{StaticResource DevToolsInlineButtonStyle}"
+                                    Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                                <TextBox
+                                    MinWidth="200"
+                                    AutomationProperties.Name="Content type for the binary body"
+                                    PlaceholderText="application/octet-stream"
+                                    Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                    Text="{x:Bind ViewModel.BinaryContentType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+
+                            <TextBox
+                                Grid.Row="1"
+                                AcceptsReturn="True"
+                                AutomationProperties.Name="Request body"
+                                FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                PlaceholderText="The request body. JSON is validated as you type."
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                Text="{x:Bind ViewModel.BodyText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind ViewModel.IsTextBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                            <ScrollViewer
+                                Grid.Row="1"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="{x:Bind ViewModel.IsFormBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.FormFields, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="tools:EditableRow">
+                                            <Grid ColumnSpacing="8" Padding="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="32" />
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Send this field" IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
+                                                <TextBox Grid.Column="1" AutomationProperties.Name="Field name" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <TextBox Grid.Column="2" AutomationProperties.Name="Field value" FontFamily="{StaticResource DevToolsMonospaceFont}" PlaceholderText="value" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Width="26"
+                                                    Height="26"
+                                                    MinWidth="26"
+                                                    Padding="0"
+                                                    AutomationProperties.Name="Delete this field"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.RemoveFormFieldCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete">
+                                                    <FontIcon FontSize="13" Glyph="&#xE74D;" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <ScrollViewer
+                                Grid.Row="1"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="{x:Bind ViewModel.IsMultipartBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.Parts, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="tools:MultipartRow">
+                                            <Grid ColumnSpacing="8" Padding="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="32" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Send this part" IsChecked="{x:Bind IsEnabled, Mode=TwoWay}" />
+
+                                                <TextBox
+                                                    Grid.Column="1"
+                                                    AutomationProperties.Name="Part name"
+                                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                                    PlaceholderText="name"
+                                                    Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                                    Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                                <!-- A part is either a value or a file, never both. -->
+                                                <TextBox
+                                                    Grid.Column="2"
+                                                    AutomationProperties.Name="Part value"
+                                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                                    PlaceholderText="value"
+                                                    Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                                    Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    Visibility="{x:Bind IsFile, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
+
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    Text="{x:Bind FileLabel, Mode=OneWay}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    Visibility="{x:Bind IsFile, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                                                <Button
+                                                    Grid.Column="3"
+                                                    AutomationProperties.Name="Attach a file to this part"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.ChoosePartFileCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="File…"
+                                                    Style="{StaticResource DevToolsInlineButtonStyle}" />
+
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Width="26"
+                                                    Height="26"
+                                                    MinWidth="26"
+                                                    Padding="0"
+                                                    AutomationProperties.Name="Delete this part"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.RemovePartCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                                    ToolTipService.ToolTip="Delete">
+                                                    <FontIcon FontSize="13" Glyph="&#xE74D;" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <StackPanel
+                                Grid.Row="1"
+                                VerticalAlignment="Top"
+                                Visibility="{x:Bind ViewModel.IsBinaryBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock
+                                    Style="{StaticResource DevToolsCaptionStyle}"
+                                    Text="The whole file is sent as the request body." />
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    Text="{x:Bind ViewModel.BinaryFilePath, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <TextBlock
+                                Grid.Row="2"
+                                Style="{StaticResource DevToolsCaptionStyle}"
+                                Text="{x:Bind ViewModel.BodyValidationText, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </PivotItem>
+
+                    <PivotItem Header="Settings">
+                        <tkp:WrapPanel HorizontalSpacing="16" VerticalSpacing="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Name" />
+                                <TextBox MinWidth="220" AutomationProperties.Name="Request name" Style="{StaticResource DevToolsInlineTextBoxStyle}" Text="{x:Bind ViewModel.RequestName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Timeout (s)" />
+                                <NumberBox MinWidth="110" AutomationProperties.Name="Timeout in seconds" Maximum="600" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.TimeoutSeconds, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel VerticalAlignment="Bottom" Spacing="6">
+                                <CheckBox AutomationProperties.Name="Follow redirects" Content="Follow redirects" IsChecked="{x:Bind ViewModel.FollowRedirects, Mode=TwoWay}" />
+                                <CheckBox AutomationProperties.Name="Ignore TLS certificate errors for this request" Content="Ignore certificate errors" IsChecked="{x:Bind ViewModel.IgnoreCertificateErrors, Mode=TwoWay}" />
+                            </StackPanel>
+                        </tkp:WrapPanel>
+                    </PivotItem>
+
+                </Pivot>
+            </Border>
+
+            <!--
+                Response, shaped like the request above it: a strip of facts, then a left nav
+                of sections. Mirroring the two halves means the eye learns one layout, and
+                Body / Headers / Cookies / Timings read the same going out and coming back.
+            -->
+            <Border Grid.Row="2" Style="{StaticResource DevToolsPreviewCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--
+                        Facts on the left, actions on the right, each in a column of its own: in
+                        one shared cell the two ran into each other as soon as the window narrowed.
+                    -->
+                    <Grid
+                        MinHeight="36"
+                        Padding="12,4"
+                        BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="14">
+                            <TextBlock
+                                FontSize="12.5"
+                                FontWeight="SemiBold"
+                                Text="Response" />
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource DevToolsPassForegroundBrush}"
+                                Text="{x:Bind ViewModel.ResponseStatusText, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.ResponseIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource DevToolsWarnForegroundBrush}"
+                                Text="{x:Bind ViewModel.ResponseStatusText, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.ResponseIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
+                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.ResponseTimeText, Mode=OneWay}" />
+                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.ResponseSizeText, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <Button Height="26" Padding="10,0" AutomationProperties.Name="Copy the response" Command="{x:Bind ViewModel.CopyResponseCommand}" Content="Copy" FontSize="12" />
+                            <Button Height="26" Padding="10,0" AutomationProperties.Name="Open the response in the JSON formatter" Command="{x:Bind ViewModel.FormatResponseCommand}" Content="Format" FontSize="12" />
+                            <Button Height="26" Padding="10,0" AutomationProperties.Name="Generate a C# model from the response" Command="{x:Bind ViewModel.GenerateModelCommand}" Content="Generate model" FontSize="12" />
+                            <Button Height="26" Padding="10,0" AutomationProperties.Name="Compare this response with the previous one" Command="{x:Bind ViewModel.CompareWithPreviousCommand}" Content="Compare" FontSize="12" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="138" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ListView
+                            Padding="6,8"
+                            AutomationProperties.Name="Response sections"
+                            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                            BorderThickness="0,0,1,0"
+                            SelectedIndex="{x:Bind ViewModel.ResponseViewIndex, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="MinHeight" Value="28" />
+                                    <Setter Property="Padding" Value="9,0" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+
+                            <ListViewItem>
+                                <TextBlock FontSize="12" Text="Body" />
+                            </ListViewItem>
+                            <ListViewItem>
+                                <Grid>
+                                    <TextBlock FontSize="12" Text="Headers" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Text="{x:Bind ViewModel.ResponseHeaderCount, Mode=OneWay}" />
+                                </Grid>
+                            </ListViewItem>
+                            <ListViewItem>
+                                <Grid>
+                                    <TextBlock FontSize="12" Text="Cookies" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Text="{x:Bind ViewModel.ResponseCookieCount, Mode=OneWay}" />
+                                </Grid>
+                            </ListViewItem>
+                            <ListViewItem>
+                                <TextBlock FontSize="12" Text="Timings" />
+                            </ListViewItem>
+                            <ListViewItem>
+                                <Grid>
+                                    <TextBlock FontSize="12" Text="History" />
+                                    <TextBlock
+                                        HorizontalAlignment="Right"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Text="{x:Bind ViewModel.HistoryCount, Mode=OneWay}" />
+                                </Grid>
+                            </ListViewItem>
+                        </ListView>
+
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Pretty / Raw / Preview, only where they mean something. -->
+                            <!-- Sized by its content: a fixed 30 px clipped the segmented control. -->
+                            <Grid
+                                Padding="10,4"
+                                BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                                BorderThickness="0,0,0,1"
+                                Visibility="{x:Bind ViewModel.IsBodyView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <tkp:Segmented
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="How to show the body"
+                                    SelectedIndex="{x:Bind ViewModel.BodyPresentationIndex, Mode=TwoWay}">
+                                    <tkp:SegmentedItem Content="Pretty" />
+                                    <tkp:SegmentedItem Content="Raw" />
+                                    <tkp:SegmentedItem Content="Preview" />
+                                </tkp:Segmented>
+
+                                <TextBlock
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Text="{x:Bind ViewModel.ResponseMediaType, Mode=OneWay}" />
                             </Grid>
+
+                            <controls:CodeEditor
+                                Grid.Row="1"
+                                CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
+                                Header="Body"
+                                IsReadOnly="True"
+                                PlaceholderText="Send the request to see the response here."
+                                ShowFooter="Collapsed"
+                                ShowHeader="Collapsed"
+                                Syntax="{x:Bind ViewModel.ResponseSyntax, Mode=OneWay}"
+                                Text="{x:Bind ViewModel.ResponseText, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsPrettyBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                            <controls:CodeEditor
+                                Grid.Row="1"
+                                CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
+                                Header="Body"
+                                IsReadOnly="True"
+                                PlaceholderText="Send the request to see the response here."
+                                ShowFooter="Collapsed"
+                                ShowHeader="Collapsed"
+                                Text="{x:Bind ViewModel.RawResponseText, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsRawBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                            <!--
+                                Preview. An image body is shown as the image; anything else
+                                is shown as text. Deliberately not a web view: rendering an
+                                arbitrary API response in a browser control would run that
+                                response's script inside this app, which is a poor trade for
+                                a nicer look at some HTML.
+                            -->
+                            <Grid
+                                Grid.Row="1"
+                                Visibility="{x:Bind ViewModel.IsPreviewBody, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <controls:CheckerboardPanel Visibility="{x:Bind ViewModel.IsImageResponse, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                    <Image
+                                        x:Name="ImagePreview"
+                                        Margin="16"
+                                        AutomationProperties.Name="Response image"
+                                        Stretch="Uniform" />
+                                </controls:CheckerboardPanel>
+
+                                <TextBlock
+                                    Margin="16"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.PreviewNotice, Mode=OneWay}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    Visibility="{x:Bind ViewModel.IsImageResponse, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
+                            </Grid>
+
+                            <ListView
+                                Grid.Row="1"
+                                AutomationProperties.Name="Response headers"
+                                ItemsSource="{x:Bind ViewModel.ResponseHeaders, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsHeadersView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="http:KeyValueItem">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="2*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Name}" />
+                                            <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Value}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <ListView
+                                Grid.Row="1"
+                                AutomationProperties.Name="Response cookies"
+                                ItemsSource="{x:Bind ViewModel.ResponseCookies, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsCookiesView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="http:CookieItem">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="2*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Name}" />
+                                            <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Value}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <ItemsControl
+                                Grid.Row="1"
+                                Padding="12"
+                                AutomationProperties.Name="Response timings"
+                                ItemsSource="{x:Bind ViewModel.ResponseTiming, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsTimingView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="tools:SegmentRow">
+                                        <Grid ColumnSpacing="12" Padding="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock FontSize="12" Text="{x:Bind Name}" />
+                                            <TextBlock Grid.Column="1" FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind Mean}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <ListView
+                                Grid.Row="1"
+                                AutomationProperties.Name="Earlier responses"
+                                ItemsSource="{x:Bind ViewModel.History, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.IsHistoryView, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="http:ResponseRecord">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock FontFamily="{StaticResource DevToolsMonospaceFont}" FontSize="12" Text="{x:Bind StatusLine}" />
+                                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind StartedAt}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                         </Grid>
                     </Grid>
-                </Border>
-            </Grid>
+                </Grid>
+            </Border>
         </Grid>
     </controls:ToolShell>
 </views:ToolPageBase>

@@ -143,6 +143,13 @@ public sealed partial class ApiBuilderViewModel : JobToolViewModelBase
 
     public override string ToolId => "api-builder";
 
+    /// <summary>
+    /// Banners here report one-off events — sent, copied, token fetched — and the response
+    /// pane already holds the result, so they clear after five seconds instead of taking a
+    /// row from the editor until something replaces them.
+    /// </summary>
+    protected override TimeSpan? MessageAutoHideDelay => TimeSpan.FromSeconds(5);
+
     public override string RunLabel => "Send";
 
     // ---------------------------------------------------------------- request editor

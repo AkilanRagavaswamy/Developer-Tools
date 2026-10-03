@@ -178,11 +178,14 @@ public sealed class ToolCatalog
             ToolCategory.Json, "\uE8AB", typeof(JsonDiffPage),
             ["json", "diff", "compare", "difference", "patch", "rfc6902", "merge", "changes", "semantic"]),
 
-        // A generated source file, not the code brackets the formatter uses: two tools sharing
-        // one glyph are two tools you have to read the label to tell apart.
+        // "C#" drawn as a mark, because what the tool does is turn JSON into C#: a blank page
+        // glyph said nothing about that, and the icon font has no symbol that does.
         new("json-to-csharp", "JSON to C#", "Generate compilable C# models from a JSON sample",
-            ToolCategory.Json, "", typeof(JsonToCSharpPage),
-            ["json", "csharp", "c#", "class", "record", "poco", "dto", "model", "generate", "codegen", "deserialize"]),
+            ToolCategory.Json, "C#", typeof(JsonToCSharpPage),
+            ["json", "csharp", "c#", "class", "record", "poco", "dto", "model", "generate", "codegen", "deserialize"])
+        {
+            GlyphFont = new("Segoe UI Black,Segoe UI Variable Display,Segoe UI"),
+        },
 
         // ---------- Vector ----------
         new("svg-to-xaml", "SVG to XAML", "Convert SVG shapes, paths and gradients to WPF or WinUI XAML",

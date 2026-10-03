@@ -179,7 +179,7 @@ public sealed partial class ShellPage : UserControl
         var item = new NavigationViewItem
         {
             Content = tool.Name,
-            Icon = new FontIcon { Glyph = tool.Glyph },
+            Icon = new FontIcon { Glyph = tool.Glyph, FontFamily = tool.GlyphFont },
             Tag = tool.Id,
         };
 
