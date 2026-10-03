@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>DevTools.Http.Tests</RootNamespace>
+    <AssemblyName>DevTools.Http.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseVSTest>false</UseVSTest>
+    <!-- xUnit1051 asks every awaited call to take TestContext.Current.CancellationToken. These
+         tests run against a loopback server and finish in milliseconds, so threading that token
+         through every call site would add a great deal of noise and catch nothing. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DevTools.Http\DevTools.Http.csproj" />
+  </ItemGroup>
+
+</Project>

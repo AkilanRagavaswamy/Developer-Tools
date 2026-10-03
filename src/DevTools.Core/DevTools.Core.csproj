@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>DevTools.Core</RootNamespace>
+    <AssemblyName>DevTools.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- No PackageReference by design. DevTools.Core has no dependency it could reach a
+       network through, which is what makes NFR-05 checkable rather than asserted. -->
+
+</Project>

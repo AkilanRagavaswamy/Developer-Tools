@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.JsonDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:tools="using:DevTools.App.ViewModels.Tools"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+        OptionsWidth="760">
+
+        <!--
+            Options. Arrays first because it changes what "the same element" means; the six
+            comparison settings and the ignore list fold behind their own buttons, each carrying
+            a count, because a surprising diff is nearly always one of them left switched on.
+        -->
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <tkp:Segmented
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Array matching strategy"
+                        ToolTipService.ToolTip="Array matching strategy"
+                        SelectedIndex="{x:Bind ViewModel.StrategyIndex, Mode=TwoWay}">
+                        <tkp:SegmentedItem Content="Best match" />
+                        <tkp:SegmentedItem Content="Index" />
+                        <tkp:SegmentedItem Content="Key" />
+                    </tkp:Segmented>
+                </StackPanel>
+
+                <DropDownButton
+                    Grid.Column="1"
+                    AutomationProperties.Name="Comparison settings"
+                    Style="{StaticResource DevToolsInlineDropDownStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <TextBlock Text="Comparison" />
+                        <Border
+                            Style="{StaticResource DevToolsCountBadgeStyle}"
+                            Visibility="{x:Bind ViewModel.HasComparisonOptions, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock
+                                Style="{StaticResource DevToolsCountBadgeTextStyle}"
+                                Text="{x:Bind ViewModel.ComparisonCount, Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <DropDownButton.Flyout>
+                        <Flyout Placement="Bottom">
+                            <StackPanel Width="280" Spacing="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Key field" />
+                                    <TextBox
+                                        AutomationProperties.Name="Key field name"
+                                        IsEnabled="{x:Bind ViewModel.IsKeyFieldEnabled, Mode=OneWay}"
+                                        PlaceholderText="id"
+                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                        Text="{x:Bind ViewModel.KeyField, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Numeric tolerance" />
+                                    <TextBox
+                                        AutomationProperties.Name="Numeric tolerance"
+                                        PlaceholderText="exact"
+                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                        Text="{x:Bind ViewModel.NumericToleranceText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="6">
+                                    <CheckBox
+                                        AutomationProperties.Name="Ignore the order of array elements"
+                                        Content="Ignore array order"
+                                        IsChecked="{x:Bind ViewModel.IgnoreArrayOrder, Mode=TwoWay}" />
+                                    <CheckBox
+                                        AutomationProperties.Name="Ignore case in string values"
+                                        Content="Ignore case in values"
+                                        IsChecked="{x:Bind ViewModel.IgnoreCaseInValues, Mode=TwoWay}" />
+                                    <CheckBox
+                                        AutomationProperties.Name="Ignore case in member names"
+                                        Content="Ignore case in keys"
+                                        IsChecked="{x:Bind ViewModel.IgnoreCaseInKeys, Mode=TwoWay}" />
+                                    <CheckBox
+                                        AutomationProperties.Name="Treat null and missing as the same"
+                                        Content="null equals missing"
+                                        IsChecked="{x:Bind ViewModel.NullEqualsMissing, Mode=TwoWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Flyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+
+                <DropDownButton
+                    Grid.Column="2"
+                    AutomationProperties.Name="Ignored paths"
+                    Style="{StaticResource DevToolsInlineDropDownStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <TextBlock Text="Ignored paths" />
+                        <Border
+                            Style="{StaticResource DevToolsCountBadgeStyle}"
+                            Visibility="{x:Bind ViewModel.HasIgnoredPaths, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock
+                                Style="{StaticResource DevToolsCountBadgeTextStyle}"
+                                Text="{x:Bind ViewModel.IgnoredPathCount, Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <DropDownButton.Flyout>
+                        <Flyout Placement="Bottom">
+                            <StackPanel Width="320" Spacing="8">
+                                <TextBlock
+                                    Style="{StaticResource DevToolsOptionLabelStyle}"
+                                    Text="One JSONPath per line. Matching members are removed from both documents before they are compared."
+                                    TextWrapping="Wrap" />
+                                <TextBox
+                                    MinHeight="96"
+                                    AcceptsReturn="True"
+                                    AutomationProperties.Name="Paths to ignore"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    PlaceholderText="$..timestamp"
+                                    Text="{x:Bind ViewModel.IgnorePathsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Flyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+
+                <CheckBox
+                    Grid.Column="3"
+                    AutomationProperties.Name="Show unchanged rows too"
+                    Content="Show unchanged"
+                    IsChecked="{x:Bind ViewModel.ShowUnchanged, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}" />
+
+                <Button
+                    Grid.Column="4"
+                    AutomationProperties.Name="Swap the two documents"
+                    Command="{x:Bind ViewModel.SwapCommand}"
+                    Style="{StaticResource DevToolsInlineButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <FontIcon FontSize="13" Glyph="&#xE8AB;" />
+                        <TextBlock Text="Swap" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <Grid RowSpacing="12">
+            <!--
+                Both rows share the height. The inputs used to be an Auto row, which gives a
+                pane as much height as its content wants: paste a long document and the editors
+                grew instead of scrolling, and the differences below were pushed off the bottom
+                of the window where nothing could reach them.
+            -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Inputs -->
+            <controls:ToolSplitPanel MinHeight="180">
+                <controls:ToolSplitPanel.FirstPane>
+                    <controls:CodeEditor
+                        Margin="0,0,5,0"
+                        ClearCommand="{x:Bind ViewModel.ClearLeftCommand}"
+                        FooterText="{x:Bind ViewModel.LeftStats, Mode=OneWay}"
+                        Header="Original JSON"
+                        OpenFileCommand="{x:Bind ViewModel.OpenLeftCommand}"
+                        PasteCommand="{x:Bind ViewModel.PasteLeftCommand}"
+                        PlaceholderText="Paste the original document."
+                        Text="{x:Bind ViewModel.Left, Mode=TwoWay}" />
+                </controls:ToolSplitPanel.FirstPane>
+
+                <controls:ToolSplitPanel.SecondPane>
+                    <controls:CodeEditor
+                        Margin="5,0,0,0"
+                        ClearCommand="{x:Bind ViewModel.ClearRightCommand}"
+                        FooterText="{x:Bind ViewModel.RightStats, Mode=OneWay}"
+                        Header="Changed JSON"
+                        OpenFileCommand="{x:Bind ViewModel.OpenRightCommand}"
+                        PasteCommand="{x:Bind ViewModel.PasteRightCommand}"
+                        PlaceholderText="Paste the document to compare it against."
+                        Text="{x:Bind ViewModel.Right, Mode=TwoWay}" />
+                </controls:ToolSplitPanel.SecondPane>
+            </controls:ToolSplitPanel>
+
+            <!-- Result -->
+            <Border Grid.Row="1" Style="{StaticResource DevToolsCardStyle}">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox
+                            AutomationProperties.Name="Result view"
+                            SelectedIndex="{x:Bind ViewModel.ViewIndex, Mode=TwoWay}">
+                            <ComboBoxItem Content="Side by side" />
+                            <ComboBoxItem Content="Tree" />
+                            <ComboBoxItem Content="JSON Patch" />
+                            <ComboBoxItem Content="Unified text" />
+                        </ComboBox>
+
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource DevToolsCaptionStyle}"
+                            Text="{x:Bind ViewModel.SummaryText, Mode=OneWay}" />
+
+                        <Button
+                            Grid.Column="2"
+                            AutomationProperties.Name="Copy the result"
+                            Command="{x:Bind ViewModel.CopyPatchCommand}"
+                            Content="Copy" />
+                    </Grid>
+
+                    <!--
+                        Side by side (FR-J28): the default, because the first question of a
+                        diff is what the two documents look like against each other.
+                    -->
+                    <controls:JsonDiffView
+                        Grid.Row="1"
+                        CurrentBrush="{ThemeResource DevToolsDiffCurrentBrush}"
+                        Layout="{x:Bind ViewModel.Layout, Mode=OneWay}"
+                        LeftHeader="Original JSON"
+                        MissingBrush="{ThemeResource DevToolsDiffMissingBrush}"
+                        RightHeader="Changed JSON"
+                        TypeBrush="{ThemeResource DevToolsDiffTypeBrush}"
+                        ValueBrush="{ThemeResource DevToolsDiffValueBrush}"
+                        Visibility="{x:Bind ViewModel.IsSideBySideVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                    <!-- Tree view: marker glyph as well as colour, never colour alone -->
+                    <ListView
+                        Grid.Row="1"
+                        AutomationProperties.Name="Differences"
+                        ItemsSource="{x:Bind ViewModel.Rows, Mode=OneWay}"
+                        SelectionMode="Single"
+                        Visibility="{x:Bind ViewModel.IsTreeVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="tools:DiffRow">
+                                <Grid
+                                    AutomationProperties.Name="{x:Bind AutomationName}"
+                                    ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="3*" />
+                                        <ColumnDefinition Width="3*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Width="{x:Bind Indent}" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Width="16"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind Marker}" />
+
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        Text="{x:Bind Name}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <TextBlock
+                                        Grid.Column="3"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind Left}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <TextBlock
+                                        Grid.Column="4"
+                                        Text="{x:Bind Right}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <controls:CodeEditor
+                        Grid.Row="1"
+                        CopyCommand="{x:Bind ViewModel.CopyPatchCommand}"
+                        Header="Result"
+                        Syntax="Json"
+                        IsReadOnly="True"
+                        PlaceholderText="The RFC 6902 patch or the unified diff appears here."
+                        SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                        ShowFooter="Collapsed"
+                        Text="{x:Bind ViewModel.Output, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.IsTextVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </Border>
+        </Grid>
+    </controls:ToolShell>
+</views:ToolPageBase>

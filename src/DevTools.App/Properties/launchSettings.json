@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DevTools (Package)": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

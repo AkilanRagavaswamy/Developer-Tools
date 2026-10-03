@@ -1,0 +1,2 @@
+MainPackage=D:\Projects\DevTools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\win-x64\DevTools.App_1.0.0.0_x64.msix
+ResourcePack=D:\Projects\DevTools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\win-x64\DevTools.App_1.0.0.0_scale-400.msix

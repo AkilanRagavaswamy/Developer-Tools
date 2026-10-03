@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>DevTools.Core.Tests</RootNamespace>
+    <AssemblyName>DevTools.Core.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <!-- xUnit v3 runs on Microsoft.Testing.Platform. On the .NET 10 SDK the old VSTest bridge
+         is gone, so `dotnet test` has to be opted in to the new runner explicitly. -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseVSTest>false</UseVSTest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DevTools.Core\DevTools.Core.csproj" />
+  </ItemGroup>
+
+</Project>

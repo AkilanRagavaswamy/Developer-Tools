@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.JsonToCSharpPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+        OptionsWidth="880">
+
+        <!--
+            Options. The four that change the shape of the emitted type stay in the open; the
+            rest are set once for a project and then left, so they fold behind Generation with a
+            count of how many are away from their default.
+        -->
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <tkp:Segmented
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Type kind"
+                        ToolTipService.ToolTip="Type kind"
+                        SelectedIndex="{x:Bind ViewModel.TypeKindIndex, Mode=TwoWay}">
+                        <tkp:SegmentedItem Content="record" />
+                        <tkp:SegmentedItem Content="class" />
+                        <tkp:SegmentedItem Content="struct" ToolTipService.ToolTip="readonly record struct" />
+                    </tkp:Segmented>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <ComboBox
+                        MinWidth="128"
+                        AutomationProperties.Name="Member style"
+                        ToolTipService.ToolTip="Member style"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        SelectedIndex="{x:Bind ViewModel.MemberStyleIndex, Mode=TwoWay}"
+                        Style="{StaticResource DevToolsInlineComboStyle}">
+                        <ComboBoxItem Content="get; init;" />
+                        <ComboBoxItem Content="get; set;" />
+                        <ComboBoxItem Content="required" />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <ComboBox
+                        MinWidth="158"
+                        AutomationProperties.Name="Serializer attributes"
+                        ToolTipService.ToolTip="Serializer attributes"
+                        SelectedIndex="{x:Bind ViewModel.AttributeStyleIndex, Mode=TwoWay}"
+                        Style="{StaticResource DevToolsInlineComboStyle}">
+                        <ComboBoxItem Content="System.Text.Json" />
+                        <ComboBoxItem Content="Newtonsoft.Json" />
+                        <ComboBoxItem Content="None" />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="3"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBox
+                        Width="120"
+                        AutomationProperties.Name="Root type name"
+                        ToolTipService.ToolTip="Root type name"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                        Text="{x:Bind ViewModel.RootTypeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <DropDownButton
+                    Grid.Column="5"
+                    AutomationProperties.Name="Generation settings"
+                    Style="{StaticResource DevToolsInlineDropDownStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <TextBlock Text="Generation" />
+                        <Border
+                            Style="{StaticResource DevToolsCountBadgeStyle}"
+                            Visibility="{x:Bind ViewModel.HasGenerationChanges, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock
+                                Style="{StaticResource DevToolsCountBadgeTextStyle}"
+                                Text="{x:Bind ViewModel.GenerationCount, Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <DropDownButton.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <StackPanel Width="300" Spacing="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Collections" />
+                                    <ComboBox
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Collection type"
+                                        SelectedIndex="{x:Bind ViewModel.CollectionKindIndex, Mode=TwoWay}"
+                                        Style="{StaticResource DevToolsInlineComboStyle}">
+                                        <ComboBoxItem Content="List&lt;T&gt;" />
+                                        <ComboBoxItem Content="T[]" />
+                                        <ComboBoxItem Content="IReadOnlyList&lt;T&gt;" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Namespace" />
+                                    <ComboBox
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Namespace style"
+                                        SelectedIndex="{x:Bind ViewModel.NamespaceStyleIndex, Mode=TwoWay}"
+                                        Style="{StaticResource DevToolsInlineComboStyle}">
+                                        <ComboBoxItem Content="File-scoped" />
+                                        <ComboBoxItem Content="Block" />
+                                        <ComboBoxItem Content="None" />
+                                    </ComboBox>
+                                    <TextBox
+                                        AutomationProperties.Name="Namespace name"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        IsEnabled="{x:Bind ViewModel.IsNamespaceNameEnabled, Mode=OneWay}"
+                                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                                        Text="{x:Bind ViewModel.NamespaceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="6">
+                                    <CheckBox
+                                        AutomationProperties.Name="Annotate nullable reference types"
+                                        Content="Nullable annotations"
+                                        IsChecked="{x:Bind ViewModel.NullableAnnotations, Mode=TwoWay}" />
+                                    <CheckBox
+                                        AutomationProperties.Name="Detect dates, GUIDs and URIs from string values"
+                                        Content="Detect date / GUID / URI"
+                                        IsChecked="{x:Bind ViewModel.DetectDateGuidUri, Mode=TwoWay}" />
+                                    <CheckBox
+                                        AutomationProperties.Name="Nest child types inside their parent"
+                                        Content="Nest types"
+                                        IsChecked="{x:Bind ViewModel.NestTypes, Mode=TwoWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Flyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="JSON sample"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Paste a JSON sample. Every element of an array contributes, so a sparse element makes its members nullable rather than being ignored."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <controls:CodeEditor
+                    Margin="5,0,0,0"
+                    CopyCommand="{x:Bind ViewModel.CopyOutputCommand}"
+                    FooterText="{x:Bind ViewModel.StatsText, Mode=OneWay}"
+                    Header="C#"
+                    Syntax="CSharp"
+                    IsReadOnly="True"
+                    PlaceholderText="The generated types appear here."
+                    SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                    Text="{x:Bind ViewModel.Output, Mode=OneWay}" />
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

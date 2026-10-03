@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="DevTools.App.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:services="using:DevTools.App.Services"
+    xmlns:vm="using:DevTools.App.ViewModels"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--
+            Title bar (FR-S09). It carries the tool's identity, the tool's own options row and
+            the app commands, which is what lets every page drop both its 90 px header and its
+            options band. Three columns: identity at its natural width, the options row taking
+            the leftover middle, the commands against the caption buttons.
+        -->
+        <Grid x:Name="TitleBarDragArea" Height="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!--
+                Left: pane toggle, then DevTools > this tool. The one-line description used to
+                sit here; with the options row beside it there is no room for both, so it is now
+                the tooltip on the tool's name and stays on the dashboard cards.
+            -->
+            <Grid x:Name="ToolIdentity" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button
+                    Margin="6,0,0,0"
+                    AutomationProperties.Name="Show or hide the tool names"
+                    Click="OnPaneToggleClick"
+                    Style="{StaticResource DevToolsCaptionButtonStyle}"
+                    ToolTipService.ToolTip="Show or hide the tool names">
+                    <FontIcon FontSize="14" Glyph="&#xE700;" />
+                </Button>
+
+                <Image
+                    Grid.Column="1"
+                    Width="18"
+                    Height="18"
+                    Margin="6,0,0,0"
+                    Source="ms-appx:///Assets/Square44x44Logo.targetsize-32.png" />
+
+                <TextBlock
+                    Grid.Column="2"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="DevTools" />
+
+                <FontIcon
+                    Grid.Column="3"
+                    Margin="6,0,2,0"
+                    FontSize="11"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Glyph="&#xE76C;"
+                    Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                <TextBlock
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="{x:Bind ViewModel.ActiveToolName, Mode=OneWay}"
+                    ToolTipService.ToolTip="{x:Bind ViewModel.ActiveToolSubtitle, Mode=OneWay}" />
+            </Grid>
+
+            <!--
+                The active tool's options row (FR-T01), moved up out of the page. Nothing is
+                bound here: the page declares the row and the shell parents it, because an
+                element has one parent and the band below is the other place it can go.
+            -->
+            <ContentPresenter
+                x:Name="TitleBarOptions"
+                Grid.Column="1"
+                Margin="16,0,12,0"
+                VerticalContentAlignment="Center" />
+
+            <!--
+                Right: the active tool's own commands, then the app commands, then the system's
+                caption buttons. There is no search box: `Ctrl+K` searches the same index over
+                the whole window, and the box was 320 px of chrome doing the same job twice —
+                removing it is also what frees `Ctrl+F` for finding text in a pane (FR-T12).
+            -->
+            <StackPanel
+                x:Name="TitleBarCommands"
+                Grid.Column="2"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="2">
+
+                <Button
+                    AutomationProperties.Name="Pin or unpin this tool"
+                    Command="{x:Bind ViewModel.ToggleActiveFavoriteCommand}"
+                    Style="{StaticResource DevToolsCaptionButtonStyle}"
+                    ToolTipService.ToolTip="Pin or unpin this tool (Ctrl+D)"
+                    Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <FontIcon
+                        FontSize="14"
+                        Foreground="{ThemeResource DevToolsAccentBrush}"
+                        Glyph="{x:Bind ViewModel.ActiveToolIsFavorite, Mode=OneWay, Converter={StaticResource FavoriteGlyph}}" />
+                </Button>
+
+                <Button
+                    AutomationProperties.Name="Reset this tool"
+                    Command="{x:Bind ViewModel.ResetActiveToolCommand}"
+                    Style="{StaticResource DevToolsCaptionButtonStyle}"
+                    ToolTipService.ToolTip="Reset this tool"
+                    Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                </Button>
+
+                <Border
+                    Width="1"
+                    Height="18"
+                    Margin="6,0"
+                    Background="{ThemeResource DevToolsCardBorderBrush}"
+                    Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                <Button
+                    AutomationProperties.Name="Open the command palette"
+                    Click="OnPaletteClick"
+                    Style="{StaticResource DevToolsCaptionButtonStyle}"
+                    ToolTipService.ToolTip="Command palette (Ctrl+K)">
+                    <FontIcon FontSize="14" Glyph="&#xE756;" />
+                </Button>
+
+                <Button
+                    AutomationProperties.Name="Switch between light and dark"
+                    Command="{x:Bind ViewModel.ToggleThemeCommand}"
+                    Style="{StaticResource DevToolsCaptionButtonStyle}"
+                    ToolTipService.ToolTip="Switch between light and dark">
+                    <FontIcon FontSize="14" Glyph="&#xE793;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ============================ Navigation (FR-S01) ============================ -->
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            AlwaysShowHeader="False"
+            CompactPaneLength="48"
+            IsBackButtonVisible="Collapsed"
+            IsPaneOpen="False"
+            IsPaneToggleButtonVisible="False"
+            IsSettingsVisible="False"
+            ItemInvoked="OnNavItemInvoked"
+            OpenPaneLength="260"
+            PaneDisplayMode="LeftCompact">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--
+                    Where the options row goes when the title bar is too narrow for it. Same
+                    bar style and the same horizontal padding as the page, so dropping down
+                    looks like the row moved rather than like a different control appeared.
+                -->
+                <Border
+                    x:Name="OptionsBand"
+                    Margin="24,12,24,0"
+                    Style="{StaticResource DevToolsOptionsBarStyle}"
+                    Visibility="Collapsed">
+                    <!--
+                        No ScrollViewer here on purpose: one measures its child at infinite
+                        width, which lets a row's star column take far more than the window has
+                        and pushes everything after it out of sight. The row is sized to fit.
+                    -->
+                    <ContentPresenter x:Name="BandOptions" VerticalContentAlignment="Center" />
+                </Border>
+
+                <!-- Clipboard suggestion banner (FR-S07) -->
+                <InfoBar Grid.Row="1" Margin="24,12,24,0" CloseButtonClick="OnSuggestionDismiss" IsClosable="True" IsOpen="{x:Bind ViewModel.IsSuggestionOpen, Mode=TwoWay}" Message="{x:Bind ViewModel.SuggestionMessage, Mode=OneWay}"
+                    Severity="Informational" Title="Smart detect">
+                    <InfoBar.Content>
+                        <ItemsControl Margin="0,4,0,12" ItemsSource="{x:Bind ViewModel.Suggestions, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SuggestionItem">
+                                    <Button Click="OnSuggestionClick" Tag="{x:Bind ToolId}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon FontSize="14" Glyph="{x:Bind Glyph}" Foreground="{ThemeResource SystemAccentColor}" />
+                                            <TextBlock Text="{x:Bind Name}" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </InfoBar.Content>
+                </InfoBar>
+
+                <Frame x:Name="ContentFrame" Grid.Row="2" />
+            </Grid>
+        </NavigationView>
+
+        <!-- ============================ Command palette (FR-S04) ============================ -->
+        <Grid
+            x:Name="PaletteOverlay"
+            Grid.RowSpan="2"
+            Background="{ThemeResource SmokeFillColorDefaultBrush}"
+            Tapped="OnPaletteBackdropTapped"
+            Visibility="Collapsed">
+
+            <!-- Opaque on purpose: a layer fill let the document show through the palette. -->
+            <Border
+                Width="620"
+                MaxHeight="480"
+                Margin="0,96,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
+                Tapped="OnPaletteContentTapped">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox
+                        x:Name="PaletteInput"
+                        Margin="12"
+                        AutomationProperties.Name="Command palette search"
+                        KeyDown="OnPaletteKeyDown"
+                        PlaceholderText="Jump to a tool..."
+                        Text="{x:Bind ViewModel.PaletteQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <ListView
+                        x:Name="PaletteList"
+                        Grid.Row="1"
+                        Margin="4,0,4,4"
+                        IsItemClickEnabled="True"
+                        ItemClick="OnPaletteItemClick"
+                        ItemsSource="{x:Bind ViewModel.PaletteResults, Mode=OneWay}"
+                        SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="services:ToolSearchResult">
+                                <Grid Padding="0,6" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon
+                                        FontSize="16"
+                                        Foreground="{ThemeResource DevToolsAccentBrush}"
+                                        Glyph="{x:Bind Tool.Glyph}" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{x:Bind Tool.Name}" />
+                                        <TextBlock
+                                            Style="{StaticResource DevToolsCaptionStyle}"
+                                            Text="{x:Bind Tool.Description}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Margin="14,0,14,10"
+                        Style="{StaticResource DevToolsCaptionStyle}"
+                        Text="Up and Down to move, Enter to open, Esc to close" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

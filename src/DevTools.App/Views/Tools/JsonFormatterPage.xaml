@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.JsonFormatterPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+        OptionsWidth="880">
+
+        <!--
+            Options, ordered by how often they are touched: the action, then the one setting
+            that changes every formatted line, then the free-text field that needs the room,
+            then the one flag worth seeing. The remaining three are input quirks you set once
+            per document, so they collapse behind More with a count.
+        -->
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <tkp:Segmented
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Action"
+                        ToolTipService.ToolTip="Action"
+                        SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}">
+                        <tkp:SegmentedItem Content="Format" />
+                        <tkp:SegmentedItem Content="Minify" />
+                        <tkp:SegmentedItem Content="Validate" />
+                    </tkp:Segmented>
+                </StackPanel>
+
+                <Grid Grid.Column="2" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox BorderThickness="1,1,1,2"
+                        Grid.Column="1"
+                        MinWidth="140" Padding="5,5,5,0"
+                        AutomationProperties.Name="JSONPath query"
+                        ToolTipService.ToolTip="JSONPath query"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        PlaceholderText="$.store.book[*].title"
+                        Style="{StaticResource DevToolsInlineTextBoxStyle}"
+                        Text="{x:Bind ViewModel.JsonPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+
+                <StackPanel
+                    Grid.Column="3"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <tkp:Segmented
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="How to show the result"
+                        ToolTipService.ToolTip="How to show the result"
+                        SelectedIndex="{x:Bind ViewModel.ResultViewIndex, Mode=TwoWay}">
+                        <tkp:SegmentedItem Content="Text" />
+                        <tkp:SegmentedItem Content="Tree" ToolTipService.ToolTip="Fold the document by key" />
+                    </tkp:Segmented>
+                </StackPanel>
+
+                <CheckBox
+                    Grid.Column="4"
+                    AutomationProperties.Name="Sort keys alphabetically"
+                    Content="Sort keys"
+                    IsChecked="{x:Bind ViewModel.SortKeys, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}" />
+
+                <DropDownButton
+                    Grid.Column="5"
+                    AutomationProperties.Name="More options"
+                    Style="{StaticResource DevToolsInlineDropDownStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <TextBlock Text="More" />
+                        <Border
+                            Style="{StaticResource DevToolsCountBadgeStyle}"
+                            Visibility="{x:Bind ViewModel.HasMoreOptions, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock
+                                Style="{StaticResource DevToolsCountBadgeTextStyle}"
+                                Text="{x:Bind ViewModel.MoreOptionCount, Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <ToggleMenuFlyoutItem
+                                IsChecked="{x:Bind ViewModel.AllowTrailingCommas, Mode=TwoWay}"
+                                Text="Allow trailing commas" />
+                            <ToggleMenuFlyoutItem
+                                IsChecked="{x:Bind ViewModel.AllowComments, Mode=TwoWay}"
+                                Text="Allow comments" />
+                            <ToggleMenuFlyoutItem
+                                IsChecked="{x:Bind ViewModel.EscapeNonAscii, Mode=TwoWay}"
+                                Text="Escape non-ASCII" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="JSON"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Paste JSON here. Numbers keep their exact literal form — 1.0 stays 1.0, and a 30-digit integer keeps every digit."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <Grid Margin="5,0,0,0">
+                    <controls:CodeEditor
+                        CopyCommand="{x:Bind ViewModel.CopyOutputCommand}"
+                        FooterText="{x:Bind ViewModel.StatsText, Mode=OneWay}"
+                        Header="Result"
+                        IsReadOnly="True"
+                        PlaceholderText="The formatted document appears here."
+                        SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                        Syntax="Json"
+                        Text="{x:Bind ViewModel.Output, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.ShowText, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+                    <!-- The same document, foldable by key (FR-J11). -->
+                    <controls:JsonTreeView
+                        Header="Result"
+                        Root="{x:Bind ViewModel.Outline, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.ShowTree, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

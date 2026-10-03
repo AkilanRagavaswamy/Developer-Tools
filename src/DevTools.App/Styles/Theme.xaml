@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Every colour here is defined per theme, including High Contrast, so the app is
+        correct in all three without any code-behind (FR-S16). Nothing below hard-codes a
+        colour that would survive a High Contrast switch.
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+            <!-- Text and glyphs drawn on top of the accent, such as a count badge. -->
+            <Color x:Key="DevToolsOnAccentColor">#FFFFFF</Color>
+            <SolidColorBrush x:Key="DevToolsAccentBrush" Color="{StaticResource SystemAccentColor}" />
+            <SolidColorBrush x:Key="DevToolsOnAccentBrush" Color="{StaticResource SystemAccentColorLight1}" />
+            <SolidColorBrush x:Key="DevToolsCardBackgroundBrush" Color="#FFFFFF" Opacity="0.70" />
+            <SolidColorBrush x:Key="DevToolsCardBorderBrush" Color="#000000" Opacity="0.08" />
+            <SolidColorBrush x:Key="DevToolsEditorBackgroundBrush" Color="#FFFFFF" Opacity="0.60" />
+            <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="#000000" Opacity="0.035" />
+            <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="#000000" Opacity="0.40" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="#22C55E" Opacity="0.22" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="#EF4444" Opacity="0.20" />
+            <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="#F59E0B" Opacity="0.22" />
+            <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="#4F46E5" Opacity="0.25" />
+            <SolidColorBrush x:Key="DevToolsDiffMissingBrush" Color="#EF4444" Opacity="0.16" />
+            <SolidColorBrush x:Key="DevToolsDiffTypeBrush" Color="#F59E0B" Opacity="0.18" />
+            <SolidColorBrush x:Key="DevToolsDiffValueBrush" Color="#000000" Opacity="0.07" />
+            <SolidColorBrush x:Key="DevToolsDiffCurrentBrush" Color="#4F46E5" Opacity="0.22" />
+            <SolidColorBrush x:Key="DevToolsCheckerboardBrush" Color="#000000" Opacity="0.06" />
+
+            <!-- Pass and warn pills: a tinted background with readable text on it. -->
+            <SolidColorBrush x:Key="DevToolsInfoBackgroundBrush" Color="#4F46E5" Opacity="0.08" />
+            <SolidColorBrush x:Key="DevToolsInfoBorderBrush" Color="#4F46E5" Opacity="0.28" />
+            <SolidColorBrush x:Key="DevToolsPassBackgroundBrush" Color="#16A34A" Opacity="0.12" />
+            <SolidColorBrush x:Key="DevToolsPassBorderBrush" Color="#16A34A" Opacity="0.35" />
+            <SolidColorBrush x:Key="DevToolsPassForegroundBrush" Color="#15803D" />
+            <SolidColorBrush x:Key="DevToolsWarnBackgroundBrush" Color="#D97706" Opacity="0.14" />
+            <SolidColorBrush x:Key="DevToolsWarnBorderBrush" Color="#D97706" Opacity="0.35" />
+            <SolidColorBrush x:Key="DevToolsWarnForegroundBrush" Color="#B45309" />
+
+            <!-- Syntax colouring for the read-only output panes (FR-T11). -->
+            <SolidColorBrush x:Key="DevToolsSyntaxPropertyBrush" Color="#0550AE" />
+            <SolidColorBrush x:Key="DevToolsSyntaxStringBrush" Color="#0A7B34" />
+            <SolidColorBrush x:Key="DevToolsSyntaxNumberBrush" Color="#953800" />
+            <SolidColorBrush x:Key="DevToolsSyntaxKeywordBrush" Color="#8250DF" />
+            <SolidColorBrush x:Key="DevToolsSyntaxCommentBrush" Color="#6E7781" />
+            <SolidColorBrush x:Key="DevToolsSyntaxPunctuationBrush" Color="#57606A" />
+            <SolidColorBrush x:Key="DevToolsSyntaxElementBrush" Color="#0550AE" />
+            <SolidColorBrush x:Key="DevToolsSyntaxAttributeBrush" Color="#953800" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <!-- The dark accent needs dark text on it, not white. -->
+            <Color x:Key="DevToolsOnAccentColor">#16162E</Color>
+            <SolidColorBrush x:Key="DevToolsAccentBrush" Color="{StaticResource SystemAccentColor}" />
+            <SolidColorBrush x:Key="DevToolsOnAccentBrush" Color="{StaticResource SystemAccentColorDark1}" />
+            <SolidColorBrush x:Key="DevToolsCardBackgroundBrush" Color="#FFFFFF" Opacity="0.045" />
+            <SolidColorBrush x:Key="DevToolsCardBorderBrush" Color="#FFFFFF" Opacity="0.09" />
+            <SolidColorBrush x:Key="DevToolsEditorBackgroundBrush" Color="#000000" Opacity="0.22" />
+            <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="#FFFFFF" Opacity="0.035" />
+            <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="#FFFFFF" Opacity="0.45" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="#22C55E" Opacity="0.28" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="#EF4444" Opacity="0.26" />
+            <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="#F59E0B" Opacity="0.26" />
+            <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="#818CF8" Opacity="0.32" />
+            <SolidColorBrush x:Key="DevToolsDiffMissingBrush" Color="#EF4444" Opacity="0.24" />
+            <SolidColorBrush x:Key="DevToolsDiffTypeBrush" Color="#F59E0B" Opacity="0.24" />
+            <SolidColorBrush x:Key="DevToolsDiffValueBrush" Color="#FFFFFF" Opacity="0.09" />
+            <SolidColorBrush x:Key="DevToolsDiffCurrentBrush" Color="#818CF8" Opacity="0.30" />
+            <SolidColorBrush x:Key="DevToolsCheckerboardBrush" Color="#FFFFFF" Opacity="0.08" />
+
+            <!-- Pass and warn pills: a tinted background with readable text on it. -->
+            <SolidColorBrush x:Key="DevToolsInfoBackgroundBrush" Color="#818CF8" Opacity="0.10" />
+            <SolidColorBrush x:Key="DevToolsInfoBorderBrush" Color="#818CF8" Opacity="0.28" />
+            <SolidColorBrush x:Key="DevToolsPassBackgroundBrush" Color="#6EE7A0" Opacity="0.12" />
+            <SolidColorBrush x:Key="DevToolsPassBorderBrush" Color="#6EE7A0" Opacity="0.30" />
+            <SolidColorBrush x:Key="DevToolsPassForegroundBrush" Color="#6EE7A0" />
+            <SolidColorBrush x:Key="DevToolsWarnBackgroundBrush" Color="#FBBF24" Opacity="0.14" />
+            <SolidColorBrush x:Key="DevToolsWarnBorderBrush" Color="#FBBF24" Opacity="0.32" />
+            <SolidColorBrush x:Key="DevToolsWarnForegroundBrush" Color="#FBBF24" />
+
+            <!-- Syntax colouring for the read-only output panes (FR-T11). -->
+            <SolidColorBrush x:Key="DevToolsSyntaxPropertyBrush" Color="#79C0FF" />
+            <SolidColorBrush x:Key="DevToolsSyntaxStringBrush" Color="#7EE787" />
+            <SolidColorBrush x:Key="DevToolsSyntaxNumberBrush" Color="#FFA657" />
+            <SolidColorBrush x:Key="DevToolsSyntaxKeywordBrush" Color="#D2A8FF" />
+            <SolidColorBrush x:Key="DevToolsSyntaxCommentBrush" Color="#8B949E" />
+            <SolidColorBrush x:Key="DevToolsSyntaxPunctuationBrush" Color="#C9D1D9" />
+            <SolidColorBrush x:Key="DevToolsSyntaxElementBrush" Color="#79C0FF" />
+            <SolidColorBrush x:Key="DevToolsSyntaxAttributeBrush" Color="#FFA657" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="HighContrast">
+            <SolidColorBrush x:Key="DevToolsAccentBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsOnAccentBrush" Color="{ThemeResource SystemColorHighlightTextColor}" />
+            <SolidColorBrush x:Key="DevToolsCardBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsCardBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsEditorBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="{ThemeResource SystemColorHotlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffMissingBrush" Color="{ThemeResource SystemColorHotlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffTypeBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffValueBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffCurrentBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsCheckerboardBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsInfoBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsInfoBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsPassBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsPassBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsPassForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsWarnBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="DevToolsWarnBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsWarnForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+
+            <!-- High Contrast gets the system palette, not a reduced version of the colours
+                 above: the whole point of the mode is that the user chose those colours. -->
+            <SolidColorBrush x:Key="DevToolsSyntaxPropertyBrush" Color="{ThemeResource SystemColorHotlightColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxStringBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxNumberBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxKeywordBrush" Color="{ThemeResource SystemColorHotlightColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxCommentBrush" Color="{ThemeResource SystemColorGrayTextColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxPunctuationBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxElementBrush" Color="{ThemeResource SystemColorHotlightColor}" />
+            <SolidColorBrush x:Key="DevToolsSyntaxAttributeBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!--
+        Spacing scale. The numbers come from the redesign artboards and are used in one place
+        only each, so a change here moves every tool at once rather than six pages separately.
+    -->
+    <x:Double x:Key="DevToolsSpacingXS">4</x:Double>
+    <x:Double x:Key="DevToolsSpacingS">8</x:Double>
+    <x:Double x:Key="DevToolsSpacingM">12</x:Double>
+    <x:Double x:Key="DevToolsSpacingL">16</x:Double>
+    <x:Double x:Key="DevToolsSpacingXL">20</x:Double>
+
+    <!-- Every inline control on an options bar is this tall, so a row reads as one band. -->
+    <x:Double x:Key="DevToolsControlHeight">30</x:Double>
+
+    <!-- 8 px between a label and its control; 20 px between one group and the next. -->
+    <x:Double x:Key="DevToolsLabelGap">8</x:Double>
+    <x:Double x:Key="DevToolsGroupGap">20</x:Double>
+    <x:Double x:Key="DevToolsCardGap">10</x:Double>
+
+    <Thickness x:Key="DevToolsPagePadding">20,16,20,20</Thickness>
+    <Thickness x:Key="DevToolsOptionsBarPadding">14,0</Thickness>
+    <Thickness x:Key="DevToolsInlinePadding">12,0</Thickness>
+    <Thickness x:Key="DevToolsCardPadding">14</Thickness>
+
+    <!-- Text sits 12 px in and 14 px down in every editor, placeholder and real text alike. -->
+    <Thickness x:Key="DevToolsEditorTextPadding">14,12</Thickness>
+
+    <CornerRadius x:Key="DevToolsCardCornerRadius">8</CornerRadius>
+
+    <!-- The monospace stack used by every editor surface. -->
+    <FontFamily x:Key="DevToolsMonospaceFont">Cascadia Mono, Consolas, Courier New, monospace</FontFamily>
+
+</ResourceDictionary>

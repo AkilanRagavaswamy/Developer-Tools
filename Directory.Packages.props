@@ -1,0 +1,29 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Windows App SDK">
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.9169" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM and UI">
+    <!-- 8.4.2 or newer is required: in 8.4.0 the [ObservableProperty] generator silently emits
+         nothing for partial properties, and WinUI needs partial properties (MVVMTK0045). -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.2.251219" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <!-- The C# generator's acceptance test compiles its own output. -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+  </ItemGroup>
+
+</Project>

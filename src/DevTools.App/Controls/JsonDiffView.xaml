@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="DevTools.App.Controls.JsonDiffView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--
+            The count, what to show, and a way through the differences one at a time. The three
+            filters carry their own counts: "20 incorrect types" says what it will hide as well
+            as how many there are.
+        -->
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Difference count"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="{x:Bind Summary, Mode=OneWay}" />
+
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="14">
+                <CheckBox
+                    x:Name="MissingFilter"
+                    Checked="OnFilterChanged"
+                    Content="{x:Bind MissingLabel, Mode=OneWay}"
+                    IsChecked="True"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}"
+                    Unchecked="OnFilterChanged" />
+                <CheckBox
+                    x:Name="TypeFilter"
+                    Checked="OnFilterChanged"
+                    Content="{x:Bind TypeLabel, Mode=OneWay}"
+                    IsChecked="True"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}"
+                    Unchecked="OnFilterChanged" />
+                <CheckBox
+                    x:Name="ValueFilter"
+                    Checked="OnFilterChanged"
+                    Content="{x:Bind ValueLabel, Mode=OneWay}"
+                    IsChecked="True"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}"
+                    Unchecked="OnFilterChanged" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="3"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
+                    AutomationProperties.Name="Previous difference"
+                    Click="OnPreviousClick"
+                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                    ToolTipService.ToolTip="Previous difference">
+                    <FontIcon FontSize="12" Glyph="&#xE76B;" />
+                </Button>
+
+                <TextBlock
+                    MinWidth="72"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Current difference"
+                    Style="{StaticResource DevToolsCaptionStyle}"
+                    Text="{x:Bind Position, Mode=OneWay}"
+                    TextAlignment="Center" />
+
+                <Button
+                    AutomationProperties.Name="Next difference"
+                    Click="OnNextClick"
+                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                    ToolTipService.ToolTip="Next difference">
+                    <FontIcon FontSize="12" Glyph="&#xE76C;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- What the current difference is, in a sentence. -->
+        <Border
+            Grid.Row="1"
+            Padding="10,6"
+            Background="{ThemeResource DevToolsCardBackgroundBrush}"
+            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource DevToolsCardCornerRadius}"
+            Visibility="{x:Bind HasNote, Mode=OneWay}">
+            <TextBlock
+                AutomationProperties.Name="About this difference"
+                Style="{StaticResource DevToolsCaptionStyle}"
+                Text="{x:Bind Note, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </Border>
+
+        <Border
+            Grid.Row="2"
+            Background="{ThemeResource DevToolsEditorBackgroundBrush}"
+            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource DevToolsCardCornerRadius}">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid
+                    Padding="12,6"
+                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind LeftHeader, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="12,0,0,0"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind RightHeader, Mode=OneWay}" />
+                </Grid>
+
+                <!--
+                    One list for both documents, not two kept in step. A row holds the same
+                    place in each, so they cannot drift apart however the window is scrolled —
+                    which is the thing a side-by-side view is for.
+                -->
+                <ListView
+                    x:Name="RowList"
+                    Grid.Row="1"
+                    AutomationProperties.Name="Differences, side by side"
+                    IsItemClickEnabled="True"
+                    ItemClick="OnRowClick"
+                    SelectionMode="None">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="controls:JsonDiffRowView">
+                            <Grid
+                                Padding="0,1"
+                                HorizontalAlignment="Stretch"
+                                Background="{x:Bind RowBackground}"
+                                ColumnSpacing="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Margin="0,0,10,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                    Text="{x:Bind LeftLine}"
+                                    TextAlignment="Right" />
+
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="0,0,12,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12.5"
+                                    Text="{x:Bind LeftText}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="0,0,10,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                    Text="{x:Bind RightLine}"
+                                    TextAlignment="Right" />
+
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Margin="0,0,12,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12.5"
+                                    Text="{x:Bind RightText}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

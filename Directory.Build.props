@@ -1,0 +1,37 @@
+<Project>
+
+  <PropertyGroup Label="Product">
+    <Product>DevTools</Product>
+    <Company>DevTools</Company>
+    <Authors>DevTools</Authors>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>Copyright (c) 2026</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Language">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Strictness">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>7</WarningLevel>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- XAML and WinRT source generators emit these in generated files we do not own. -->
+    <NoWarn>$(NoWarn);CS1591;CA1416;NU1701;CS8305</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Output">
+    <Deterministic>true</Deterministic>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+  </PropertyGroup>
+
+</Project>
