@@ -310,8 +310,8 @@ public abstract partial class DualTextToolViewModelBase : ToolViewModelBase
     protected override void CaptureState(ToolState state)
     {
         base.CaptureState(state);
-        state.Set("left", Left);
-        state.Set("right", Right);
+        state.SetData("left", Left);
+        state.SetData("right", Right);
     }
 
     protected override void RestoreState(ToolState state)

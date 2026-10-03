@@ -246,7 +246,7 @@ public sealed partial class JsonFormatterViewModel : TextToolViewModelBase
         state.Set("commas", AllowTrailingCommas);
         state.Set("comments", AllowComments);
         state.Set("escape", EscapeNonAscii);
-        state.Set("path", JsonPath);
+        state.SetData("path", JsonPath);
     }
 
     protected override void RestoreState(ToolState state)

@@ -46,11 +46,15 @@ public sealed partial class JsonDiffViewModel : DualTextToolViewModelBase
     public JsonDiffViewModel(ToolServices services)
         : base(services)
     {
+        Views = services.Settings.JsonDiffTextViews
+            ? [DiffView.SideBySide, DiffView.Tree, DiffView.JsonPatch, DiffView.UnifiedText]
+            : [DiffView.SideBySide, DiffView.Tree];
+
         ArrayStrategy = ArrayStrategy.BestMatch;
         KeyField = "id";
         IgnorePathsText = string.Empty;
         NumericToleranceText = string.Empty;
-        View = DiffView.Tree;
+        View = DiffView.SideBySide;
         SummaryText = string.Empty;
     }
 
@@ -132,8 +136,23 @@ public sealed partial class JsonDiffViewModel : DualTextToolViewModelBase
     public IReadOnlyList<ArrayStrategy> ArrayStrategies { get; } =
         [ArrayStrategy.BestMatch, ArrayStrategy.Index, ArrayStrategy.Key];
 
-    public IReadOnlyList<DiffView> Views { get; } =
-        [DiffView.SideBySide, DiffView.Tree, DiffView.JsonPatch, DiffView.UnifiedText];
+    /// <summary>
+    /// The result views on offer. JSON Patch and Unified text are only listed when Settings
+    /// asks for them; read once, because a tool view model lives no longer than its page.
+    /// </summary>
+    public IReadOnlyList<DiffView> Views { get; }
+
+    /// <summary>What the result-view combo box shows, in the same order as <see cref="Views"/>.</summary>
+    public IReadOnlyList<string> ViewLabels => [.. Views.Select(static view => view switch
+    {
+        DiffView.SideBySide => "Side by side",
+        DiffView.Tree => "Tree",
+        DiffView.JsonPatch => "JSON Patch",
+        _ => "Unified text",
+    })];
+
+    /// <summary>Falls back to side by side when a remembered view is no longer offered.</summary>
+    private DiffView Normalize(DiffView view) => Views.Contains(view) ? view : DiffView.SideBySide;
 
     /// <summary>The key field only means anything under the Key strategy.</summary>
     public bool IsKeyFieldEnabled => ArrayStrategy == ArrayStrategy.Key;
@@ -435,7 +454,7 @@ public sealed partial class JsonDiffViewModel : DualTextToolViewModelBase
         IgnorePathsText = state.GetString("ignorePaths");
         NumericToleranceText = state.GetString("tolerance");
         ShowUnchanged = state.GetBool("showUnchanged");
-        View = state.GetEnum("view", DiffView.Tree);
+        View = Normalize(state.GetEnum("view", DiffView.SideBySide));
     }
 
     protected override void ResetOptions()
@@ -449,7 +468,7 @@ public sealed partial class JsonDiffViewModel : DualTextToolViewModelBase
         IgnorePathsText = string.Empty;
         NumericToleranceText = string.Empty;
         ShowUnchanged = false;
-        View = DiffView.Tree;
+        View = DiffView.SideBySide;
         OnEmptyInput();
     }
 }

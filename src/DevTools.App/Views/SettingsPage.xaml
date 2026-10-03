@@ -9,8 +9,12 @@
     xmlns:vm="using:DevTools.App.ViewModels"
     mc:Ignorable="d">
 
+    <!--
+        No MaxWidth: the cards stretch with the window, whether the navigation pane is open or
+        compact, rather than sitting in a 1000 px column with empty margins either side.
+    -->
     <ScrollViewer Padding="{StaticResource DevToolsPagePadding}" VerticalScrollBarVisibility="Auto">
-        <StackPanel MaxWidth="1000" Spacing="6">
+        <StackPanel Spacing="6">
 
             <TextBlock
                 Margin="0,0,0,10"
@@ -119,7 +123,7 @@
                 <ToggleSwitch AutomationProperties.Name="Smart detect" IsOn="{x:Bind ViewModel.SmartDetect, Mode=TwoWay}" />
             </tk:SettingsCard>
 
-            <tk:SettingsCard Description="Remember each tool's input and options between sessions." Header="Remember tool state">
+            <tk:SettingsCard Description="Remember each tool's options between sessions. The data you enter in a tool is always cleared when DevTools closes." Header="Remember tool state">
                 <tk:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE81C;" />
                 </tk:SettingsCard.HeaderIcon>
@@ -148,13 +152,30 @@
                 </tk:SettingsExpander.Items>
             </tk:SettingsExpander>
 
+            <!-- ======================= Tools ======================= -->
+            <TextBlock
+                Margin="0,16,0,4"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="Tools" />
+
+            <tk:SettingsCard Description="Also offer the JSON Patch and Unified text result views. Side by side and Tree are always available." Header="JSON Diff Checker">
+                <tk:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8AB;" />
+                </tk:SettingsCard.HeaderIcon>
+                <CheckBox
+                    MinWidth="0"
+                    AutomationProperties.Name="Show JSON Patch and Unified text views"
+                    Content="Show text views"
+                    IsChecked="{x:Bind ViewModel.JsonDiffTextViews, Mode=TwoWay}" />
+            </tk:SettingsCard>
+
             <!-- ======================= Shortcuts ======================= -->
             <TextBlock
                 Margin="0,16,0,4"
                 Style="{StaticResource BodyStrongTextBlockStyle}"
                 Text="Keyboard shortcuts" />
 
-            <tk:SettingsExpander Description="Every shortcut DevTools responds to." Header="Shortcuts" IsExpanded="True">
+            <tk:SettingsExpander Description="Every shortcut DevTools responds to." Header="Shortcuts" IsExpanded="False">
                 <tk:SettingsExpander.HeaderIcon>
                     <FontIcon Glyph="&#xE765;" />
                 </tk:SettingsExpander.HeaderIcon>
@@ -196,48 +217,56 @@
                 Style="{StaticResource BodyStrongTextBlockStyle}"
                 Text="About" />
 
-            <tk:SettingsExpander Description="{x:Bind ViewModel.AppVersion}" Header="DevTools">
+            <tk:SettingsExpander Description="{x:Bind ViewModel.AppVersion}" Header="Developer Tools">
                 <tk:SettingsExpander.HeaderIcon>
                     <BitmapIcon ShowAsMonochrome="False" UriSource="ms-appx:///Assets/Square44x44Logo.targetsize-48.png" />
                 </tk:SettingsExpander.HeaderIcon>
                 <tk:SettingsExpander.Items>
+                    <tk:SettingsCard Description="{x:Bind ViewModel.Developer}" Header="Developer" />
+                    <tk:SettingsCard Header="Source code">
+                        <tk:SettingsCard.Description>
+                            <HyperlinkButton Margin="0,0,0,0" AutomationProperties.Name="Open the GitHub repository"
+                                             Content="{x:Bind ViewModel.RepositoryText}" NavigateUri="{x:Bind ViewModel.RepositoryUri}" />
+                        </tk:SettingsCard.Description>
+                    </tk:SettingsCard>
                     <tk:SettingsCard Description="{x:Bind ViewModel.RuntimeVersion}" Header="Runtime" />
                     <tk:SettingsCard Description="{x:Bind ViewModel.WindowsAppSdkVersion}" Header="UI framework" />
                     <tk:SettingsCard Description="{x:Bind ViewModel.OperatingSystem}" Header="Operating system" />
-                    <!--
-                        Stated item by item rather than as one sweeping sentence: two of these
-                        tools exist to send HTTP requests, so "works entirely offline" would be
-                        false, and a privacy claim that is not exactly true is worth nothing.
-                    -->
-                    <tk:SettingsCard Header="Privacy">
+                    <tk:SettingsCard ContentAlignment="Vertical" Header="Privacy" HorizontalContentAlignment="Stretch">
                         <ItemsControl ItemsSource="{x:Bind ViewModel.PrivacyNotes}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <TextBlock
-                                        Margin="0,2"
-                                        MaxWidth="460"
-                                        Style="{StaticResource DevToolsCaptionStyle}"
-                                        Text="{x:Bind}"
-                                        TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,2" Style="{StaticResource DevToolsCaptionStyle}"
+                                               Text="{x:Bind}" TextWrapping="Wrap" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </tk:SettingsCard>
-                    <tk:SettingsCard Header="Open-source components">
+                    <tk:SettingsCard ContentAlignment="Vertical" Header="Open-source components" HorizontalContentAlignment="Stretch">
                         <ItemsControl ItemsSource="{x:Bind ViewModel.Licenses}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <TextBlock
-                                        Margin="0,2"
-                                        Style="{StaticResource DevToolsCaptionStyle}"
-                                        Text="{x:Bind}"
-                                        TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,2" Style="{StaticResource DevToolsCaptionStyle}"
+                                               Text="{x:Bind}" TextWrapping="Wrap" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </tk:SettingsCard>
+                    <tk:SettingsCard ContentAlignment="Vertical" Header="License" HorizontalContentAlignment="Stretch">
+                        <tk:SettingsCard.Description>
+                            <HyperlinkButton Margin="0,0,0,0" AutomationProperties.Name="Open the License Details"
+                                             Content="{x:Bind ViewModel.LicenseName}"
+                                             NavigateUri="{x:Bind ViewModel.LicenseUri}" />
+                        </tk:SettingsCard.Description>
+                    </tk:SettingsCard>
                 </tk:SettingsExpander.Items>
             </tk:SettingsExpander>
+
+            <TextBlock
+                Margin="0,16,0,0"
+                HorizontalAlignment="Center"
+                Style="{StaticResource DevToolsCaptionStyle}"
+                Text="{x:Bind ViewModel.Copyright}" />
 
         </StackPanel>
     </ScrollViewer>

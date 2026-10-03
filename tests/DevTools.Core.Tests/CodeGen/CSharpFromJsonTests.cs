@@ -48,6 +48,19 @@ public sealed class CSharpFromJsonTests
 
     // FR-J41 — widening rather than picking whichever came first.
     [Fact]
+    public void Fractional_numbers_can_be_emitted_as_double()
+    {
+        var code = Code(
+            """{ "price": 1.5, "count": 2, "xs": [ {"n": 1}, {"n": 1.5} ] }""",
+            CSharpGenOptions.Default with { FractionalNumberType = FractionalNumberType.Double });
+
+        Assert.Contains("public double Price { get; init; }", code, StringComparison.Ordinal);
+        Assert.Contains("public double N { get; init; }", code, StringComparison.Ordinal);
+        Assert.Contains("public int Count { get; init; }", code, StringComparison.Ordinal);
+        Assert.DoesNotContain("decimal", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Numbers_widen_across_the_sample()
     {
         Assert.Contains("public long N { get; init; }",

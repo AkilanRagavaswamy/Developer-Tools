@@ -523,12 +523,14 @@ internal sealed class CSharpEmitter(CSharpGenOptions options, TypeGraph graph)
         }
     }
 
-    private static (string Name, bool IsValueType) Scalar(ScalarKind kind) => kind switch
+    private (string Name, bool IsValueType) Scalar(ScalarKind kind) => kind switch
     {
         ScalarKind.Bool => ("bool", true),
         ScalarKind.Integer => ("int", true),
         ScalarKind.Long => ("long", true),
-        ScalarKind.Decimal => ("decimal", true),
+        ScalarKind.Decimal => options.FractionalNumberType == FractionalNumberType.Double
+            ? ("double", true)
+            : ("decimal", true),
         ScalarKind.Double => ("double", true),
         ScalarKind.Guid => ("Guid", true),
         ScalarKind.DateTimeOffset => ("DateTimeOffset", true),

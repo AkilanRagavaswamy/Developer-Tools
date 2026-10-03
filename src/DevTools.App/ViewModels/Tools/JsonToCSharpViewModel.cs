@@ -10,10 +10,11 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     public JsonToCSharpViewModel(ToolServices services)
         : base(services)
     {
-        TypeKind = CSharpTypeKind.Record;
-        MemberStyle = MemberStyle.GetInit;
-        AttributeStyle = AttributeStyle.SystemTextJson;
+        TypeKind = CSharpTypeKind.Class;
+        MemberStyle = MemberStyle.GetSet;
+        AttributeStyle = AttributeStyle.NewtonsoftJson;
         CollectionKind = CollectionKind.List;
+        FractionalNumberType = FractionalNumberType.Double;
         NamespaceStyle = NamespaceStyle.FileScoped;
         NamespaceName = DefaultNamespace;
         RootTypeName = "Root";
@@ -48,6 +49,9 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     public partial CollectionKind CollectionKind { get; set; }
 
     [ObservableProperty]
+    public partial FractionalNumberType FractionalNumberType { get; set; }
+
+    [ObservableProperty]
     public partial NamespaceStyle NamespaceStyle { get; set; }
 
     [ObservableProperty]
@@ -69,16 +73,19 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     public partial string StatsText { get; set; }
 
     public IReadOnlyList<CSharpTypeKind> TypeKinds { get; } =
-        [CSharpTypeKind.Record, CSharpTypeKind.Class, CSharpTypeKind.ReadonlyRecordStruct];
+        [CSharpTypeKind.Class, CSharpTypeKind.ReadonlyRecordStruct, CSharpTypeKind.Record];
 
     public IReadOnlyList<MemberStyle> MemberStyles { get; } =
-        [MemberStyle.GetInit, MemberStyle.GetSet, MemberStyle.Required];
+        [MemberStyle.GetSet, MemberStyle.GetInit, MemberStyle.Required];
 
     public IReadOnlyList<AttributeStyle> AttributeStyles { get; } =
-        [AttributeStyle.SystemTextJson, AttributeStyle.NewtonsoftJson, AttributeStyle.None];
+        [AttributeStyle.NewtonsoftJson, AttributeStyle.SystemTextJson, AttributeStyle.None];
 
     public IReadOnlyList<CollectionKind> CollectionKinds { get; } =
         [CollectionKind.List, CollectionKind.Array, CollectionKind.IReadOnlyList];
+
+    public IReadOnlyList<FractionalNumberType> FractionalNumberTypes { get; } =
+        [FractionalNumberType.Double, FractionalNumberType.Decimal];
 
     public IReadOnlyList<NamespaceStyle> NamespaceStyles { get; } =
         [NamespaceStyle.FileScoped, NamespaceStyle.Block, NamespaceStyle.None];
@@ -89,25 +96,31 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     public int TypeKindIndex
     {
         get => TypeKinds.IndexOfValue(TypeKind);
-        set => TypeKind = TypeKinds.ValueAt(value, CSharpTypeKind.Record);
+        set => TypeKind = TypeKinds.ValueAt(value, CSharpTypeKind.Class);
     }
 
     public int MemberStyleIndex
     {
         get => MemberStyles.IndexOfValue(MemberStyle);
-        set => MemberStyle = MemberStyles.ValueAt(value, MemberStyle.GetInit);
+        set => MemberStyle = MemberStyles.ValueAt(value, MemberStyle.GetSet);
     }
 
     public int AttributeStyleIndex
     {
         get => AttributeStyles.IndexOfValue(AttributeStyle);
-        set => AttributeStyle = AttributeStyles.ValueAt(value, AttributeStyle.SystemTextJson);
+        set => AttributeStyle = AttributeStyles.ValueAt(value, AttributeStyle.NewtonsoftJson);
     }
 
     public int CollectionKindIndex
     {
         get => CollectionKinds.IndexOfValue(CollectionKind);
         set => CollectionKind = CollectionKinds.ValueAt(value, CollectionKind.List);
+    }
+
+    public int FractionalNumberTypeIndex
+    {
+        get => FractionalNumberTypes.IndexOfValue(FractionalNumberType);
+        set => FractionalNumberType = FractionalNumberTypes.ValueAt(value, FractionalNumberType.Double);
     }
 
     public int NamespaceStyleIndex
@@ -141,6 +154,13 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
         OnOptionChanged();
     }
 
+    partial void OnFractionalNumberTypeChanged(FractionalNumberType value)
+    {
+        OnPropertyChanged(nameof(FractionalNumberTypeIndex));
+        RaiseGenerationCount();
+        OnOptionChanged();
+    }
+
     partial void OnNamespaceStyleChanged(NamespaceStyle value)
     {
         OnPropertyChanged(nameof(IsNamespaceNameEnabled));
@@ -166,6 +186,7 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     /// </summary>
     public int GenerationCount =>
         (CollectionKind == CollectionKind.List ? 0 : 1) +
+        (FractionalNumberType == FractionalNumberType.Double ? 0 : 1) +
         (NamespaceStyle == NamespaceStyle.FileScoped ? 0 : 1) +
         (NamespaceName == DefaultNamespace ? 0 : 1) +
         (NullableAnnotations ? 0 : 1) +
@@ -216,6 +237,7 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
             MemberStyle = MemberStyle,
             AttributeStyle = AttributeStyle,
             CollectionKind = CollectionKind,
+            FractionalNumberType = FractionalNumberType,
             NamespaceStyle = NamespaceStyle,
             NamespaceName = string.IsNullOrWhiteSpace(NamespaceName) ? "Generated" : NamespaceName.Trim(),
             RootTypeName = string.IsNullOrWhiteSpace(RootTypeName) ? "Root" : RootTypeName.Trim(),
@@ -254,6 +276,7 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
         state.Set("memberStyle", MemberStyle);
         state.Set("attributes", AttributeStyle);
         state.Set("collections", CollectionKind);
+        state.Set("fractional", FractionalNumberType);
         state.Set("namespaceStyle", NamespaceStyle);
         state.Set("namespaceName", NamespaceName);
         state.Set("rootTypeName", RootTypeName);
@@ -265,10 +288,11 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
     protected override void RestoreState(ToolState state)
     {
         base.RestoreState(state);
-        TypeKind = state.GetEnum("typeKind", CSharpTypeKind.Record);
-        MemberStyle = state.GetEnum("memberStyle", MemberStyle.GetInit);
-        AttributeStyle = state.GetEnum("attributes", AttributeStyle.SystemTextJson);
+        TypeKind = state.GetEnum("typeKind", CSharpTypeKind.Class);
+        MemberStyle = state.GetEnum("memberStyle", MemberStyle.GetSet);
+        AttributeStyle = state.GetEnum("attributes", AttributeStyle.NewtonsoftJson);
         CollectionKind = state.GetEnum("collections", CollectionKind.List);
+        FractionalNumberType = state.GetEnum("fractional", FractionalNumberType.Double);
         NamespaceStyle = state.GetEnum("namespaceStyle", NamespaceStyle.FileScoped);
         NamespaceName = state.GetString("namespaceName", "Generated");
         RootTypeName = state.GetString("rootTypeName", "Root");
@@ -279,10 +303,11 @@ public sealed partial class JsonToCSharpViewModel : TextToolViewModelBase
 
     protected override void ResetOptions()
     {
-        TypeKind = CSharpTypeKind.Record;
-        MemberStyle = MemberStyle.GetInit;
-        AttributeStyle = AttributeStyle.SystemTextJson;
+        TypeKind = CSharpTypeKind.Class;
+        MemberStyle = MemberStyle.GetSet;
+        AttributeStyle = AttributeStyle.NewtonsoftJson;
         CollectionKind = CollectionKind.List;
+        FractionalNumberType = FractionalNumberType.Double;
         NamespaceStyle = NamespaceStyle.FileScoped;
         NamespaceName = DefaultNamespace;
         RootTypeName = "Root";

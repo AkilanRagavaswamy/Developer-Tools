@@ -529,7 +529,13 @@ public sealed partial class ShellPage : UserControl
         }
     }
 
-    private void OnSuggestionDismiss(InfoBar sender, object args) => ViewModel.DismissSuggestion();
+    private void OnSuggestionDismiss(object sender, RoutedEventArgs e) => ViewModel.DismissSuggestion();
+
+    private void OnSuggestionSettingsClick(Microsoft.UI.Xaml.Documents.Hyperlink sender, Microsoft.UI.Xaml.Documents.HyperlinkClickEventArgs args)
+    {
+        ViewModel.DismissSuggestion();
+        _navigation.NavigateTo(typeof(SettingsPage));
+    }
 
     // ------------------------------------------------------------- shortcuts
 

@@ -38,6 +38,9 @@ public interface ISettingsService
 
     bool PersistToolState { get; set; }
 
+    /// <summary>Whether JSON Diff offers the JSON Patch and Unified text result views.</summary>
+    bool JsonDiffTextViews { get; set; }
+
     string WindowPlacement { get; set; }
 
     double SplitterRatio { get; set; }
@@ -63,6 +66,7 @@ public sealed class SettingsService : ISettingsService
     private const string KeySyntaxColouring = "EditorSyntaxColouring";
     private const string KeySmartDetect = "SmartDetectEnabled";
     private const string KeyPersistState = "PersistToolState";
+    private const string KeyDiffTextViews = "JsonDiffTextViews";
     private const string KeyWindowPlacement = "WindowPlacement";
     private const string KeySplitterRatio = "SplitterRatio";
     private const string KeyPaneOpen = "NavigationPaneOpen";
@@ -136,6 +140,12 @@ public sealed class SettingsService : ISettingsService
     {
         get => Read(KeyPersistState, true);
         set => Write(KeyPersistState, value);
+    }
+
+    public bool JsonDiffTextViews
+    {
+        get => Read(KeyDiffTextViews, false);
+        set => Write(KeyDiffTextViews, value);
     }
 
     public string WindowPlacement

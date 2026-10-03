@@ -310,7 +310,7 @@ public abstract partial class TextToolViewModelBase : ToolViewModelBase
     protected override void CaptureState(ToolState state)
     {
         base.CaptureState(state);
-        state.Set("input", Input);
+        state.SetData("input", Input);
     }
 
     protected override void RestoreState(ToolState state)

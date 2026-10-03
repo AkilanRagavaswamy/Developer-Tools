@@ -136,6 +136,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    // ---------------------------------------------------------------- tools
+
+    public bool JsonDiffTextViews
+    {
+        get => _settings.JsonDiffTextViews;
+        set
+        {
+            _settings.JsonDiffTextViews = value;
+            OnPropertyChanged();
+        }
+    }
+
     [ObservableProperty]
     public partial string? StatusMessage { get; set; }
 
@@ -198,6 +210,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SmartDetect));
         OnPropertyChanged(nameof(SyntaxColouring));
         OnPropertyChanged(nameof(PersistToolState));
+        OnPropertyChanged(nameof(JsonDiffTextViews));
 
         StatusMessage = "Settings reset.";
     }
@@ -231,10 +244,37 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public string DataFolder => JsonStore.RootPath;
 
+    public string Developer => "R K Akilan";
+
+    public Uri RepositoryUri { get; } = new("https://github.com/AkilanRagavaswamy/Developer-Tools");
+
+    public string RepositoryText => "Navigate to repository";
+
+    public string LicenseName => "MIT License";
+
+    public Uri LicenseUri { get; } = new("https://github.com/AkilanRagavaswamy/Developer-Tools?tab=MIT-1-ov-file");
+
+    public string Copyright => "© 2026 R K Akilan. All rights reserved.";
+
+    /// <summary>The licence DevTools itself is released under, as it appears in the repository.</summary>
+    public string LicenseText =>
+        "Copyright (c) 2026 R K Akilan\n\n" +
+        "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and " +
+        "associated documentation files (the \"Software\"), to deal in the Software without restriction, " +
+        "including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, " +
+        "and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, " +
+        "subject to the following conditions:\n\n" +
+        "The above copyright notice and this permission notice shall be included in all copies or substantial " +
+        "portions of the Software.\n\n" +
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT " +
+        "LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO " +
+        "EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER " +
+        "IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR " +
+        "THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
+
     public IReadOnlyList<ShortcutEntry> Shortcuts { get; } =
     [
         new("Ctrl + K", "Open the command palette"),
-        new("Ctrl + F", "Focus the search box"),
         new("Ctrl + ,", "Open Settings"),
         new("Ctrl + D", "Pin or unpin the current tool"),
         new("Ctrl + Enter", "Run the current tool"),

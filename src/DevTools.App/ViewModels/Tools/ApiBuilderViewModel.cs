@@ -1405,14 +1405,16 @@ public sealed partial class ApiBuilderViewModel : JobToolViewModelBase
     protected override void CaptureState(ToolState state)
     {
         base.CaptureState(state);
-        state.Set("name", RequestName);
-        state.Set("method", Method);
-        state.Set("url", Url);
-        state.Set("bodyKind", BodyKind);
-        state.Set("body", BodyText);
-        state.Set("authKind", AuthKind);
-        state.Set("username", AuthUsername ?? string.Empty);
-        state.Set("apiKeyName", ApiKeyName ?? string.Empty);
+        // The request being composed is the user's data: kept while DevTools runs, never
+        // written to disk. Saved collections are the place for requests worth keeping.
+        state.SetData("name", RequestName);
+        state.SetData("method", Method);
+        state.SetData("url", Url);
+        state.SetData("bodyKind", BodyKind.ToString());
+        state.SetData("body", BodyText);
+        state.SetData("authKind", AuthKind.ToString());
+        state.SetData("username", AuthUsername ?? string.Empty);
+        state.SetData("apiKeyName", ApiKeyName ?? string.Empty);
         state.Set("timeout", TimeoutSeconds);
         state.Set("redirects", FollowRedirects);
     }

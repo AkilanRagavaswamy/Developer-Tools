@@ -10,7 +10,48 @@ namespace DevTools.App.Services;
 /// </summary>
 public sealed class ToolState
 {
+    /// <summary>
+    /// Keys earlier builds wrote with the user's data in them. Stripped from anything read off
+    /// disk, so data saved before inputs stopped being persisted does not come back.
+    /// </summary>
+    private static readonly HashSet<string> LegacyDataKeys = new(StringComparer.Ordinal)
+    {
+        "input", "left", "right", "path",
+        "name", "method", "url", "bodyKind", "body", "authKind", "username", "apiKeyName",
+    };
+
     public Dictionary<string, string> Values { get; set; } = [];
+
+    /// <summary>
+    /// The keys holding what the user typed or pasted, as opposed to option choices. They are
+    /// kept for the session, so leaving a tool and coming back finds it as it was, but they
+    /// are never written to disk: tool data is gone when DevTools closes.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public HashSet<string> DataKeys { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Records a value that is the user's data rather than an option.</summary>
+    public void SetData(string key, string? value)
+    {
+        Set(key, value);
+        DataKeys.Add(key);
+    }
+
+    /// <summary>A copy holding only the option values — what is safe to write to disk.</summary>
+    public ToolState OptionsOnly()
+    {
+        var options = new ToolState();
+
+        foreach (var (key, value) in Values)
+        {
+            if (!DataKeys.Contains(key) && !LegacyDataKeys.Contains(key))
+            {
+                options.Values[key] = value;
+            }
+        }
+
+        return options;
+    }
 
     public string GetString(string key, string fallback = "") =>
         Values.TryGetValue(key, out var value) ? value : fallback;
@@ -88,8 +129,8 @@ public sealed class ToolStateService(ISettingsService settings) : IToolStateServ
             return cached;
         }
 
-        var loaded = await JsonStore.LoadAsync<ToolState>(FileFor(toolId)).ConfigureAwait(false)
-                     ?? new ToolState();
+        var stored = await JsonStore.LoadAsync<ToolState>(FileFor(toolId)).ConfigureAwait(false);
+        var loaded = stored?.OptionsOnly() ?? new ToolState();
         _cache[toolId] = loaded;
         return loaded;
     }
@@ -117,7 +158,7 @@ public sealed class ToolStateService(ISettingsService settings) : IToolStateServ
             try
             {
                 await Task.Delay(DebounceWindow, cts.Token).ConfigureAwait(false);
-                await JsonStore.SaveAsync(FileFor(toolId), state).ConfigureAwait(false);
+                await JsonStore.SaveAsync(FileFor(toolId), state.OptionsOnly()).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -135,7 +176,14 @@ public sealed class ToolStateService(ISettingsService settings) : IToolStateServ
         });
     }
 
-    /// <summary>Writes every pending change immediately — called as the app closes.</summary>
+    /// <summary>
+    /// Called as the app closes: writes every tool's options and drops its data.
+    /// </summary>
+    /// <remarks>
+    /// Every cached tool is written, not only those with a write pending, so a tool whose last
+    /// save predates this build — and so still holds data on disk — is scrubbed too. The
+    /// in-memory data is cleared as well; nothing the user entered outlives the session.
+    /// </remarks>
     public async Task FlushAsync()
     {
         foreach (var key in _pending.Keys.ToList())
@@ -145,10 +193,56 @@ public sealed class ToolStateService(ISettingsService settings) : IToolStateServ
                 await cts.CancelAsync().ConfigureAwait(false);
                 cts.Dispose();
             }
+        }
 
-            if (_cache.TryGetValue(key, out var state))
+        foreach (var (key, state) in _cache.ToList())
+        {
+            var options = state.OptionsOnly();
+            _cache[key] = options;
+
+            if (settings.PersistToolState)
             {
-                await JsonStore.SaveAsync(FileFor(key), state).ConfigureAwait(false);
+                await JsonStore.SaveAsync(FileFor(key), options).ConfigureAwait(false);
+            }
+        }
+
+        await ScrubUnopenedAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>Strips data from the state files of tools that were not opened this session.</summary>
+    private async Task ScrubUnopenedAsync()
+    {
+        string[] files;
+
+        try
+        {
+            var folder = JsonStore.PathFor(Directory);
+            files = System.IO.Directory.Exists(folder)
+                ? System.IO.Directory.GetFiles(folder, "*.json")
+                : [];
+        }
+        catch (Exception)
+        {
+            return;
+        }
+
+        var opened = _cache.Keys.Select(Sanitize).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in files)
+        {
+            var name = Path.GetFileNameWithoutExtension(file);
+            if (opened.Contains(name))
+            {
+                continue;
+            }
+
+            var relative = $"{Directory}/{name}.json";
+            var stored = await JsonStore.LoadAsync<ToolState>(relative).ConfigureAwait(false);
+            var options = stored?.OptionsOnly();
+
+            if (stored is not null && options!.Values.Count != stored.Values.Count)
+            {
+                await JsonStore.SaveAsync(relative, options).ConfigureAwait(false);
             }
         }
     }

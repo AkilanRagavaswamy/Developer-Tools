@@ -212,14 +212,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
+                        <!-- JSON Patch and Unified text are listed only when Settings turns them on. -->
                         <ComboBox
                             AutomationProperties.Name="Result view"
-                            SelectedIndex="{x:Bind ViewModel.ViewIndex, Mode=TwoWay}">
-                            <ComboBoxItem Content="Side by side" />
-                            <ComboBoxItem Content="Tree" />
-                            <ComboBoxItem Content="JSON Patch" />
-                            <ComboBoxItem Content="Unified text" />
-                        </ComboBox>
+                            ItemsSource="{x:Bind ViewModel.ViewLabels}"
+                            SelectedIndex="{x:Bind ViewModel.ViewIndex, Mode=TwoWay}" />
 
                         <TextBlock
                             Grid.Column="1"

@@ -39,9 +39,9 @@
                         AutomationProperties.Name="Type kind"
                         ToolTipService.ToolTip="Type kind"
                         SelectedIndex="{x:Bind ViewModel.TypeKindIndex, Mode=TwoWay}">
-                        <tkp:SegmentedItem Content="record" />
                         <tkp:SegmentedItem Content="class" />
                         <tkp:SegmentedItem Content="struct" ToolTipService.ToolTip="readonly record struct" />
+                        <tkp:SegmentedItem Content="record" />
                     </tkp:Segmented>
                 </StackPanel>
 
@@ -56,8 +56,8 @@
                         FontFamily="{StaticResource DevToolsMonospaceFont}"
                         SelectedIndex="{x:Bind ViewModel.MemberStyleIndex, Mode=TwoWay}"
                         Style="{StaticResource DevToolsInlineComboStyle}">
-                        <ComboBoxItem Content="get; init;" />
                         <ComboBoxItem Content="get; set;" />
+                        <ComboBoxItem Content="get; init;" />
                         <ComboBoxItem Content="required" />
                     </ComboBox>
                 </StackPanel>
@@ -72,8 +72,8 @@
                         ToolTipService.ToolTip="Serializer attributes"
                         SelectedIndex="{x:Bind ViewModel.AttributeStyleIndex, Mode=TwoWay}"
                         Style="{StaticResource DevToolsInlineComboStyle}">
-                        <ComboBoxItem Content="System.Text.Json" />
                         <ComboBoxItem Content="Newtonsoft.Json" />
+                        <ComboBoxItem Content="System.Text.Json" />
                         <ComboBoxItem Content="None" />
                     </ComboBox>
                 </StackPanel>
@@ -118,6 +118,19 @@
                                         <ComboBoxItem Content="List&lt;T&gt;" />
                                         <ComboBoxItem Content="T[]" />
                                         <ComboBoxItem Content="IReadOnlyList&lt;T&gt;" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock Style="{StaticResource DevToolsOptionLabelStyle}" Text="Fractional numbers" />
+                                    <ComboBox
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.Name="Type for fractional numbers"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        SelectedIndex="{x:Bind ViewModel.FractionalNumberTypeIndex, Mode=TwoWay}"
+                                        Style="{StaticResource DevToolsInlineComboStyle}">
+                                        <ComboBoxItem Content="double" />
+                                        <ComboBoxItem Content="decimal" />
                                     </ComboBox>
                                 </StackPanel>
 

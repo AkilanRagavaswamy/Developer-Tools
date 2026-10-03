@@ -45,6 +45,16 @@ public enum NamespaceStyle
     None,
 }
 
+/// <summary>The C# type a number with a fractional part (or too big for <c>long</c>) becomes.</summary>
+public enum FractionalNumberType
+{
+    /// <summary><c>double</c> — what most serializers and APIs expect.</summary>
+    Double,
+
+    /// <summary><c>decimal</c> — exact base-10, right for money.</summary>
+    Decimal,
+}
+
 /// <summary>Everything the C# generator lets the caller choose (FR-J44).</summary>
 public sealed record CSharpGenOptions
 {
@@ -55,6 +65,12 @@ public sealed record CSharpGenOptions
     public AttributeStyle AttributeStyle { get; init; } = AttributeStyle.SystemTextJson;
 
     public CollectionKind CollectionKind { get; init; } = CollectionKind.List;
+
+    /// <summary>
+    /// What a non-integral number is emitted as. A value that only <c>double</c> can hold is
+    /// emitted as <c>double</c> whichever is chosen.
+    /// </summary>
+    public FractionalNumberType FractionalNumberType { get; init; } = FractionalNumberType.Decimal;
 
     /// <summary>Annotates nullable reference types with <c>?</c>.</summary>
     public bool NullableAnnotations { get; init; } = true;

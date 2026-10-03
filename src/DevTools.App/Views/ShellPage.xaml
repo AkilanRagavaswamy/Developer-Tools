@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:services="using:DevTools.App.Services"
+    xmlns:tk="using:CommunityToolkit.WinUI.Controls"
     xmlns:vm="using:DevTools.App.ViewModels"
     mc:Ignorable="d">
 
@@ -193,28 +194,79 @@
                 </Border>
 
                 <!-- Clipboard suggestion banner (FR-S07) -->
-                <InfoBar Grid.Row="1" Margin="24,12,24,0" CloseButtonClick="OnSuggestionDismiss" IsClosable="True" IsOpen="{x:Bind ViewModel.IsSuggestionOpen, Mode=TwoWay}" Message="{x:Bind ViewModel.SuggestionMessage, Mode=OneWay}"
-                    Severity="Informational" Title="Smart detect">
-                    <InfoBar.Content>
-                        <ItemsControl Margin="0,4,0,12" ItemsSource="{x:Bind ViewModel.Suggestions, Mode=OneWay}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:SuggestionItem">
-                                    <Button Click="OnSuggestionClick" Tag="{x:Bind ToolId}">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon FontSize="14" Glyph="{x:Bind Glyph}" Foreground="{ThemeResource SystemAccentColor}" />
-                                            <TextBlock Text="{x:Bind Name}" />
-                                        </StackPanel>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </InfoBar.Content>
-                </InfoBar>
+                <!--
+                    Clipboard suggestion banner (FR-S07). Drawn by hand in InfoBar's colours
+                    rather than as an InfoBar, because InfoBar puts custom content on a row of its
+                    own under the message: here the title, the message and the tool buttons share
+                    one line and wrap only when the window is too narrow for them.
+                -->
+                <Border
+                    Grid.Row="1"
+                    Margin="24,12,24,0"
+                    Padding="16,10,6,10"
+                    Background="{ThemeResource InfoBarInformationalSeverityBackgroundBrush}"
+                    BorderBrush="{ThemeResource InfoBarBorderBrush}"
+                    BorderThickness="{ThemeResource InfoBarBorderThickness}"
+                    CornerRadius="{ThemeResource ControlCornerRadius}"
+                    Visibility="{x:Bind ViewModel.IsSuggestionOpen, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Margin="0,7,0,0" VerticalAlignment="Top">
+                            <FontIcon FontSize="16" Foreground="{ThemeResource InfoBarInformationalSeverityIconBackground}" Glyph="&#xF136;" />
+                            <FontIcon FontSize="16" Foreground="{ThemeResource InfoBarInformationalSeverityIconForeground}" Glyph="&#xF13F;" />
+                        </Grid>
+
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <tk:WrapPanel HorizontalSpacing="12" VerticalSpacing="8">
+                                <TextBlock
+                                    Margin="0,6,0,0"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                                    Text="Smart detect" />
+                                <TextBlock
+                                    Margin="0,6,0,0"
+                                    Text="{x:Bind ViewModel.SuggestionMessage, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.Suggestions, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <tk:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SuggestionItem">
+                                            <Button Click="OnSuggestionClick" Tag="{x:Bind ToolId}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon FontSize="14" Glyph="{x:Bind Glyph}" Foreground="{ThemeResource SystemAccentColor}" />
+                                                    <TextBlock Text="{x:Bind Name}" />
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </tk:WrapPanel>
+
+                            <TextBlock Style="{StaticResource DevToolsCaptionStyle}" TextWrapping="Wrap">
+                                <Run Text="Clipboard suggestions can be turned off in" />
+                                <Hyperlink Click="OnSuggestionSettingsClick">Settings</Hyperlink><Run Text="." />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Button
+                            Grid.Column="2"
+                            VerticalAlignment="Top"
+                            AutomationProperties.Name="Dismiss the suggestion"
+                            Click="OnSuggestionDismiss"
+                            Style="{StaticResource DevToolsToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Dismiss">
+                            <FontIcon FontSize="12" Glyph="&#xE711;" />
+                        </Button>
+                    </Grid>
+                </Border>
 
                 <Frame x:Name="ContentFrame" Grid.Row="2" />
             </Grid>
