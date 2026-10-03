@@ -147,6 +147,43 @@ public sealed class JsonDifferTests
     }
 
     [Fact]
+    public void Best_match_pairs_an_edited_record_instead_of_removing_and_re_adding_it()
+    {
+        var diff = Diff(
+            """{"sales":[{"repCode":"A","notes":"hi","total":1,"type":"Cash"}]}""",
+            """{"sales":[{"type":"Cash","total":2,"notes":"hi","repCode":"A","extra":true}]}""");
+
+        Assert.Equal(1, diff.Changed);
+        Assert.Equal(1, diff.Added);
+        Assert.Equal(0, diff.Removed);
+
+        var element = Assert.Single(diff.Root.Children.Single().Children);
+        Assert.Equal(JsonDiffKind.Changed, element.Kind);
+    }
+
+    [Fact]
+    public void Best_match_pairs_each_edited_record_with_its_closest_counterpart()
+    {
+        var diff = Diff(
+            """[{"id":1,"name":"a","x":1},{"id":2,"name":"b","x":1}]""",
+            """[{"id":2,"name":"b","x":5}]""");
+
+        Assert.Equal(1, diff.Removed);
+        Assert.Equal(1, diff.Changed);
+        Assert.Equal(0, diff.Added);
+    }
+
+    [Fact]
+    public void Best_match_does_not_pair_unrelated_objects()
+    {
+        var diff = Diff("""[{"a":1}]""", """[{"b":2}]""");
+
+        Assert.Equal(1, diff.Removed);
+        Assert.Equal(1, diff.Added);
+        Assert.Equal(0, diff.Changed);
+    }
+
+    [Fact]
     public void Index_strategy_reports_the_cascade_that_best_match_avoids()
     {
         var diff = Diff("[1,2,3]", "[1,9,2,3]", new JsonDiffOptions { ArrayStrategy = ArrayStrategy.Index });

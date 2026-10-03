@@ -641,13 +641,52 @@ public sealed partial class CodeEditor : UserControl
 
         if (Editor.Visibility == Visibility.Visible)
         {
-            // Selecting is what scrolls a TextBox to a position; there is no other way to ask.
+            // Focus stays in the find box, so the selection is only visible because the editor
+            // is told to paint it unfocused (see the markup), and the TextBox will not scroll to
+            // a selection it does not own focus for — that has to be done by hand.
             Editor.Select(start, length);
+            ScrollEditorTo(start);
             UpdateGutter();
         }
         else
         {
             Colourised.ScrollTo(ColourHost, start);
+        }
+    }
+
+    /// <summary>
+    /// Scrolls the plain editor so the character at <paramref name="offset"/> sits a third of
+    /// the way down the viewport.
+    /// </summary>
+    /// <remarks>
+    /// The character's rectangle is taken relative to the first character's, which gives its
+    /// position within the content whether or not the TextBox reports rectangles already
+    /// shifted by the current scroll offset.
+    /// </remarks>
+    private void ScrollEditorTo(int offset)
+    {
+        AttachScrollViewer();
+
+        if (_editorScrollViewer is null || string.IsNullOrEmpty(Editor.Text))
+        {
+            return;
+        }
+
+        try
+        {
+            var origin = Editor.GetRectFromCharacterIndex(0, trailingEdge: false);
+            var target = Editor.GetRectFromCharacterIndex(Math.Min(offset, Editor.Text.Length - 1), trailingEdge: false);
+
+            var y = target.Top - origin.Top - (_editorScrollViewer.ViewportHeight / 3);
+            var x = _settings.EditorWordWrap
+                ? (double?)null
+                : Math.Max(0, target.Left - origin.Left - (_editorScrollViewer.ViewportWidth / 3));
+
+            _editorScrollViewer.ChangeView(x, Math.Max(0, y), null, disableAnimation: true);
+        }
+        catch (ArgumentException)
+        {
+            // Not laid out yet; the selection is still made, it just is not scrolled to.
         }
     }
 

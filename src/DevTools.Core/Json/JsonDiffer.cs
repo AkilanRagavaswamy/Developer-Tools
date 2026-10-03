@@ -620,6 +620,8 @@ public static class JsonDiffer
             }
 
             var children = new List<JsonDiffNode>();
+            var gapLeft = new List<int>();
+            var gapRight = new List<int>();
             var x = 0;
             var y = 0;
 
@@ -627,35 +629,263 @@ public static class JsonDiffer
             {
                 if (string.Equals(leftHashes[x], rightHashes[y], StringComparison.Ordinal))
                 {
+                    FlushGap(path, a, b, gapLeft, gapRight, children);
                     children.Add(Compare($"{path}[{x}]", $"[{x}]", a[x], b[y]));
                     x++;
                     y++;
                 }
                 else if (table[x + 1, y] >= table[x, y + 1])
                 {
-                    children.Add(Compare($"{path}[{x}]", $"[{x}]", a[x], null));
-                    x++;
+                    gapLeft.Add(x++);
                 }
                 else
                 {
-                    children.Add(Compare($"{path}[{y}]", $"[{y}]", null, b[y]));
-                    y++;
+                    gapRight.Add(y++);
                 }
             }
 
             while (x < n)
             {
-                children.Add(Compare($"{path}[{x}]", $"[{x}]", a[x], null));
-                x++;
+                gapLeft.Add(x++);
             }
 
             while (y < m)
             {
-                children.Add(Compare($"{path}[{y}]", $"[{y}]", null, b[y]));
-                y++;
+                gapRight.Add(y++);
             }
 
+            FlushGap(path, a, b, gapLeft, gapRight, children);
+
             return children;
+        }
+
+        /// <summary>The least similarity at which two unequal elements are treated as one that changed.</summary>
+        private const double PairingThreshold = 0.25;
+
+        /// <summary>Gaps larger than this (left × right) are paired by position rather than by similarity.</summary>
+        private const int MaxGapCells = 250_000;
+
+        /// <summary>
+        /// Pairs up the elements that fell between two exact LCS matches.
+        /// </summary>
+        /// <remarks>
+        /// Exact hashing only pairs elements that are identical, so a record with one edited
+        /// field would otherwise surface as a whole-element remove plus a whole-element add —
+        /// hiding the one field that actually changed. Within each gap the elements are aligned
+        /// again, in order, by how similar they are; pairs recurse into a field-level diff and
+        /// only what is left over is reported as added or removed.
+        /// </remarks>
+        private void FlushGap(
+            string path,
+            IReadOnlyList<JsonNode> a,
+            IReadOnlyList<JsonNode> b,
+            List<int> gapLeft,
+            List<int> gapRight,
+            List<JsonDiffNode> children)
+        {
+            var p = gapLeft.Count;
+            var q = gapRight.Count;
+
+            if (p == 0 || q == 0 || (long)p * q > MaxGapCells)
+            {
+                var paired = p == 0 || q == 0 ? 0 : Math.Min(p, q);
+
+                for (var k = 0; k < paired; k++)
+                {
+                    children.Add(Compare($"{path}[{gapLeft[k]}]", $"[{gapLeft[k]}]", a[gapLeft[k]], b[gapRight[k]]));
+                }
+
+                EmitUnpaired(path, a, b, gapLeft, gapRight, paired, children);
+                gapLeft.Clear();
+                gapRight.Clear();
+                return;
+            }
+
+            var similarity = new double[p, q];
+            for (var i = 0; i < p; i++)
+            {
+                for (var j = 0; j < q; j++)
+                {
+                    similarity[i, j] = Similarity(a[gapLeft[i]], b[gapRight[j]]);
+                }
+            }
+
+            // Order-preserving alignment that maximises total similarity.
+            var score = new double[p + 1, q + 1];
+            for (var i = p - 1; i >= 0; i--)
+            {
+                for (var j = q - 1; j >= 0; j--)
+                {
+                    var best = Math.Max(score[i + 1, j], score[i, j + 1]);
+                    if (similarity[i, j] >= PairingThreshold)
+                    {
+                        best = Math.Max(best, similarity[i, j] + score[i + 1, j + 1]);
+                    }
+
+                    score[i, j] = best;
+                }
+            }
+
+            var li = 0;
+            var rj = 0;
+            var pendingRemoved = new List<int>();
+            var pendingAdded = new List<int>();
+
+            void FlushPending()
+            {
+                foreach (var index in pendingRemoved)
+                {
+                    children.Add(Compare($"{path}[{index}]", $"[{index}]", a[index], null));
+                }
+
+                foreach (var index in pendingAdded)
+                {
+                    children.Add(Compare($"{path}[{index}]", $"[{index}]", null, b[index]));
+                }
+
+                pendingRemoved.Clear();
+                pendingAdded.Clear();
+            }
+
+            while (li < p && rj < q)
+            {
+                if (similarity[li, rj] >= PairingThreshold &&
+                    score[li, rj] == similarity[li, rj] + score[li + 1, rj + 1])
+                {
+                    FlushPending();
+                    var l = gapLeft[li];
+                    children.Add(Compare($"{path}[{l}]", $"[{l}]", a[l], b[gapRight[rj]]));
+                    li++;
+                    rj++;
+                }
+                else if (score[li, rj] == score[li + 1, rj])
+                {
+                    pendingRemoved.Add(gapLeft[li++]);
+                }
+                else
+                {
+                    pendingAdded.Add(gapRight[rj++]);
+                }
+            }
+
+            while (li < p)
+            {
+                pendingRemoved.Add(gapLeft[li++]);
+            }
+
+            while (rj < q)
+            {
+                pendingAdded.Add(gapRight[rj++]);
+            }
+
+            FlushPending();
+            gapLeft.Clear();
+            gapRight.Clear();
+        }
+
+        private void EmitUnpaired(
+            string path,
+            IReadOnlyList<JsonNode> a,
+            IReadOnlyList<JsonNode> b,
+            List<int> gapLeft,
+            List<int> gapRight,
+            int skip,
+            List<JsonDiffNode> children)
+        {
+            for (var k = skip; k < gapLeft.Count; k++)
+            {
+                children.Add(Compare($"{path}[{gapLeft[k]}]", $"[{gapLeft[k]}]", a[gapLeft[k]], null));
+            }
+
+            for (var k = skip; k < gapRight.Count; k++)
+            {
+                children.Add(Compare($"{path}[{gapRight[k]}]", $"[{gapRight[k]}]", null, b[gapRight[k]]));
+            }
+        }
+
+        /// <summary>
+        /// How alike two unequal elements are, from 0 (nothing in common) to 1.
+        /// </summary>
+        /// <remarks>
+        /// Objects score by their members: a member present on both sides with an equal value
+        /// counts fully, one present on both sides with a different value counts a little (the
+        /// shape still matches), and one present on only one side counts nothing. Scalars of
+        /// the same kind score just above the threshold, so a lone edited value in a gap reads
+        /// as a change rather than a remove and an add.
+        /// </remarks>
+        private double Similarity(JsonNode left, JsonNode right)
+        {
+            if (left.Kind != right.Kind)
+            {
+                return 0;
+            }
+
+            switch (left, right)
+            {
+                case (JsonObject l, JsonObject r):
+                {
+                    var rightMembers = new Dictionary<string, JsonNode>(options.KeyComparer);
+                    foreach (var member in r.Members)
+                    {
+                        rightMembers[member.Name] = member.Value;
+                    }
+
+                    var union = rightMembers.Count;
+                    var total = 0.0;
+                    var seen = new HashSet<string>(options.KeyComparer);
+
+                    foreach (var member in l.Members)
+                    {
+                        if (!seen.Add(member.Name))
+                        {
+                            continue;
+                        }
+
+                        if (!rightMembers.TryGetValue(member.Name, out var other))
+                        {
+                            union++;
+                            continue;
+                        }
+
+                        total += string.Equals(Hash(member.Value), Hash(other), StringComparison.Ordinal)
+                            ? 1.0
+                            : 0.3;
+                    }
+
+                    return union == 0 ? 1 : total / union;
+                }
+
+                case (JsonArray l, JsonArray r):
+                {
+                    if (l.Items.Count == 0 && r.Items.Count == 0)
+                    {
+                        return 1;
+                    }
+
+                    var pool = new Dictionary<string, int>(StringComparer.Ordinal);
+                    foreach (var item in r.Items)
+                    {
+                        var hash = Hash(item);
+                        pool[hash] = pool.GetValueOrDefault(hash) + 1;
+                    }
+
+                    var common = 0;
+                    foreach (var item in l.Items)
+                    {
+                        var hash = Hash(item);
+                        if (pool.GetValueOrDefault(hash) > 0)
+                        {
+                            pool[hash]--;
+                            common++;
+                        }
+                    }
+
+                    return 0.3 + (0.7 * 2.0 * common / (l.Items.Count + r.Items.Count));
+                }
+
+                default:
+                    return PairingThreshold;
+            }
         }
 
         private string Hash(JsonNode node)

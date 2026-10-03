@@ -227,6 +227,7 @@
                     ScrollViewer.HorizontalScrollMode="Auto"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     SelectionChanged="OnSelectionChanged"
+                    SelectionHighlightColorWhenNotFocused="{ThemeResource DevToolsAccentBrush}"
                     SizeChanged="OnEditorSizeChanged"
                     TextChanged="OnEditorTextChanged"
                     TextWrapping="Wrap" />
