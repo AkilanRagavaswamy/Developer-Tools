@@ -21,6 +21,10 @@ public partial class ToolPageBase : Page
     {
         NavigationCacheMode = NavigationCacheMode.Disabled;
 
+        // The accelerators belong to the whole page, so WinUI's automatic "Ctrl+Enter" tooltip
+        // would pop up wherever the pointer rests. The buttons carry their own tooltips.
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
+
         AddAccelerator(VirtualKey.Enter, VirtualKeyModifiers.Control, () => Tool?.RunCommand.Execute(null));
         AddAccelerator(VirtualKey.L, VirtualKeyModifiers.Control, () => Tool?.ClearCommand.Execute(null));
         AddAccelerator(VirtualKey.D, VirtualKeyModifiers.Control, () => Tool?.ToggleFavoriteCommand.Execute(null));

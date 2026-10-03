@@ -570,6 +570,10 @@ public sealed partial class ShellPage : UserControl
         Add(VirtualKey.Right, VirtualKeyModifiers.Menu, () => _navigation.GoForward());
         Add(VirtualKey.F1, VirtualKeyModifiers.None, () => _navigation.NavigateTo(typeof(SettingsPage)));
         Add(VirtualKey.Escape, VirtualKeyModifiers.None, ClosePalette);
+
+        // App-wide shortcuts on the whole shell: an automatic tooltip would follow the pointer
+        // everywhere. They are listed in Settings instead.
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
         return;
 
         void Add(VirtualKey key, VirtualKeyModifiers modifiers, Action action)

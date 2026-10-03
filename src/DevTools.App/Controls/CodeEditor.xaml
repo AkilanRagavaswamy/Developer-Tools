@@ -9,6 +9,7 @@
     mc:Ignorable="d">
 
     <Border
+        x:Name="EditorFrame"
         Background="{ThemeResource DevToolsEditorBackgroundBrush}"
         BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
         BorderThickness="1"

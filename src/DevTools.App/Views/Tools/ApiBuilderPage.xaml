@@ -75,14 +75,16 @@
                         </StackPanel>
                     </Button>
 
-                    <DropDownButton
+                    <!-- A plain button: a dropdown's chevron does not fit beside the dots at this size. -->
+                    <Button
                         Grid.Column="3"
                         Width="34"
                         Height="34"
                         Padding="0"
-                        AutomationProperties.Name="More actions">
+                        AutomationProperties.Name="More actions"
+                        ToolTipService.ToolTip="More actions">
                         <FontIcon FontSize="14" Glyph="&#xE712;" />
-                        <DropDownButton.Flyout>
+                        <Button.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedRight">
                                 <MenuFlyoutItem
                                     Command="{x:Bind ViewModel.NewRequestCommand}"
@@ -103,12 +105,14 @@
                                     Command="{x:Bind ViewModel.StopCommand}"
                                     Text="Stop" />
                             </MenuFlyout>
-                        </DropDownButton.Flyout>
-                    </DropDownButton>
+                        </Button.Flyout>
+                    </Button>
                 </Grid>
 
+                <!-- Collapsed when there is nothing to resolve, so it adds no gap under the row. -->
                 <TextBlock
                     Margin="2,0,0,0"
+                    Visibility="{x:Bind ViewModel.ResolvedUrlPreview, Mode=OneWay, Converter={StaticResource StringToVisibility}}"
                     FontFamily="{StaticResource DevToolsMonospaceFont}"
                     FontSize="11.5"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
@@ -122,16 +126,21 @@
                 the tabs you are not looking at, and a header left on from the last request
                 is the usual reason this one behaves differently.
             -->
+            <!--
+                The inset is on the card, not on the pivot items, so the tab strip and the rows
+                under it start at the same 12 px; inset per item left the tabs on the border.
+            -->
             <Border
                 Grid.Row="1"
                 Height="290"
+                Padding="12,4,12,0"
                 Style="{StaticResource DevToolsPreviewCardStyle}">
                 <Pivot AutomationProperties.Name="Request sections">
                     <Pivot.Resources>
                         <x:Double x:Key="PivotHeaderItemFontSize">12.5</x:Double>
                         <!-- Tabs need air between them; the default Pivot spacing is for a page title. -->
                         <Thickness x:Key="PivotHeaderItemMargin">0,0,20,0</Thickness>
-                        <Thickness x:Key="PivotItemMargin">12,0,12,12</Thickness>
+                        <Thickness x:Key="PivotItemMargin">0,0,0,12</Thickness>
                     </Pivot.Resources>
 
                     <PivotItem>
@@ -772,6 +781,7 @@
                                 Grid.Row="1"
                                 CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
                                 Header="Body"
+                                IsFramed="False"
                                 IsReadOnly="True"
                                 PlaceholderText="Send the request to see the response here."
                                 ShowFooter="Collapsed"
@@ -784,6 +794,7 @@
                                 Grid.Row="1"
                                 CopyCommand="{x:Bind ViewModel.CopyResponseCommand}"
                                 Header="Body"
+                                IsFramed="False"
                                 IsReadOnly="True"
                                 PlaceholderText="Send the request to see the response here."
                                 ShowFooter="Collapsed"

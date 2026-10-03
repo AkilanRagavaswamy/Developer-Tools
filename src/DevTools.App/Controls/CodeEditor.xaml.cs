@@ -47,6 +47,9 @@ public sealed partial class CodeEditor : UserControl
 
         KeyboardAccelerators.Add(find);
 
+        // Otherwise hovering anywhere over the editor shows a stray "Ctrl+F" tooltip.
+        KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
+
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -107,6 +110,31 @@ public sealed partial class CodeEditor : UserControl
 
     private static void OnShowHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
         ((CodeEditor)d).HeaderRow.Visibility = (Visibility)e.NewValue;
+
+    /// <summary>
+    /// Whether the editor draws its own card border. Turned off where the editor already sits
+    /// inside a card, which would otherwise show two borders a pixel apart.
+    /// </summary>
+    public static readonly DependencyProperty IsFramedProperty = DependencyProperty.Register(
+        nameof(IsFramed), typeof(bool), typeof(CodeEditor),
+        new PropertyMetadata(true, OnIsFramedChanged));
+
+    public bool IsFramed
+    {
+        get => (bool)GetValue(IsFramedProperty);
+        set => SetValue(IsFramedProperty, value);
+    }
+
+    private static void OnIsFramedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var editor = (CodeEditor)d;
+        var framed = (bool)e.NewValue;
+
+        editor.EditorFrame.BorderThickness = framed ? new Thickness(1) : new Thickness(0);
+        editor.EditorFrame.CornerRadius = framed
+            ? (CornerRadius)Application.Current.Resources["DevToolsCardCornerRadius"]
+            : new CornerRadius(0);
+    }
 
     public static readonly DependencyProperty ShowFooterProperty = DependencyProperty.Register(
         nameof(ShowFooter), typeof(Visibility), typeof(CodeEditor),
