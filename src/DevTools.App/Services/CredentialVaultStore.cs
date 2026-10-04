@@ -22,7 +22,7 @@ namespace DevTools.App.Services;
 /// </remarks>
 public sealed class CredentialVaultStore : ICredentialStore
 {
-    private const string ResourceName = "DevTools";
+    private const string ResourceName = "Forgekit";
 
     private readonly Dictionary<string, string> _fallback = new(StringComparer.Ordinal);
     private PasswordVault? _vault;

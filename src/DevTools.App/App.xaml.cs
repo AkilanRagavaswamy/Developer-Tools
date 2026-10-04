@@ -35,7 +35,7 @@ public partial class App : Application
 
         _services = ConfigureServices();
 
-        // Read any devtools: URI before the window exists, so the shell can open that tool
+        // Read any forgekit: URI before the window exists, so the shell can open that tool
         // instead of Home on its first navigation (FR-S18).
         _services.GetRequiredService<IProtocolActivationService>().Initialize();
 

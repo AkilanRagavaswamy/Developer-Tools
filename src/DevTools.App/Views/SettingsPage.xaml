@@ -217,7 +217,7 @@
                 Style="{StaticResource BodyStrongTextBlockStyle}"
                 Text="About" />
 
-            <tk:SettingsExpander Description="{x:Bind ViewModel.AppVersion}" Header="Developer Tools">
+            <tk:SettingsExpander Description="{x:Bind ViewModel.AppVersion}" Header="Forgekit">
                 <tk:SettingsExpander.HeaderIcon>
                     <BitmapIcon ShowAsMonochrome="False" UriSource="ms-appx:///Assets/Square44x44Logo.targetsize-48.png" />
                 </tk:SettingsExpander.HeaderIcon>

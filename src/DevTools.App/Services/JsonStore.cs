@@ -31,7 +31,7 @@ public static class JsonStore
             {
                 var fallback = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "DevTools");
+                    "Forgekit");
                 Directory.CreateDirectory(fallback);
                 return fallback;
             }

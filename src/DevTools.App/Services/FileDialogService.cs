@@ -157,7 +157,7 @@ public sealed class FileDialogService(IShellContext shell) : IFileDialogService
             var picker = new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = string.IsNullOrWhiteSpace(suggestedName) ? "devtools-output" : suggestedName,
+                SuggestedFileName = string.IsNullOrWhiteSpace(suggestedName) ? "forgekit-output" : suggestedName,
             };
             WinRT.Interop.InitializeWithWindow.Initialize(picker, shell.WindowHandle);
 

@@ -69,7 +69,7 @@ public sealed partial class ShellPage : UserControl
         await ViewModel.InitializeAsync();
         BuildNavigation();
 
-        // A devtools: URI that launched the app opens that tool instead of Home (FR-S18).
+        // A forgekit: URI that launched the app opens that tool instead of Home (FR-S18).
         if (_protocol.TakePendingToolId() is { } launchToolId)
         {
             _navigation.NavigateToTool(launchToolId);

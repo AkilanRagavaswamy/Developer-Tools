@@ -31,8 +31,8 @@ public sealed partial class MainWindow : Window
         var handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
         _shell.Attach(this, handle);
 
-        Title = "DevTools";
-        AppWindow.SetIcon("Assets/DevTools.ico");
+        Title = "Forgekit";
+        AppWindow.SetIcon("Assets/Forgekit.ico");
 
         // The shell draws its own title bar row, so the system one is extended away.
         ExtendsContentIntoTitleBar = true;

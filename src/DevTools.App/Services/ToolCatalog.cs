@@ -8,7 +8,7 @@ public sealed record ToolSearchResult(ToolDescriptor Tool, int Score);
 
 /// <summary>
 /// The single registry of every tool in the app. Navigation, the dashboard, the command
-/// palette, Smart Detect and <c>devtools:</c> activation all resolve through this one list,
+/// palette, Smart Detect and <c>forgekit:</c> activation all resolve through this one list,
 /// so adding a tool is a one-line change here plus its page.
 /// </summary>
 public sealed class ToolCatalog

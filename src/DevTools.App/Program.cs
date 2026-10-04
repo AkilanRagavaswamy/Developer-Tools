@@ -9,7 +9,7 @@ namespace DevTools.App;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Without this, every <c>devtools://tool/&lt;id&gt;</c> URI starts another copy of the app:
+/// Without this, every <c>forgekit://tool/&lt;id&gt;</c> URI starts another copy of the app:
 /// <see cref="AppInstance.GetCurrent"/>'s <c>Activated</c> event only fires for activations
 /// that were <em>redirected</em> to this process, and nothing redirects them by default.
 /// </para>
@@ -25,7 +25,7 @@ namespace DevTools.App;
 /// </remarks>
 public static class Program
 {
-    private const string InstanceKey = "DevTools.ApiWorkbench.Main";
+    private const string InstanceKey = "Forgekit.Main";
 
     [STAThread]
     public static int Main(string[] args)
