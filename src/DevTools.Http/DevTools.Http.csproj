@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Windows-targeted: the capture proxy reads the Windows proxy setting from the registry
-         and the owning process of a connection from the TCP table. Both are Win32, and the app
-         this library serves is Windows-only anyway. -->
+    <!-- Windows-targeted: the app this library serves is Windows-only. -->
     <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>DevTools.Http</RootNamespace>
     <AssemblyName>DevTools.Http</AssemblyName>
