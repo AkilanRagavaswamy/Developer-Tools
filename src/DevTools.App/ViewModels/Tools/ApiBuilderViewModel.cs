@@ -1238,7 +1238,7 @@ public sealed partial class ApiBuilderViewModel : JobToolViewModelBase
 
         if (native.IsSuccess)
         {
-            AddCollection(native.Value!, "Forgekit");
+            AddCollection(native.Value!, "ForgeKitRk");
             return;
         }
 

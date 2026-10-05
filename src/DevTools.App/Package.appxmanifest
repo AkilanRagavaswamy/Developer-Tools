@@ -5,17 +5,17 @@
 		 xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
 		 IgnorableNamespaces="uap uap3 rescap">
 
-	<Identity Name="AkilanRagavaswamy.ForgekitDeveloperToolkit" Publisher="CN=4FEF7FAB-6AD4-4C46-88A8-05AFF705DD4C" Version="1.0.0.0" />
+	<Identity Name="AkilanRagavaswamy.ForgeKitRk-DeveloperToolkit" Publisher="CN=4FEF7FAB-6AD4-4C46-88A8-05AFF705DD4C" Version="1.0.0.0" />
 
 	<Properties>
-		<DisplayName>Forgekit – Developer Toolkit</DisplayName>
+		<DisplayName>ForgeKitRk - Developer Toolkit</DisplayName>
 		<PublisherDisplayName>Akilan Ragavaswamy</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
 		<Description>Six developer tools in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler for the calls an application makes.</Description>
 	</Properties>
 
 	<Dependencies>
-		<!-- Desktop only: Forgekit is a full-trust (runFullTrust) app, so it runs on Windows
+		<!-- Desktop only: ForgeKitRk is a full-trust (runFullTrust) app, so it runs on Windows
 		     Desktop and not on Xbox/HoloLens/IoT. Declaring Windows.Universal would make the
 		     Store select device families this package cannot support. -->
 		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
@@ -27,9 +27,9 @@
 
 	<Applications>
 		<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-			<uap:VisualElements DisplayName="Forgekit – Developer Toolkit" Description="A developer toolkit in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler."
+			<uap:VisualElements DisplayName="ForgeKitRk" Description="A developer toolkit in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler."
 								BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
-				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="Forgekit">
+				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="ForgeKitRk">
 					<uap:ShowNameOnTiles>
 						<uap:ShowOn Tile="square150x150Logo" />
 						<uap:ShowOn Tile="wide310x150Logo" />
@@ -40,10 +40,10 @@
 			</uap:VisualElements>
 
 			<Extensions>
-				<!-- Lets another app or a shortcut jump straight to a tool: forgekit://tool/json-formatter -->
+				<!-- Lets another app or a shortcut jump straight to a tool: forgekitrk://tool/json-formatter -->
 				<uap:Extension Category="windows.protocol">
-					<uap:Protocol Name="forgekit">
-						<uap:DisplayName>Forgekit</uap:DisplayName>
+					<uap:Protocol Name="forgekitrk">
+						<uap:DisplayName>ForgeKitRk</uap:DisplayName>
 						<uap:Logo>Assets\Square44x44Logo.png</uap:Logo>
 					</uap:Protocol>
 				</uap:Extension>

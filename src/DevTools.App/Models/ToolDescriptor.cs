@@ -2,7 +2,7 @@ namespace DevTools.App.Models;
 
 /// <summary>
 /// One entry in the tool catalog. <see cref="Id"/> is the stable key used by persisted
-/// state, favorites, recents and <c>forgekit://tool/&lt;id&gt;</c> activation, so it must never
+/// state, favorites, recents and <c>forgekitrk://tool/&lt;id&gt;</c> activation, so it must never
 /// change once shipped.
 /// </summary>
 public sealed record ToolDescriptor(

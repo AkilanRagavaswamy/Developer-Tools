@@ -278,7 +278,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>Human-readable summary of the app and its runtime, shown in Settings and About.</summary>
     public static string AboutText =>
-        $"Forgekit 1.0.0\n" +
+        $"ForgeKitRk 1.0.0\n" +
         $".NET {Environment.Version}\n" +
         $"Windows App SDK 2.4.0\n" +
         $"{Environment.OSVersion.VersionString}";

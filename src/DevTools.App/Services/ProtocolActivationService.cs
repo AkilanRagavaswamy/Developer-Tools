@@ -5,7 +5,7 @@ namespace DevTools.App.Services;
 
 public interface IProtocolActivationService
 {
-    /// <summary>Raised when a <c>forgekit:</c> URI names a tool to open.</summary>
+    /// <summary>Raised when a <c>forgekitrk:</c> URI names a tool to open.</summary>
     event EventHandler<string>? ToolRequested;
 
     /// <summary>The tool id from the URI that launched the app, if it was launched by one.</summary>
@@ -19,7 +19,7 @@ public interface IProtocolActivationService
 }
 
 /// <summary>
-/// Handles <c>forgekit://tool/&lt;tool-id&gt;</c> activation (FR-S18), so a shortcut, a script or
+/// Handles <c>forgekitrk://tool/&lt;tool-id&gt;</c> activation (FR-S18), so a shortcut, a script or
 /// another app can open a specific tool directly.
 /// <para>
 /// Both entry points are covered: the URI that launched the process, and a URI that arrives
@@ -29,7 +29,7 @@ public interface IProtocolActivationService
 public sealed class ProtocolActivationService(ToolCatalog catalog, IShellContext shell)
     : IProtocolActivationService
 {
-    public const string Scheme = "forgekit";
+    public const string Scheme = "forgekitrk";
 
     private string? _pendingToolId;
 
@@ -82,7 +82,7 @@ public sealed class ProtocolActivationService(ToolCatalog catalog, IShellContext
     }
 
     /// <summary>
-    /// Accepts <c>forgekit://tool/&lt;id&gt;</c> and the shorter <c>forgekit://&lt;id&gt;</c>, and
+    /// Accepts <c>forgekitrk://tool/&lt;id&gt;</c> and the shorter <c>forgekitrk://&lt;id&gt;</c>, and
     /// returns the id only when it names a tool that actually exists.
     /// </summary>
     internal static string? ParseToolId(Uri? uri, ToolCatalog catalog)

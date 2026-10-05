@@ -65,7 +65,7 @@
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Style="{StaticResource CaptionTextBlockStyle}"
-                    Text="Forgekit" />
+                    Text="ForgeKitRk" />
 
                 <FontIcon
                     Grid.Column="3"

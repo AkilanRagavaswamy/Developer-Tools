@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup Label="Product">
-    <Product>Forgekit</Product>
+    <Product>ForgeKitRk</Product>
     <Company>R K Akilan</Company>
     <Authors>R K Akilan</Authors>
     <Version>1.0.0</Version>
