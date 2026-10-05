@@ -300,7 +300,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<string> PrivacyNotes { get; } =
     [
         "The JSON, SVG and code-generation tools run entirely on this machine. They have no network code at all.",
-        "API Builder and API Profiler send exactly the requests you compose, to the addresses you give them, and nowhere else.",
+        "API Builder sends exactly the requests you compose, to the addresses you give it, and nowhere else.",
         "No telemetry, no analytics, no crash reporting and no update checks — ever.",
         "Passwords, tokens and client secrets are held in the Windows credential vault, never written into a collection file.",
     ];

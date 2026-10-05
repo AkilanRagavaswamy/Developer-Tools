@@ -196,9 +196,5 @@ public sealed class ToolCatalog
         new("api-builder", "API Builder", "Compose, organise and send HTTP requests with environments and auth",
             ToolCategory.Api, "\uE968", typeof(ApiBuilderPage),
             ["api", "http", "rest", "request", "postman", "curl", "openapi", "collection", "environment", "send", "client"]),
-
-        new("api-profiler", "API Profiler", "Watch the HTTP calls an application makes and read the whole exchange",
-            ToolCategory.Api, "", typeof(ApiProfilerPage),
-            ["api", "profile", "capture", "proxy", "listen", "watch", "traffic", "sniff", "fiddler", "inspect", "timing", "latency"]),
     ];
 }

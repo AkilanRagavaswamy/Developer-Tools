@@ -178,33 +178,9 @@ Timing comes from a `SocketsHttpHandler` whose `ConnectCallback` performs DNS an
 hand (exact `Dns` and `Connect` figures) and whose `PlaintextStreamFilter` brackets the TLS
 handshake, with stopwatches around send, first byte and body read for the rest.
 
-### 6.2 Capture
+### 6.2 Capture — removed
 
-```csharp
-public sealed record CapturedExchange { Method, Url, Host, PathAndQuery,
-    RequestHeaders, RequestBody, StatusCode, ResponseHeaders, ResponseBody,
-    Duration, Outcome, ProcessId, ProcessName, TunnelBytes }
-
-public enum CaptureOutcome { Complete, Tunnelled, Pinned, Failed }
-```
-
-`CaptureProxy` is a loopback `TcpListener`. A plain request arrives with an absolute URI and
-is forwarded through one `HttpClient`; a `CONNECT` is terminated here with a certificate this
-app signs, so the request inside the tunnel can be read and re-made against the real server.
-With no certificate the bytes are relayed untouched and recorded as a tunnel; a client that
-pins its certificate refuses the handshake and is recorded as pinned rather than as an error.
-
-`HttpWire` reads the head a line at a time — a proxy has to decide what to do from the first
-line, and a buffered read would swallow the start of the body.
-
-`ProcessResolver` answers which process opened a connection, from `GetExtendedTcpTable`. The
-lookup happens while the connection is open, because the table is a snapshot.
-
-`SystemProxy` points the per-user Windows setting at the proxy and puts it back.
-`CanChangeSystemSetting` is false inside an MSIX package, whose registry writes are redirected
-into a private hive: the tool does not attempt a change it cannot make, and says so instead.
-
-`CaptureSession` owns the three of them and is the only thing the app talks to.
+The capture proxy, certificate handling and process attribution were removed along with the API Profiler.
 
 ### 6.3 Workspace
 
@@ -237,7 +213,7 @@ ToolViewModelBase              message banner · IsBusy · cancellation · gener
   ├── DualTextToolViewModelBase Left/Right inputs · swap
   │      └── JsonDiffViewModel
   └── JobToolViewModelBase     explicit Start/Stop · progress · partial results
-         └── ApiProfilerViewModel, ApiBuilderViewModel
+         └── ApiBuilderViewModel
 ```
 
 A stale run can never overwrite a newer one: each run captures a monotonically increasing

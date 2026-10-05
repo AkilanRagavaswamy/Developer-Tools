@@ -1323,18 +1323,6 @@ public sealed partial class ApiBuilderViewModel : JobToolViewModelBase
     }
 
     [RelayCommand]
-    private void ProfileThis()
-    {
-        if (string.IsNullOrWhiteSpace(Url))
-        {
-            SetInfo("Enter a URL first.");
-            return;
-        }
-
-        Services.Handoff.Send("api-profiler", new ToolPayload.Request(BuildRequest()));
-    }
-
-    [RelayCommand]
     private void AddHeader() => Headers.Add(new EditableRow());
 
     [RelayCommand]

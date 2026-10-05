@@ -98,10 +98,6 @@
                                     Text="Copy as cURL" />
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem
-                                    Command="{x:Bind ViewModel.ProfileThisCommand}"
-                                    Text="Profile this request" />
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem
                                     Command="{x:Bind ViewModel.StopCommand}"
                                     Text="Stop" />
                             </MenuFlyout>

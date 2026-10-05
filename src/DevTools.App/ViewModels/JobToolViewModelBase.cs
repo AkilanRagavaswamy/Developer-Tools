@@ -9,7 +9,7 @@ namespace DevTools.App.ViewModels;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Used by API Builder and API Profiler. Two things separate these from the text tools, and
+/// Used by API Builder. Two things separate these from the text tools, and
 /// both are the reason they do not share a base class with them.
 /// </para>
 /// <para>

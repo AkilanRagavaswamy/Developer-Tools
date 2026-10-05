@@ -43,20 +43,26 @@ public sealed class ToolGroup(ToolCategory category, IEnumerable<ToolCard> tools
     public string CountLabel => Tools.Count == 1 ? "1 tool" : $"{Tools.Count} tools";
 }
 
-/// <summary>Backs the dashboard: every tool as a card, plus the pinned ones (FR-S02).</summary>
+/// <summary>Backs the dashboard: every tool as a card, plus the recent and pinned ones (FR-S02, FR-S06).</summary>
 public sealed partial class HomeViewModel : ObservableObject
 {
+    /// <summary>How many recently opened tools the Recent row shows.</summary>
+    private const int MaxRecent = 4;
+
     private readonly ToolCatalog _catalog;
     private readonly IFavoritesService _favorites;
+    private readonly IRecentToolsService _recents;
     private readonly INavigationService _navigation;
 
     public HomeViewModel(
         ToolCatalog catalog,
         IFavoritesService favorites,
+        IRecentToolsService recents,
         INavigationService navigation)
     {
         _catalog = catalog;
         _favorites = favorites;
+        _recents = recents;
         _navigation = navigation;
 
         // One card per tool, shared by its category and the Favorites row, so pinning from
@@ -82,6 +88,14 @@ public sealed partial class HomeViewModel : ObservableObject
     public IReadOnlyList<ToolGroup> Groups { get; }
 
     public ObservableCollection<ToolCard> FavoriteTools { get; } = [];
+
+    /// <summary>
+    /// The tools opened most recently, newest first. Refreshed every time Home is shown, which is
+    /// the only time the list can have changed — recents are recorded when a tool is opened.
+    /// </summary>
+    public ObservableCollection<ToolCard> RecentTools { get; } = [];
+
+    public bool HasRecents => RecentTools.Count > 0;
 
     public int TotalTools => _catalog.All.Count;
 
@@ -112,6 +126,21 @@ public sealed partial class HomeViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(HasFavorites));
+
+        RecentTools.Clear();
+        foreach (var id in _recents.Ids)
+        {
+            if (_cards.TryGetValue(id, out var card))
+            {
+                RecentTools.Add(card);
+                if (RecentTools.Count == MaxRecent)
+                {
+                    break;
+                }
+            }
+        }
+
+        OnPropertyChanged(nameof(HasRecents));
     }
 
     [RelayCommand]

@@ -3,6 +3,12 @@
 **Version:** 1.0 · **Date:** 2026-09-17 · **Workspace:** `D:\Projects\DevTools`
 **Owner:** akilan.rk@zohocorp.com
 
+> **Post-release changes (October 2026).** The product shipped as **ForgeKitRk – Developer
+> Toolkit**. The **API Profiler** described in Phases 7 and 12 — its capture proxy, certificate
+> handling and in-process agent — was **removed**; the sections below are kept as the historical
+> plan. **Recents (FR-S06)** were restored: a Recent row on Home and recents-first in the command
+> palette.
+
 ---
 
 ## 1. What is being built

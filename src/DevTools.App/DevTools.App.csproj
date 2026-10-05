@@ -49,30 +49,4 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
-  <!--
-    The API Profiler's agent is not referenced by the app: it is loaded into other processes, so
-    it must stay a standalone payload rather than a compile-time dependency. This builds it (always
-    as AnyCPU, so its output path is fixed whatever platform the app is building for) and copies
-    its output into a Profiler\ folder beside the app, where LaunchProfiler looks for it at run
-    time. Driving the build explicitly — instead of a ProjectReference — keeps the app's x64/ARM64
-    platform from flowing into the agent.
-  -->
-  <Target Name="BundleProfilerAgent"
-          BeforeTargets="AssignTargetPaths"
-          Condition="'$(DesignTimeBuild)' != 'true'">
-    <MSBuild Projects="..\DevTools.Profiler.Agent\DevTools.Profiler.Agent.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=AnyCPU">
-      <Output TaskParameter="TargetOutputs" ItemName="_ProfilerAgentAssembly" />
-    </MSBuild>
-
-    <ItemGroup>
-      <_ProfilerAgentFile Include="%(_ProfilerAgentAssembly.RootDir)%(_ProfilerAgentAssembly.Directory)**\*.*" />
-      <Content Include="@(_ProfilerAgentFile)">
-        <Link>Profiler\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-  </Target>
-
 </Project>

@@ -22,7 +22,7 @@ it against what it used to be.
 | P5 | **Explain failures** | Precise, positioned, human-readable messages — never a stack trace, never a silent empty box. |
 | P6 | **Accessible by default** | Full keyboard operation, screen-reader names, High Contrast, no colour-only status. |
 | P7 | **Secrets stay secret** | Credentials go to the OS credential store, never into a document on disk. |
-| P8 | **Reversible machine changes** | The capture proxy is the only part of DevTools that changes anything outside itself. Every such change — the Windows proxy setting, a trusted root certificate — is stated before it is made, reversed when capture stops, recovered after a crash, and confined to `src\DevTools.Http\Capture`, which `build.ps1 -Task verify` enforces. |
+| P8 | **No machine changes** | The app changes nothing outside its own storage: no system settings, no proxy configuration, no certificates. (The API Profiler, the one part that did, was removed.) |
 
 ### 1.2 Out of scope (v1)
 
@@ -37,11 +37,11 @@ GraphQL and gRPC · localisation beyond an en-US resource pipeline ready for mor
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | **FR-S01** | Navigation shell | `NavigationView` in Left mode listing the six tools flat (no category groups — six items do not need them). Opens **compact**, icons only; the pane toggle lives in the title bar and the chosen state is remembered. |
-| **FR-S02** | Home dashboard | Landing page with a card per tool, and the pinned ones above them. No recent strip: with six tools it was a second copy of the same list. |
+| **FR-S02** | Home dashboard | Landing page with a card per tool, with the recently opened and pinned ones above them. |
 | **FR-S03** | Global search | Ranked search over tool name, description and keywords; Enter opens the top hit. Reached through the command palette (FR-S04), which searches the same index over the whole window. *The title-bar search box is withdrawn:* it was 320 px of permanent chrome doing a job `Ctrl+K` already did, and it held `Ctrl+F` hostage — that shortcut now belongs to the pane with the caret (FR-T12). `ToolCatalog.Search` is unchanged. |
 | **FR-S04** | Command palette | `Ctrl+K` overlay over the same index plus app commands. `Esc` closes. |
 | **FR-S05** | Favorites | Pin/unpin from the title bar or the palette. Persisted. |
-| **FR-S06** | Recents | *Withdrawn.* Recorded as before by `RecentToolsService`, but no longer shown: six tools fit on the dashboard whole, so a recent strip only repeated them. |
+| **FR-S06** | Recents | *Restored.* `RecentToolsService` records each tool as it is opened; the four most recent are shown as a Recent row on the Home dashboard, and an empty command palette lists recents first, newest first. Cleared from Settings → Stored data. |
 | **FR-S07** | Theme | Light / Dark / System, applied live to every surface including caption buttons. |
 | **FR-S08** | Backdrop | Mica / Mica Alt / Acrylic / None, applied live, degrading to a solid brush when unsupported. |
 | **FR-S09** | Custom title bar | `ExtendsContentIntoTitleBar` with correct drag regions after resize and DPI change. Carries the pane toggle, `DevTools ▸ <tool>`, the active tool's options row (FR-T01), and the favourite, reset, palette and theme commands. Those four are 46 × 32 and the system caption buttons are set to `Tall`, so every button in the row shares one centre line. The tool's one-line description is the tooltip on its name rather than text in the bar — with the options row up there, there is not room for both. |
@@ -62,7 +62,7 @@ GraphQL and gRPC · localisation beyond an en-US resource pipeline ready for mor
 | **FR-T01** | Tool chrome | The tool's name, favourite and reset live in the 48 px title bar, not in a page header. Each page declares **one** options row — settings ordered by how often they are touched, rarer ones behind a named overflow button carrying a count — and the shell shows it **in the title bar** when there is room beside the name and the commands, or in a band directly above the page when there is not. The row carries no text labels: the controls say what they are and each has a tooltip, which is what makes it narrow enough to fit. Nothing wraps or clips at 1088 effective pixels. |
 | **FR-T02** | Input affordances | Paste, Open file, Clear, live character and line counter on every text input. |
 | **FR-T03** | Output affordances | Copy (with transient confirmation) and Save as. Output read-only but selectable. |
-| **FR-T04** | Live transform | Runs automatically on input or option change, debounced 250 ms, cancelling any in-flight run. Tools whose work is expensive or outbound (API Profiler, API Builder) expose an explicit **Run/Send** button instead. |
+| **FR-T04** | Live transform | Runs automatically on input or option change, debounced 250 ms, cancelling any in-flight run. Tools whose work is expensive or outbound (API Builder) expose an explicit **Run/Send** button instead. |
 | **FR-T05** | Error surface | `InfoBar` with severity, message and — where the engine supplies it — line/column/offset. The previous good output is **not** wiped mid-typing. |
 | **FR-T06** | Empty state | Empty input shows a neutral placeholder, never an error. |
 | **FR-T07** | Large input guard | Above 5 MB the UI prompts; processing stays responsive and cancellable. |
@@ -134,25 +134,11 @@ GraphQL and gRPC · localisation beyond an en-US resource pipeline ready for mor
 | **FR-V11** | A conversion report beside the previews: one row per feature with what happened and **why** — what converted, what was dropped and what the target dialect cannot express — each with the action that would fix it. Kind is carried by glyph as well as colour. |
 | **FR-V12** | Optional geometry simplification: merge all paths into one `Path` with a single `Data` string. |
 
-### 4.5 API Profiler — `api-profiler`
+### 4.5 API Profiler — *removed*
 
-The tool listens to the HTTP calls an application makes, rather than measuring a URL typed into
-it. The change was made after the first release: the question people arrive with is "what is
-this app calling, and why is it slow", which a URL you already knew about cannot answer.
-
-| ID | Requirement |
-| --- | --- |
-| **FR-A01** | A capture proxy on the loopback interface records every HTTP exchange that passes through it: method, URL, headers, whole request and response bodies, status, size and duration. |
-| **FR-A02** | Where DevTools can change the Windows proxy setting, starting the capture points it at the proxy and stopping puts it back exactly as it was found. **Inside its MSIX package it cannot**: a packaged process has its registry writes redirected into a private hive, through `HKEY_CURRENT_USER` and `HKEY_USERS` alike, so the change would look like it took and capture nothing. The tool detects that up front, does not attempt it, and tells the user to point the app at the proxy instead — with the address and a Copy button. |
-| **FR-A03** | The proxy setting is **per user, not per process**. The UI states this plainly and never implies per-app capture. |
-| **FR-A04** | Each exchange is attributed to the process that opened the connection, read from the Windows TCP table while the connection is open. A process dropdown **filters** the list; it does not restrict what is captured. |
-| **FR-A05** | https bodies require a DevTools root certificate trusted for the current user. Installing it is its own step with its own consent, never something Start does quietly. Removing it is offered in the same place. |
-| **FR-A06** | Without a certificate, https appears as a tunnel: host, size and timing, no content. A client that pins its certificate is recorded as pinned, not as a failure. |
-| **FR-A07** | The port and the certificate thumbprint are written to app configuration on first use and reused, so the certificate is installed once rather than every session. |
-| **FR-A08** | Response bodies are retained **in full**, never truncated or sampled. The running total of bytes held is shown, because that is the cost of the choice. |
-| **FR-A09** | A capture left running by a crash is undone at the next launch: the previous proxy setting is written down before it is changed, and restored on start-up. |
-| **FR-A10** | Selecting a call shows the whole exchange — request, response and timings — and offers **Send to API Builder** and **Copy as cURL**. |
-| **FR-A11** | Credential header values (`Authorization`, `Cookie`, anything named for a key or token) are covered in the detail pane; the header itself is still listed. |
+The API Profiler (FR-A01…FR-A11) was removed from the product, together with its capture proxy,
+certificate handling and in-process agent. Requirement ids FR-A01…FR-A11 are retired and are not
+reused.
 
 ### 4.6 API Builder — `api-builder`
 

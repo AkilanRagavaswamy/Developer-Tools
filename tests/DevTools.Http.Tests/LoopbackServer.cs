@@ -36,8 +36,8 @@ public sealed record CannedResponse(
 /// <remarks>
 /// Built on <see cref="TcpListener"/> rather than <see cref="HttpListener"/> on purpose: it
 /// needs no URL reservation and no elevation, so the suite runs identically on a developer's
-/// machine and on a build agent. It also gives the delay control the profiler tests need —
-/// injecting a known latency is the only way to assert that the timings mean anything.
+/// machine and on a build agent. It also gives delay control — injecting a known latency is the
+/// only way to assert that measured timings mean anything.
 /// </remarks>
 public sealed class LoopbackServer : IAsyncDisposable
 {

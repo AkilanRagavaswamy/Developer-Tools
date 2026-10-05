@@ -39,37 +39,8 @@ public partial class App : Application
         // instead of Home on its first navigation (FR-S18).
         _services.GetRequiredService<IProtocolActivationService>().Initialize();
 
-        // If a capture was running when a previous run died, the Windows proxy setting is still
-        // pointed at a port nobody is listening on — which leaves the whole machine unable to
-        // reach the internet. Putting it back is the first thing this launch does.
-        _ = RecoverCaptureProxyAsync();
-
         MainWindow = new MainWindow();
         MainWindow.Activate();
-    }
-
-    /// <summary>
-    /// Undoes a capture that a previous run did not get to stop. Fire-and-forget on purpose:
-    /// the window should not wait on a file read, and a failure here must not stop the app.
-    /// </summary>
-    private static async Task RecoverCaptureProxyAsync()
-    {
-        try
-        {
-            var config = Services.GetRequiredService<ICaptureConfigService>();
-            await config.LoadAsync();
-
-            if (await config.RecoverAsync() is not null)
-            {
-                LogError(
-                    "The Windows proxy setting was restored at start-up.",
-                    new InvalidOperationException("A previous capture did not stop cleanly."));
-            }
-        }
-        catch (Exception ex)
-        {
-            LogError("Restoring the Windows proxy setting", ex);
-        }
     }
 
     private static ServiceProvider ConfigureServices()
@@ -92,15 +63,10 @@ public partial class App : Application
         services.AddSingleton<ToolCatalog>();
         services.AddSingleton<ToolServices>();
 
-        // The HTTP side. Only the two API tools take these, so nothing else in the app has a
+        // The HTTP side. Only the API Builder takes these, so nothing else in the app has a
         // way to open a socket even by accident (NFR-05).
         services.AddSingleton<ICredentialStore, CredentialVaultStore>();
         services.AddSingleton<IWorkspaceService, WorkspaceService>();
-        services.AddSingleton<ICaptureConfigService, CaptureConfigService>();
-
-        // One capture session for the app, not one per page: it owns a listening socket and a
-        // machine-wide setting, and two of those would fight over both.
-        services.AddSingleton<DevTools.Http.Capture.CaptureSession>();
 
         services.AddSingleton<HttpExecutor>(provider =>
             new HttpExecutor(provider.GetRequiredService<ICredentialStore>()));

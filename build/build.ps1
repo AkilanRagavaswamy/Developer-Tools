@@ -156,20 +156,18 @@ function Invoke-Verify {
         throw 'DevTools sends no telemetry (NFR-06).'
     }
 
-    # The capture proxy is the only part of the app that changes anything outside it: a
-    # machine-wide proxy setting and a trusted root certificate. Both are confined to
-    # src\DevTools.Http\Capture so the claim is checkable rather than asserted.
+    # The app changes nothing outside its own storage: no machine-wide proxy setting and no
+    # trusted root certificates, anywhere. Checked here so the claim is enforced, not asserted.
     $intrusive = Get-ChildItem -Path (Join-Path $root 'src') -Filter '*.cs' -Recurse |
         Where-Object { $_.FullName -notlike '*\obj\*' -and $_.FullName -notlike '*\bin\*' } |
-        Where-Object { $_.FullName -notlike '*\DevTools.Http\Capture\*' } |
         Select-String -Pattern 'X509Store|Internet Settings|InternetSetOption'
 
     if ($intrusive) {
         $intrusive | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber)  $($_.Line.Trim())" }
-        throw 'Certificate and proxy changes belong in DevTools.Http\Capture only.'
+        throw 'ForgeKitRk must not change certificate stores or proxy settings.'
     }
 
-    Write-Host '  Machine changes are confined to the capture proxy.' -ForegroundColor Green
+    Write-Host '  No machine changes: no certificate stores, no proxy settings.' -ForegroundColor Green
     Write-Host '  Core has no network types; nothing phones home.' -ForegroundColor Green
 }
 

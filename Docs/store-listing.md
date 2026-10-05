@@ -12,13 +12,13 @@ when the listing changes.
 
 ## Short description
 
-A fast, private developer toolbox for Windows — format and diff JSON, generate C# models, convert SVG to XAML, and build and profile HTTP APIs. Fully offline.
+A fast, private developer toolbox for Windows — format and diff JSON, generate C# models, convert SVG to XAML, and build and send HTTP API requests. Fully offline.
 
 ## Long description
 
 ForgeKitRk puts the small jobs you do every day into one quick, native Windows app — no browser tabs, no sign-in, no telemetry. Paste or drop a file and it just works, with a clean light/dark UI, a command palette, and keyboard shortcuts throughout.
 
-Everything runs on your machine. The JSON, SVG, and code tools have no network access at all; the API tools send only the requests you compose, and secrets stay in the Windows credential vault — never written to a file.
+Everything runs on your machine. The JSON, SVG, and code tools have no network access at all; the API Builder sends only the requests you compose, and secrets stay in the Windows credential vault — never written to a file.
 
 ## Feature points
 
@@ -27,9 +27,9 @@ Everything runs on your machine. The JSON, SVG, and code tools have no network a
 - Generate clean, compilable C# models from a JSON sample
 - Convert SVG shapes, paths, and gradients to WPF / WinUI XAML
 - Build and send HTTP requests — methods, headers, auth, environments, cURL import/export
-- Profile the HTTP calls an app makes, read the whole exchange, and re-send it
 - 100% local: no telemetry, no analytics, no account, works offline
 - Secrets held in the Windows credential vault, not in plain config
+- Recent tools and favourites one click away on the Home dashboard
 - Light, dark, and system themes with a fast command palette
 - Coming soon: text diff and HTML export
 

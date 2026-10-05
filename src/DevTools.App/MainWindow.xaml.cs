@@ -126,26 +126,8 @@ public sealed partial class MainWindow : Window
 
     private async void OnClosed(object sender, WindowEventArgs args)
     {
-        // A capture leaves a machine-wide setting changed, so stopping it is not optional at
-        // exit: closing the window while listening would otherwise leave the proxy pointed at a
-        // port that dies with the process.
-        StopCapture();
-
         SavePlacement();
         await _state.FlushAsync();
-    }
-
-    private static void StopCapture()
-    {
-        try
-        {
-            App.GetService<DevTools.Http.Capture.CaptureSession>().Stop();
-            _ = App.GetService<Services.ICaptureConfigService>().DisarmRestoreAsync();
-        }
-        catch (Exception ex)
-        {
-            App.LogError("Stopping the capture proxy at exit", ex);
-        }
     }
 
     // ------------------------------------------------------------- placement

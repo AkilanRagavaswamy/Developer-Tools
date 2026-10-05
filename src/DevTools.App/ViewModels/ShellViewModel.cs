@@ -129,9 +129,11 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         PaletteResults.Clear();
 
-        // An empty palette shows recents, which is what you usually want when you open it.
+        // An empty palette leads with recents, newest first — usually the tool you want — and
+        // then lists everything else, so every tool is still one keystroke away.
         var items = string.IsNullOrWhiteSpace(value)
-            ? _catalog.All.Select(t => new ToolSearchResult(t, 0))
+            ? RecentTools().Concat(_catalog.All.Where(t => !_recents.Ids.Contains(t.Id, StringComparer.OrdinalIgnoreCase)))
+                .Select(t => new ToolSearchResult(t, 0))
             : _catalog.Search(value, limit: 30);
 
         foreach (var item in items)

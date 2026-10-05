@@ -106,6 +106,28 @@
                 </TextBlock>
             </StackPanel>
 
+            <!-- Recent tools (FR-S06), newest first -->
+            <StackPanel
+                Spacing="10"
+                Visibility="{x:Bind ViewModel.HasRecents, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon
+                        FontSize="16"
+                        Foreground="{ThemeResource DevToolsAccentBrush}"
+                        Glyph="&#xE81C;" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Recent" />
+                </StackPanel>
+                <ItemsRepeater ItemTemplate="{StaticResource ToolCardTemplate}" ItemsSource="{x:Bind ViewModel.RecentTools, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout
+                            ItemsStretch="Fill"
+                            MinColumnSpacing="12"
+                            MinItemWidth="260"
+                            MinRowSpacing="12" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
             <!-- Favorites (FR-S05) -->
             <StackPanel
                 Spacing="10"

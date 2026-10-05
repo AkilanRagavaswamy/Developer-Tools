@@ -1,8 +1,8 @@
-# DevTools
+# ForgeKitRk – Developer Toolkit
 
-A Windows desktop workbench for **API and payload work** — six tools that cover the loop you
-actually run: compose a request, send it, profile it, format the response, model it in C#, and
-diff it against what it used to be.
+A Windows desktop workbench for **API and payload work** — five tools that cover the loop you
+actually run: compose a request, send it, format the response, model it in C#, and diff it
+against what it used to be.
 
 Built as a WinUI 3 packaged (MSIX) application on .NET 10.
 
@@ -17,16 +17,16 @@ Built as a WinUI 3 packaged (MSIX) application on .NET 10.
 | **JSON to C#** | Generates compilable models from a JSON sample. Records or classes, `init` / `set` / `required`, System.Text.Json or Newtonsoft attributes, nullable annotations, and date/GUID/URI detection. |
 | **SVG to XAML** | Converts SVG shapes, paths, transforms and gradients to WPF or WinUI XAML, with a live preview that renders the output by actually loading it. |
 | **API Builder** | Collections, folders, environments and `{{variables}}`; five auth schemes; JSON, form, multipart and binary bodies; a response viewer with timing, headers and cookies; cURL, OpenAPI 3 and Postman import. |
-| **API Profiler** | Listens to the HTTP calls another application makes and lists them: method, host, status, size, timing, whole headers and whole bodies. Pick a process, press Start, read the exchange. |
 
-They are one app because they are one workflow: every response can be formatted, modelled,
-diffed or profiled in a click, and every request can be profiled without retyping it.
+They are one app because they are one workflow: every response can be formatted, modelled or
+diffed in a click. The tools you opened last are waiting on the Home dashboard and at the top of
+the command palette.
 
 ---
 
 ## What it promises about your data
 
-Two of these tools exist to send HTTP requests, so "nothing leaves the machine" would be a lie.
+One of these tools exists to send HTTP requests, so "nothing leaves the machine" would be a lie.
 The honest version, and how each part is checkable:
 
 | Claim | How it is enforced |
@@ -84,7 +84,7 @@ simply launched.
 There is deliberately only one profile. The usual template also offers an *Unpackaged* profile
 (`"commandName": "Project"`), which cannot work here: `WindowsPackageType` is `MSIX`, and the
 app needs package identity for `ApplicationData.Current.LocalSettings`, the credential vault and
-`devtools://` activation. Offering it would be a button that always crashes.
+`forgekitrk://` activation. Offering it would be a button that always crashes.
 
 Debugging needs Developer Mode on, the same as `-Task run`.
 
@@ -118,7 +118,7 @@ DevTools.Core.Tests ──▶ DevTools.Core ◀── DevTools.Http ◀── De
 | Project | Target | Rule |
 | --- | --- | --- |
 | `DevTools.Core` | `net10.0` | Pure engines. No WinUI, **no `System.Net`**, no package references. |
-| `DevTools.Http` | `net10.0-windows` | The only assembly permitted a socket. Windows-targeted because the capture proxy reads the registry and the TCP table. |
+| `DevTools.Http` | `net10.0-windows` | The only assembly permitted a socket: the request builder, executor and collection import/export. |
 | `DevTools.App` | `net10.0-windows10.0.26100.0` | All Windows concerns; single-project MSIX. |
 
 Every engine is a static class of pure functions returning `OperationResult<T>`. Engines never
@@ -126,21 +126,21 @@ throw for bad *input* — they return a failure carrying a message with a line, 
 so the UI can point at the exact character. That is why almost all of the logic is testable
 without a UI thread.
 
-The view models come in three shapes rather than one, because these six tools genuinely differ:
+The view models come in three shapes rather than one, because these five tools genuinely differ:
 `TextToolViewModelBase` (one input, one output, live debounce), `DualTextToolViewModelBase`
 (two inputs, for the differ) and `JobToolViewModelBase` (an explicit, cancellable job that keeps
-partial results — the two API tools).
+partial results — the API Builder).
 
 ---
 
 ## Tests
 
-527 automated tests, all passing.
+504 automated tests, all passing.
 
 | Suite | Count | Covers |
 | --- | --- | --- |
-| `DevTools.Core.Tests` | 390 | JSON reader/writer/formatter/JSONPath, the differ and its patch, the C# generator, the SVG converter, the syntax tokenizer |
-| `DevTools.Http.Tests` | 137 | Request building and all five auth schemes, the executor and its timings, the capture proxy and its wire reader, process attribution, certificate issuance, cURL/OpenAPI/Postman import, variables, workspace persistence |
+| `DevTools.Core.Tests` | 394 | JSON reader/writer/formatter/JSONPath, the differ and its patch, the C# generator, the SVG converter, the syntax tokenizer |
+| `DevTools.Http.Tests` | 110 | Request building and all five auth schemes, the executor and its timings, cURL/OpenAPI/Postman import, variables, workspace persistence |
 
 Two of them carry unusual weight:
 
@@ -166,27 +166,6 @@ being silently dropped, because the alternative is finding out from the rendered
 **WinUI has no `DrawingImage`, `DrawingGroup` or `DrawingBrush`**, and its `UIElement.Clip` is a
 `RectangleGeometry` and nothing else. The converter offers only the output shapes each dialect
 can actually express, and says so when a clip path cannot survive the trip.
-
-**The profiler needs traffic pointed at it, and says how.** A Windows proxy setting is per user,
-not per process: nothing can point one application at a proxy and leave the rest alone. So the
-capture proxy sees everything, reads each connection's owning process from the TCP table, and the
-process dropdown *filters* the list.
-
-Pointing Windows at the proxy automatically is the part DevTools cannot do from inside its own
-MSIX package — a packaged process has its registry writes redirected into a private hive, so the
-change would appear to succeed and capture nothing. The tool checks for that before it tries,
-says so in plain words, and gives you the address to paste into the app you want to watch (or to
-set as `HTTP_PROXY` and `HTTPS_PROXY` when starting it). Where the setting *can* be changed, it is
-written down first, put back on stop, and restored at the next launch if DevTools died holding it.
-
-**https bodies need a certificate you have to agree to.** Without a DevTools root trusted for
-your user account, an https call is recorded as a tunnel — host, size and timing, no content.
-Installing the root is its own button with its own consent, removing it is offered beside it,
-and a client that pins its certificate is listed as pinned rather than looking like a failure.
-
-**Captured bodies are kept whole.** Nothing is truncated or sampled, because the response you
-wanted to read is always the one that would have been cut. The capture bar shows the running
-total of bytes held, so the cost of that choice is on screen rather than in Task Manager.
 
 ---
 

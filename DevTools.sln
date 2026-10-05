@@ -13,10 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevTools.Core.Tests", "test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevTools.Http.Tests", "tests\DevTools.Http.Tests\DevTools.Http.Tests.csproj", "{B5555555-5555-4555-8555-555555555555}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevTools.Profiler.Agent", "src\DevTools.Profiler.Agent\DevTools.Profiler.Agent.csproj", "{0A72A9BF-6C61-4E23-881B-96CF2338E16E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -113,27 +109,8 @@ Global
 		{B5555555-5555-4555-8555-555555555555}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B5555555-5555-4555-8555-555555555555}.Release|x86.ActiveCfg = Release|Any CPU
 		{B5555555-5555-4555-8555-555555555555}.Release|x86.Build.0 = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|x64.Build.0 = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Debug|x86.Build.0 = Debug|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|ARM64.Build.0 = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|x64.ActiveCfg = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|x64.Build.0 = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|x86.ActiveCfg = Release|Any CPU
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{0A72A9BF-6C61-4E23-881B-96CF2338E16E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

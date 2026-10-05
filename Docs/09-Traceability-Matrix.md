@@ -15,11 +15,11 @@ app. *Gate*: enforced by the build.
 | ID | Requirement | Implementation | Evidence |
 | --- | --- | --- | --- |
 | FR-S01 | Flat navigation, compact on launch | `Views/ShellPage.xaml.cs` · `BuildNavigation`, `OnPaneToggleClick` | Manual — six icons at 48 px, names on hover, state remembered |
-| FR-S02 | Home dashboard with cards and pins | `ViewModels/HomeViewModel.cs` · `Views/HomePage.xaml` | **Verified** — six cards, pinned ones above; no recent strip |
+| FR-S02 | Home dashboard with cards, recents and pins | `ViewModels/HomeViewModel.cs` · `Views/HomePage.xaml` | Manual — five cards, Recent and Favorites rows above them |
 | FR-S03 | Ranked search (through the palette) | `Services/ToolCatalog.cs` · `Search`/`Score` · `ShellViewModel.OnPaletteQueryChanged` | **Verified** — the title-bar box is gone; `Ctrl+K` searches the same index |
 | FR-S04 | `Ctrl+K` command palette | `ViewModels/ShellViewModel.cs` · `OpenPalette` | Manual |
 | FR-S05 | Favorites, persisted | `Services/FavoritesService.cs` | Manual — `favorites.json` written |
-| FR-S06 | Recents, de-duplicated (recorded, not displayed) | `Services/RecentToolsService.cs` · `Services/NavigationService.cs` | **Verified** — `recents.json` holds all six after use |
+| FR-S06 | Recents, de-duplicated, shown on Home and in the palette | `Services/RecentToolsService.cs` · `Services/NavigationService.cs` · `HomeViewModel.RecentTools` · `ShellViewModel.OnPaletteQueryChanged` | Manual — Recent row shows the last four opened; empty palette lists them first |
 | FR-S07 | Theme applied live | `Services/ThemeService.cs` | Manual |
 | FR-S08 | Backdrop with fallback | `Services/ThemeService.cs` · `MainWindow.xaml.cs` | Manual |
 | FR-S09 | Custom title bar | `MainWindow.xaml.cs` · `ShellPage.xaml` · `Styles/Controls.xaml` · `DevToolsCaptionButtonStyle` | **Verified** — identity, options row and four 46 × 32 commands, all sharing a centre line with the Tall caption buttons, in both themes |
@@ -123,21 +123,9 @@ app. *Gate*: enforced by the build.
 
 ---
 
-## 7. API Profiler
+## 7. API Profiler — removed
 
-| ID | Requirement | Implementation | Evidence |
-| --- | --- | --- | --- |
-| FR-A01 | Capture proxy records whole exchanges | `Capture/CaptureProxy.cs` · `Capture/HttpWire.cs` | Automated — `Forwards_a_request_and_records_the_whole_exchange`, `Records_a_posted_body` |
-| FR-A02 | Proxy change attempted only where it can work | `Capture/SystemProxy.cs` · `CanChangeSystemSetting` · `CaptureSession.RoutesAutomatically` | Automated — `Reads_the_current_setting_without_changing_it`, `An_unpackaged_process_can_change_the_setting`; restore path manual (it alters the machine) |
-| FR-A03 | Per user, not per process — said plainly | `ApiProfilerViewModel.ProxyNotice` · `ApiProfilerPage.xaml` banner | Manual |
-| FR-A04 | Process attribution from the TCP table | `Capture/ProcessResolver.cs` | Automated — `Attributes_a_loopback_connection_to_the_process_that_opened_it` |
-| FR-A05 | Certificate is its own consented step | `Capture/CaptureCertificates.cs` · `InstallCertificateCommand` | Automated — `Creating_a_root_does_not_trust_it`, `Issues_a_host_certificate_signed_by_its_root` |
-| FR-A06 | Tunnel and pinned are distinct outcomes | `CaptureOutcome` · `CaptureProxy.HandleConnectAsync` | Automated — `A_tunnel_counts_its_bytes_without_keeping_them`, `A_pinned_client_says_so…` |
-| FR-A07 | Port and thumbprint remembered once | `Services/CaptureConfigService.cs` | Manual — survives a restart |
-| FR-A08 | Whole bodies retained | `CaptureProxy.ForwardAsync` · no cap | Automated — `Keeps_a_large_response_body_in_full` |
-| FR-A09 | Crash recovery of the proxy setting | `CaptureConfig.Restore` · `App.RecoverCaptureProxyAsync` | Manual — kill the process mid-capture |
-| FR-A10 | Whole exchange, hand-off, cURL | `ApiProfilerPage.xaml` detail pane · `SendToBuilderCommand` | Manual |
-| FR-A11 | Credential values covered in the detail | `ApiProfilerViewModel.Redact` | Manual + code |
+The API Profiler was removed from the product. Requirements FR-A01…FR-A11 are retired, and nothing implements them.
 
 ---
 
