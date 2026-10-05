@@ -80,7 +80,7 @@ Forgekit is designed to comply with applicable data-protection laws, including t
 
 ## Contact
 
-Questions about this policy can be sent to: _[add your public contact email before publishing]_.
+Questions about this policy can be sent to: _akilanrkpersonal@gmail.com_.
 
 ---
 
