@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forgekit – Developer Toolkit</title>
+  <meta name="description" content="Forgekit is a fast, private developer toolkit for Windows: format and diff JSON, generate C# models, convert SVG to XAML, and build and profile HTTP APIs — fully offline." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Reusable logo tile -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="fk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#818CF8"/><stop offset=".52" stop-color="#6366F1"/><stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+    <symbol id="tile" viewBox="0 0 1024 1024">
+      <rect width="1024" height="1024" rx="224" fill="url(#fk)"/>
+      <g fill="none" stroke="#fff" stroke-width="46" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M452 316 C 410 316 410 360 410 426 C 410 478 390 500 356 512 C 390 524 410 546 410 598 C 410 664 410 708 452 708"/>
+        <path d="M572 316 C 614 316 614 360 614 426 C 614 478 634 500 668 512 C 634 524 614 546 614 598 C 614 664 614 708 572 708"/>
+      </g>
+      <rect x="479" y="479" width="66" height="66" rx="16" transform="rotate(45 512 512)" fill="#C7D2FE"/>
+    </symbol>
+  </defs></svg>
+
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="#home">
+        <svg class="logo" viewBox="0 0 1024 1024" aria-hidden="true"><use href="#tile"/></svg>
+        Forgekit
+      </a>
+      <div class="tabs">
+        <a href="#home" data-tab="home">Home</a>
+        <a href="#whats-new" data-tab="whats-new">What's New</a>
+        <a href="#privacy" data-tab="privacy">Privacy</a>
+        <a href="#about" data-tab="about">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- ============ HOME ============ -->
+    <section id="home" class="panel" aria-label="Home">
+      <div class="hero">
+        <svg class="logo-lg" viewBox="0 0 1024 1024" aria-hidden="true"><use href="#tile"/></svg>
+        <div class="hero-text">
+          <div class="tag">Developer Toolkit</div>
+          <h1>Forgekit</h1>
+          <p>A fast, private set of developer utilities for Windows — in one native app. No browser tabs, no sign-in, no telemetry.</p>
+          <a class="cta" href="https://apps.microsoft.com/detail/9MZ99SQLS9P2" target="_blank" rel="noopener">
+            Get it from the Microsoft Store
+          </a>
+        </div>
+      </div>
+
+      <div class="highlights">
+        <span class="chip"><span class="dot"></span> 100% local — works offline</span>
+        <span class="chip"><span class="dot"></span> No telemetry or analytics</span>
+        <span class="chip"><span class="dot"></span> Secrets in the Windows Credential Manager</span>
+        <span class="chip"><span class="dot"></span> Light &amp; dark themes</span>
+      </div>
+
+      <h2>The tools</h2>
+      <p class="lead">Six developer tools today, each one keyboard-first and built for Windows.</p>
+      <div class="grid">
+        <article class="tool">
+          <div class="badge">{ }</div>
+          <h3>JSON Formatter</h3>
+          <p>Format, validate and minify JSON, query it with JSONPath, and handle large files with ease.</p>
+        </article>
+        <article class="tool">
+          <div class="badge">⇄</div>
+          <h3>JSON Diff Checker</h3>
+          <p>Compare two JSON documents semantically — side-by-side and tree views, plus an exportable RFC 6902 patch.</p>
+        </article>
+        <article class="tool">
+          <div class="badge">C#</div>
+          <h3>JSON to C#</h3>
+          <p>Generate clean, compilable C# models from any JSON sample, with your choice of type, members and serializer.</p>
+        </article>
+        <article class="tool">
+          <div class="badge">&lt;/&gt;</div>
+          <h3>SVG to XAML</h3>
+          <p>Convert SVG shapes, paths and gradients to WPF or WinUI XAML, with a live preview.</p>
+        </article>
+        <article class="tool">
+          <div class="badge">↗</div>
+          <h3>API Builder</h3>
+          <p>Compose and send HTTP requests with methods, headers, auth and environments. Import and export cURL.</p>
+        </article>
+        <article class="tool">
+          <div class="badge">∿</div>
+          <h3>API Profiler</h3>
+          <p>Watch the HTTP calls an app makes and read the whole exchange — via a system proxy or by launching a .NET app with the profiler attached.</p>
+        </article>
+      </div>
+
+      <div class="soon">
+        <b>Coming soon:</b> a text diff tool and HTML export.
+      </div>
+    </section>
+
+    <!-- ============ WHAT'S NEW ============ -->
+    <section id="whats-new" class="panel" aria-label="What's New" hidden>
+      <h1>What's New</h1>
+      <p class="lead">Release notes for Forgekit.</p>
+
+      <div class="release">
+        <div class="release-head">
+          <span class="ver">1.0.0</span>
+          <span class="date">5 October 2026</span>
+          <span class="pill">Initial release</span>
+        </div>
+        <p>The first public release of Forgekit — the full toolkit, running natively and privately on Windows.</p>
+
+        <div class="tagrow"><span class="kind new">New</span></div>
+        <ul>
+          <li><b>JSON Formatter</b> — format, validate, minify and query JSON with JSONPath, with syntax colouring and large-file handling.</li>
+          <li><b>JSON Diff Checker</b> — semantic, structure-aware diff with side-by-side and tree views, best-match array pairing, and RFC 6902 patch export.</li>
+          <li><b>JSON to C#</b> — generate compilable C# models from a JSON sample, with configurable types, members, serializer attributes and number types.</li>
+          <li><b>SVG to XAML</b> — convert SVG shapes, paths and gradients to WPF / WinUI XAML with a live preview.</li>
+          <li><b>API Builder</b> — build and send HTTP requests with headers, auth, environments and cURL import/export.</li>
+          <li><b>API Profiler</b> — inspect the HTTP calls an application makes, in two modes: a system proxy, or launch-and-attach for .NET apps.</li>
+          <li>Light, dark and system themes, a command palette, and keyboard shortcuts throughout.</li>
+          <li>Fully offline for the JSON, SVG and code tools; secrets stored in the Windows Credential Manager.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ PRIVACY ============ -->
+    <section id="privacy" class="panel prose" aria-label="Privacy" hidden>
+      <h1>Privacy Policy</h1>
+      <div class="meta">
+        <div><b>Effective date:</b> 5 October 2026</div>
+        <div><b>Publisher:</b> Akilan Ragavaswamy</div>
+        <div><b>Application:</b> Forgekit – Developer Toolkit (Microsoft Store)</div>
+        <div><b>Contact:</b> <a href="mailto:akilanrkpersonal@gmail.com">akilanrkpersonal@gmail.com</a></div>
+      </div>
+
+      <h2>Summary</h2>
+      <p>Forgekit is a set of local developer utilities for Windows. <b>It does not collect, transmit, or share any personal information with the developer or any third party.</b> There is no account, no sign-in, no telemetry, no analytics, no advertising, no crash reporting, and no update tracking. Everything you put into the app is processed on your own device.</p>
+      <p>The only time Forgekit sends anything over the network is when <b>you</b> use the API tools (API Builder and API Profiler) to contact a server <b>you</b> choose. Forgekit is never a recipient of that data.</p>
+      <p>This policy explains what the app does with data, in plain language, and is provided to meet Microsoft Store Policy 10.5 and applicable privacy laws.</p>
+
+      <h2>What information Forgekit handles, and where it goes</h2>
+      <p>Forgekit does not have a server and does not phone home. The developer receives <b>no</b> data from the app. The content you work with is handled as follows.</p>
+      <h3>Tools that are fully offline</h3>
+      <p>The JSON Formatter, JSON Diff Checker, JSON-to-C# generator, and SVG-to-XAML converter run entirely on your device and have no network code. Any text, JSON, SVG, or files you paste, open, or drop into them are processed in memory on your machine and are not sent anywhere.</p>
+      <h3>API Builder</h3>
+      <p>API Builder sends the HTTP requests <b>you</b> compose to the URLs <b>you</b> enter. That network traffic goes directly from your machine to the servers you target — the same as any HTTP client (for example, a browser or <code>curl</code>). The developer does not see, receive, or intercept it.</p>
+      <ul>
+        <li>Request and response data is held on your device so you can read it.</li>
+        <li>Requests, headers, and settings you save are stored locally on your device (see <b>Storage and security</b>).</li>
+        <li>Secrets you enter — passwords, bearer tokens, API keys, OAuth client secrets — are stored in the <b>Windows Credential Manager</b> (the operating system's secure credential vault), never in a plain file, and never transmitted anywhere except, where applicable, to the endpoint you are authenticating against.</li>
+      </ul>
+      <h3>API Profiler</h3>
+      <p>API Profiler lets you inspect the HTTP calls an application makes, so you can debug and understand network behaviour on your own machine. All captured data stays on your device and is shown only to you; it is not transmitted to the developer or any third party. It works in one of two modes you choose:</p>
+      <ul>
+        <li><b>Proxy mode.</b> While you are actively capturing, Forgekit runs a local proxy on your machine and temporarily points the <b>per-user Windows proxy setting</b> at it so that traffic can be observed. This setting is recorded before it is changed and <b>restored when you stop</b> (and, if the app was closed unexpectedly, restored on next launch). To read the contents of HTTPS traffic, you may <b>optionally</b> install a local Forgekit root certificate; this happens only when you explicitly choose to, Windows asks you to confirm, and you can remove it at any time from within the app. Captured requests and responses are kept only in memory / on your device for the session.</li>
+        <li><b>Launch mode.</b> Forgekit starts a .NET application you select and observes the HTTP calls that application makes, from inside that process, reporting them back to Forgekit on your machine over a private local channel. Nothing leaves your device.</li>
+      </ul>
+      <p>Because these features can observe network traffic and the contents of requests, that traffic <b>may contain personal information</b> that belongs to you or appears in the applications you are testing. Forgekit only shows it to you locally; it does not store it beyond your session, and it does not send it anywhere.</p>
+
+      <h2>Full-trust and system capabilities</h2>
+      <p>Forgekit is a full-trust Windows desktop app (the <code>runFullTrust</code> and <code>unvirtualizedResources</code> capabilities). This means it runs with the same access as an ordinary Win32 desktop program — it can read and write files you point it at and make network connections — and it can change the per-user Windows proxy setting as described above. These capabilities are used only to provide the features you invoke, and the only system change Forgekit makes (the proxy setting, and the optional certificate) is reversible and under your control. Forgekit does not use these capabilities to scan your device, collect data in the background, or send anything to the developer.</p>
+
+      <h2>Information we collect</h2>
+      <p><b>None.</b> The developer collects no personal information through Forgekit. There is no analytics or telemetry of any kind.</p>
+
+      <h2>Storage and security</h2>
+      <ul>
+        <li>Your tool options, and data such as the API Builder workspace you save, are stored <b>locally</b> in the app's per-user storage on your device.</li>
+        <li>Data you type or paste into a tool is cleared when you close Forgekit; saved options persist according to your settings.</li>
+        <li>Secrets are stored in the <b>Windows Credential Manager</b>, protected by the operating system.</li>
+        <li>Network requests you make with the API tools use the security of the protocol you choose; HTTPS requests are encrypted in transit by the operating system's TLS stack.</li>
+        <li>Because no data is sent to the developer, there is no developer-side database to breach.</li>
+      </ul>
+
+      <h2>How information is shared</h2>
+      <p>Forgekit does <b>not</b> sell, rent, or share your information, and does not disclose it to the developer or to any third party. The only outbound data is the API requests you deliberately send to the servers you specify, and any authentication you perform against those servers — all initiated and directed by you.</p>
+
+      <h2>Your choices and controls</h2>
+      <ul>
+        <li>Use only the offline tools if you do not want any network activity.</li>
+        <li>Clear saved tool state, recent items, and favourites, and reset all settings, from <b>Settings → Stored data</b>.</li>
+        <li>Remove the optional HTTPS inspection certificate from within the API Profiler at any time.</li>
+        <li>Access or delete everything the app has stored by opening the data folder (Settings → Stored data → Open folder) or by uninstalling Forgekit, which removes its local data.</li>
+        <li>All of your information is on your own device; you have direct access to it.</li>
+      </ul>
+
+      <h2>Children's privacy</h2>
+      <p>Forgekit is a developer tool intended for a general, professional audience. It is not directed at children, and it does not knowingly collect any information from children under the age of 13.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>We will update this policy as the app's features change, and we will revise the effective date above. The current version is the one published at the URL linked from the Microsoft Store listing.</p>
+
+      <h2>Legal compliance</h2>
+      <p>Forgekit is designed to comply with applicable data-protection laws, including the EU General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). Because the developer does not collect or process your personal information, there is no developer-held data to access, correct, export, or delete; your data remains under your control on your device.</p>
+
+      <p class="note">This policy describes Forgekit's actual behaviour and is provided to satisfy Microsoft Store Policy 10.5 for a full-trust desktop app.</p>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section id="about" class="panel" aria-label="About" hidden>
+      <h1>About</h1>
+      <p class="lead">Forgekit is built and maintained by an independent developer, with a simple principle: useful tools that keep your data on your own machine.</p>
+
+      <div class="cards2">
+        <div class="infocard">
+          <h3>Developer</h3>
+          <p><b>Akilan Ragavaswamy</b><br/>Independent software developer.</p>
+          <p>Forgekit brings the small jobs developers do every day — formatting and diffing JSON, generating models, converting vectors, exercising and inspecting APIs — into one fast, native Windows app that works offline.</p>
+        </div>
+        <div class="infocard">
+          <h3>Contact &amp; links</h3>
+          <p>Email: <a href="mailto:akilanrkpersonal@gmail.com">akilanrkpersonal@gmail.com</a></p>
+          <p>Source code: <a href="https://github.com/AkilanRagavaswamy/Developer-Tools" target="_blank" rel="noopener">github.com/AkilanRagavaswamy/Developer-Tools</a></p>
+          <p>Get the app: <a href="https://apps.microsoft.com/detail/9MZ99SQLS9P2" target="_blank" rel="noopener">Microsoft Store</a></p>
+          <p>Privacy: <a href="#privacy" data-tab="privacy">Privacy policy</a></p>
+        </div>
+      </div>
+
+      <h2>License</h2>
+      <p class="lead">Forgekit is released under the MIT License.</p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2026 Akilan Ragavaswamy. All rights reserved.</span>
+      <span>Forgekit – Developer Toolkit</span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+      var ids = panels.map(function (p) { return p.id; });
+
+      function show(id) {
+        if (ids.indexOf(id) === -1) { id = 'home'; }
+        panels.forEach(function (p) { p.hidden = (p.id !== id); });
+        document.querySelectorAll('.tabs a').forEach(function (a) {
+          a.setAttribute('aria-current', a.getAttribute('data-tab') === id ? 'page' : 'false');
+        });
+        document.title = (id === 'home')
+          ? 'Forgekit – Developer Toolkit'
+          : ({'whats-new': "What's New", 'privacy': 'Privacy', 'about': 'About'}[id] + ' · Forgekit');
+      }
+
+      function fromHash() {
+        var id = (location.hash || '#home').slice(1);
+        show(id);
+        window.scrollTo(0, 0);
+      }
+
+      window.addEventListener('hashchange', fromHash);
+      fromHash();
+    })();
+  </script>
+</body>
+</html>
