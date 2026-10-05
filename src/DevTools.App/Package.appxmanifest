@@ -8,14 +8,16 @@
 	<Identity Name="AkilanRagavaswamy.ForgekitDeveloperToolkit" Publisher="CN=4FEF7FAB-6AD4-4C46-88A8-05AFF705DD4C" Version="1.0.0.0" />
 
 	<Properties>
-		<DisplayName>Forgekit - Developer Tools</DisplayName>
+		<DisplayName>Forgekit – Developer Toolkit</DisplayName>
 		<PublisherDisplayName>Akilan Ragavaswamy</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
 		<Description>Six developer tools in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler for the calls an application makes.</Description>
 	</Properties>
 
 	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+		<!-- Desktop only: Forgekit is a full-trust (runFullTrust) app, so it runs on Windows
+		     Desktop and not on Xbox/HoloLens/IoT. Declaring Windows.Universal would make the
+		     Store select device families this package cannot support. -->
 		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
 	</Dependencies>
 
@@ -25,7 +27,7 @@
 
 	<Applications>
 		<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-			<uap:VisualElements DisplayName="Forgekit - Developer Tools" Description="A developer toolkit in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler."
+			<uap:VisualElements DisplayName="Forgekit – Developer Toolkit" Description="A developer toolkit in one native Windows app: JSON formatting, diffing and C# generation, SVG to XAML conversion, an HTTP request builder, and a capture profiler."
 								BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
 				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="Forgekit">
 					<uap:ShowNameOnTiles>
