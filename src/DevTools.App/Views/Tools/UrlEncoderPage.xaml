@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.UrlEncoderPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+>
+
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <tkp:Segmented
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Direction"
+                    SelectedIndex="{x:Bind ViewModel.DirectionIndex, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Direction">
+                    <tkp:SegmentedItem Content="Encode" />
+                    <tkp:SegmentedItem Content="Decode" />
+                </tkp:Segmented>
+
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="180"
+                    AutomationProperties.Name="What is being encoded"
+                    SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="What is being encoded">
+                    <ComboBoxItem Content="Query value / path" ToolTipService.ToolTip="Escapes everything except letters, digits and - . _ ~" />
+                    <ComboBoxItem Content="Whole URL" ToolTipService.ToolTip="Keeps : / ? # &amp; = and the other URL delimiters" />
+                    <ComboBoxItem Content="Form data (+ for space)" ToolTipService.ToolTip="application/x-www-form-urlencoded" />
+                </ComboBox>
+
+                <CheckBox
+                    Grid.Column="2"
+                    AutomationProperties.Name="Encode or decode each line on its own"
+                    Content="Each line"
+                    IsChecked="{x:Bind ViewModel.EachLine, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}" />
+
+                <Button
+                    Grid.Column="4"
+                    AutomationProperties.Name="Use the result as the input, the other way round"
+                    Command="{x:Bind ViewModel.SwapCommand}"
+                    Style="{StaticResource DevToolsInlineButtonStyle}"
+                    ToolTipService.ToolTip="Use the result as the input, the other way round">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <FontIcon FontSize="13" Glyph="&#xE8AB;" />
+                        <TextBlock Text="Swap" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="{x:Bind ViewModel.InputHeader, Mode=OneWay}"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Paste a URL, a query value or form data. Decoding reads percent-escapes as UTF-8 and leaves a malformed % exactly as written."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <controls:CodeEditor
+                    Margin="5,0,0,0"
+                    CopyCommand="{x:Bind ViewModel.CopyOutputCommand}"
+                    FooterText="{x:Bind ViewModel.OutputStats, Mode=OneWay}"
+                    Header="{x:Bind ViewModel.OutputHeader, Mode=OneWay}"
+                    IsReadOnly="True"
+                    PlaceholderText="The result appears here as you type."
+                    SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                    Text="{x:Bind ViewModel.Output, Mode=OneWay}" />
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

@@ -134,7 +134,11 @@
         <Setter Property="MinHeight" Value="{StaticResource DevToolsControlHeight}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="Padding" Value="11,0" />
+        <!--
+            TextBox has no centring of its own: its text and its placeholder sit at the top
+            padding. At this height, 5 px above a 13 px line is what puts both in the middle.
+        -->
+        <Setter Property="Padding" Value="11,5,11,0" />
         <Setter Property="FontSize" Value="13" />
     </Style>
 
@@ -166,6 +170,12 @@
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontSize" Value="13" />
+        <!--
+            The template puts the label 5 px from the top, which at 13 px sits it above the
+            middle of the box. Centred with no top padding, the two line up.
+        -->
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="8,0,0,0" />
     </Style>
 
     <!--

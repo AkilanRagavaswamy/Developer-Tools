@@ -147,6 +147,14 @@ public static class JsonWriter
     {
         builder.Append('"');
 
+        // The usual string needs no escaping at all, and appending it whole is far cheaper
+        // than appending it a character at a time.
+        if (!NeedsEscaping(value, options.EscapeNonAscii))
+        {
+            builder.Append(value).Append('"');
+            return;
+        }
+
         foreach (var c in value)
         {
             switch (c)
@@ -173,6 +181,19 @@ public static class JsonWriter
         }
 
         builder.Append('"');
+    }
+
+    private static bool NeedsEscaping(string value, bool escapeNonAscii)
+    {
+        foreach (var c in value)
+        {
+            if (c < ' ' || c is '"' or '\\' || (c >= '\u007f' && (escapeNonAscii || c <= '\u009f')))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Renders a node as a single-line string, for diff cells and error messages.</summary>

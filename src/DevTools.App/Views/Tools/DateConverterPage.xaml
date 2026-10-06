@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.DateConverterPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:time="using:DevTools.Core.Time"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+>
+
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox
+                    MinWidth="150"
+                    AutomationProperties.Name="Timestamp unit"
+                    ItemsSource="{x:Bind ViewModel.UnitNames}"
+                    SelectedIndex="{x:Bind ViewModel.UnitIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="What a number is counted in" />
+
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="170"
+                    AutomationProperties.Name="Date order"
+                    ItemsSource="{x:Bind ViewModel.DateOrderNames}"
+                    SelectedIndex="{x:Bind ViewModel.DateOrderIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="How a date written in numbers, like 06-10-2026, is read" />
+
+                <ComboBox
+                    Grid.Column="2"
+                    MinWidth="240"
+                    HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="Time zone"
+                    ItemsSource="{x:Bind ViewModel.ZoneNames}"
+                    SelectedIndex="{x:Bind ViewModel.ZoneIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="The zone dates are shown in, and dates without an offset are read in" />
+
+                <ToggleButton
+                    Grid.Column="3"
+                    Height="{StaticResource DevToolsControlHeight}"
+                    Padding="{StaticResource DevToolsInlinePadding}"
+                    AutomationProperties.Name="Follow the current time"
+                    IsChecked="{x:Bind ViewModel.IsLive, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Follow the current time, second by second">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <FontIcon FontSize="13" Glyph="&#xE916;" />
+                        <TextBlock FontSize="13" Text="Live" />
+                    </StackPanel>
+                </ToggleButton>
+
+                <Button
+                    Grid.Column="4"
+                    AutomationProperties.Name="Use the current time"
+                    Command="{x:Bind ViewModel.NowCommand}"
+                    Style="{StaticResource DevToolsInlineAccentButtonStyle}"
+                    ToolTipService.ToolTip="Fill in the current time">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <FontIcon FontSize="13" Glyph="&#xE823;" />
+                        <TextBlock Text="Now" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <Grid RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Style="{StaticResource DevToolsCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DevToolsSectionHeaderStyle}" Text="Timestamp or date" Margin="0" />
+                    <TextBox
+                        AutomationProperties.Name="Timestamp or date"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        FontSize="20"
+                        PlaceholderText="1700000000   ·   1700000000000   ·   06-10-2026 14:30   ·   2026-10-06T09:00:00Z"
+                        Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock
+                        Style="{StaticResource DevToolsCaptionStyle}"
+                        Text="{x:Bind ViewModel.SummaryText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource DevToolsPreviewCardStyle}">
+                <ScrollViewer Padding="16,10" VerticalScrollBarVisibility="Auto">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Fields}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="time:DateField">
+                                <Grid
+                                    Padding="0,7"
+                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource DevToolsFieldLabelStyle}" Text="{x:Bind Label}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Style="{StaticResource DevToolsFieldValueStyle}"
+                                        Text="{x:Bind Value}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        AutomationProperties.Name="Copy"
+                                        Click="OnCopyClick"
+                                        Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                        Tag="{x:Bind Value}"
+                                        ToolTipService.ToolTip="Copy">
+                                        <FontIcon FontSize="13" Glyph="&#xE8C8;" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </controls:ToolShell>
+</views:ToolPageBase>

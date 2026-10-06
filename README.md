@@ -1,8 +1,8 @@
 # ForgeKitRk – Developer Toolkit
 
-A Windows desktop workbench for **API and payload work** — five tools that cover the loop you
-actually run: compose a request, send it, format the response, model it in C#, and diff it
-against what it used to be.
+A Windows desktop workbench for **API and payload work** — twenty tools that cover the loop
+you actually run: compose a request, send it, format the response, model it in C#, diff it
+against what it used to be, and the dozen small conversions that happen in between.
 
 Built as a WinUI 3 packaged (MSIX) application on .NET 10.
 
@@ -13,9 +13,24 @@ Built as a WinUI 3 packaged (MSIX) application on .NET 10.
 | Tool | What it does |
 | --- | --- |
 | **JSON Formatter** | Pretty-print, minify and validate JSON; query it with JSONPath; sort keys. Read the result as text or as a foldable tree, where every object and array collapses by key and the selected row hands you its JSONPath. Numbers keep their exact literal form — `1.0` stays `1.0`, `1e10` is not expanded, and a 30-digit integer keeps every digit. |
-| **JSON Diff Checker** | Compares two documents by *structure*, so member order is never a difference. Reads them side by side, row for row, with differences coloured by kind and a navigator that steps through them one at a time. Three array-matching strategies, seven loosening options, and an RFC 6902 JSON Patch you can hand to anything else. |
+| **JSON Diff Checker** | Compares two documents by *structure*, so member order is never a difference. Reads them side by side, row for row, with differences coloured by kind and a navigator that steps through them one at a time. Three array-matching strategies, seven loosening options, and an RFC 6902 JSON Patch you can hand to anything else. The side-by-side view exports as a self-contained HTML page. |
 | **JSON to C#** | Generates compilable models from a JSON sample. Records or classes, `init` / `set` / `required`, System.Text.Json or Newtonsoft attributes, nullable annotations, and date/GUID/URI detection. |
 | **SVG to XAML** | Converts SVG shapes, paths, transforms and gradients to WPF or WinUI XAML, with a live preview that renders the output by actually loading it. |
+| **JSON to Table** | Lays a JSON array out as rows and columns — nested objects become dotted columns, arrays stay as JSON in their cell — and copies it as tab-separated values for Excel, RFC 4180 CSV or a Markdown table. |
+| **SQL Formatter** | One clause per line, in ten dialects (Standard SQL, T-SQL, MySQL, MariaDB, PostgreSQL, PL/SQL, Db2, Redshift, Spark SQL, N1QL), with keyword case and leading-comma options. Only whitespace and keyword case ever change. |
+| **XML Formatter** | Indents or minifies XML by streaming it, keeps the declaration exactly as written, and never processes a DTD or fetches an external entity. |
+| **Date & Unix Time** | One box for a timestamp in seconds, milliseconds, microseconds or nanoseconds — the unit read from its size — or a date in any zone, shown fourteen ways including ISO 8601, RFC 1123, .NET ticks and FILETIME. |
+| **Base64 Text** | Encodes and decodes in seven text encodings, URL-safe or standard, wrapped or not, line by line if asked. Decoding forgives form (padding, line breaks, either alphabet, a `data:` prefix) and refuses to show binary as text. |
+| **Base64 Image** | Image to Base64 or a data URI and back, with a preview; recognises PNG, JPEG, GIF, BMP, WebP, ICO, TIFF and SVG by their bytes, not their label. |
+| **URL Encoder** | Percent-encoding for a query value, a whole URL or form data, decoded as UTF-8. |
+| **HTML Encoder** | Escapes and unescapes HTML entities, optionally writing every non-ASCII character as a numeric reference. |
+| **UUID Generator** | Versions 4, 7 and 1, up to 10,000 at a time, in four formats. A batch of version 7 UUIDs sorts in the order it was made. Paste one to see its version and, for v7, when it was created. |
+| **QR Code Generator** | Text or a URL to a QR code with a choice of recovery level, quiet zone and colours; saves as PNG up to 4096 px or as SVG, and copies either. |
+| **Text Compare** | Side by side or inline, with the changed words inside a changed line highlighted, a navigator through the differences, and a unified diff to copy — or the side-by-side view saved as an HTML page. |
+| **Character Counter** | Characters as people count them, words, sentences, paragraphs, lines, bytes and reading time, measured against the common limits — a post on X, an SMS, an SEO title. |
+| **Regex Validator** | Tests a .NET regular expression against text: every match with its line, column and groups, an optional replacement preview, the usual flags and a JavaScript mode. A two-second limit stops a catastrophically backtracking pattern instead of freezing the app. |
+| **HTML Viewer** | Open or write HTML and see the page update as you edit. The preview never goes online, and the page's own scripts run only if you allow them. |
+| **Markdown Preview** | GitHub-flavoured Markdown rendered as you type, in light or dark, saved as a standalone HTML page. The preview runs no script and loads nothing from the network. |
 | **API Builder** | Collections, folders, environments and `{{variables}}`; five auth schemes; JSON, form, multipart and binary bodies; a response viewer with timing, headers and cookies; cURL, OpenAPI 3 and Postman import. |
 
 They are one app because they are one workflow: every response can be formatted, modelled or
@@ -31,10 +46,11 @@ The honest version, and how each part is checkable:
 
 | Claim | How it is enforced |
 | --- | --- |
-| The JSON, SVG and code-generation tools have no network code **at all** | `DevTools.Core` has no package references and no `System.Net` usage. `build.ps1 -Task verify` greps for every network type and fails the build on a hit. |
+| Every tool except API Builder has no network code **at all** | Their engines live in `DevTools.Core`, which has no package references and no `System.Net` usage. `build.ps1 -Task verify` greps for every network type and fails the build on a hit. |
 | Everything outbound goes through one file | All socket work lives in `src/DevTools.Http/Execution/HttpExecutor.cs`. Nothing else constructs a handler. |
 | No telemetry, analytics, crash reporting or update checks — ever | The same verify task greps the whole of `src` and fails on a hit. |
 | Secrets are never written to a file | Passwords, tokens and client secrets go to the Windows credential vault; collections store a reference. Exporting a collection leaves them out by default. |
+| Markdown Preview and HTML Viewer cannot reach the internet | Both previews are a WebView2 with a handler that refuses every request the page makes, behind a Content-Security-Policy that allows only inline style and `data:` images. Script is off — in HTML Viewer, unless you turn on the page's own scripts, which still cannot fetch anything. A link you click opens in your own browser. |
 
 ---
 
@@ -126,7 +142,7 @@ throw for bad *input* — they return a failure carrying a message with a line, 
 so the UI can point at the exact character. That is why almost all of the logic is testable
 without a UI thread.
 
-The view models come in three shapes rather than one, because these five tools genuinely differ:
+The view models come in three shapes rather than one, because the tools genuinely differ:
 `TextToolViewModelBase` (one input, one output, live debounce), `DualTextToolViewModelBase`
 (two inputs, for the differ) and `JobToolViewModelBase` (an explicit, cancellable job that keeps
 partial results — the API Builder).
@@ -135,11 +151,11 @@ partial results — the API Builder).
 
 ## Tests
 
-504 automated tests, all passing.
+579 automated tests, all passing.
 
 | Suite | Count | Covers |
 | --- | --- | --- |
-| `DevTools.Core.Tests` | 394 | JSON reader/writer/formatter/JSONPath, the differ and its patch, the C# generator, the SVG converter, the syntax tokenizer |
+| `DevTools.Core.Tests` | 469 | JSON reader/writer/formatter/JSONPath, the differ and its patch, the C# generator, the SVG converter, the SQL formatter in all ten dialects, the XML formatter, JSON to Table, the date converter, the codecs, the UUID generator, the regex tester, the HTML diff export, text statistics, Smart Detect, the syntax tokenizer |
 | `DevTools.Http.Tests` | 110 | Request building and all five auth schemes, the executor and its timings, cURL/OpenAPI/Postman import, variables, workspace persistence |
 
 Two of them carry unusual weight:

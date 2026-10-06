@@ -200,3 +200,39 @@ Each is handled and tested.
 18. An SVG with a feature outside the supported subset converts what it can and names what it could not.
 19. A request to an unresolvable host, a refused connection, a TLS failure and a timeout each produce a distinct, actionable message.
 20. A response with no `Content-Type`, or a body that is not valid UTF-8, renders as a hex dump rather than mojibake.
+
+---
+
+## Release 1.1 — fifteen new tools
+
+Added in 1.1, each with its engine in `DevTools.Core` (pure, no network) and its tests in
+`DevTools.Core.Tests`. Where a tool follows DevToys, the differences are deliberate and listed.
+
+| Id | Tool | Engine | Notes against DevToys |
+| --- | --- | --- | --- |
+| FR-N01 | JSON to Table | `Json/JsonTable` | Exact numbers; arrays kept as JSON cells, not dropped; RFC 4180 CSV quoting; TSV and Markdown output |
+| FR-N02 | SQL Formatter | `Sql/SqlFormatter` | Same ten dialects and layout (DevToys' test suite ported and passing); hand-written scanner instead of per-call regexes; keyword case Upper/Lower/Preserve; ASC/DESC recognised; contextual negative numbers |
+| FR-N03 | XML Formatter | `Xml/XmlFormatter` | Streaming reader→writer instead of a DOM; declaration kept verbatim (DevToys rewrote every "utf-16" in the text); DTDs never processed |
+| FR-N04 | Date & Unix Time | `Time/DateTimeConverter` | One input for numbers or dates; seconds to nanoseconds with size detection; decimal arithmetic; DST gaps reported |
+| FR-N05 | Base64 Text | `Codecs/Base64Codec` | Seven encodings, URL-safe, MIME wrapping; forgiving decode; binary refused as text |
+| FR-N06 | Base64 Image | `Codecs/Base64Image` | Format from the bytes, not the label; open, paste, drop; no ImageSharp |
+| FR-N07 | URL Encoder | `Codecs/UrlCodec` | Component, whole-URL and form modes |
+| FR-N08 | HTML Encoder | `Codecs/HtmlCodec` | Optional numeric references for non-ASCII |
+| FR-N09 | UUID Generator | `Generators/UuidGenerator` | v7 monotonic within a batch; v1 node random with the multicast bit; four formats; inspector |
+| FR-N10 | QR Code Generator | App `Services/QrCodeRenderer` (ZXing.Net encoder) | Drawn from the module matrix; PNG up to 4096 px and SVG; recovery level, quiet zone and colours |
+| FR-N11 | Text Compare | `Text/TextDiff` (existing) | Side by side or inline, word-level highlights, unified diff export |
+| FR-N12 | Character Counter | `Text/TextAnalysis` | Grapheme counts, limits for common targets |
+| FR-N13 | Regex Validator | `Text/RegexTester` | Not a DevToys tool. Matches with line, column and groups; replacement preview; all .NET flags and ECMAScript; 2 s timeout against catastrophic backtracking |
+| FR-N14 | Markdown Preview | Markdig in the app | WebView2 with script off, CSP, and every resource request refused |
+| FR-N15 | HTML Viewer | App `Controls/SafeWebPreview` | Not a DevToys tool. Live preview of edited HTML; same no-network WebView2 as Markdown Preview; page scripts optional |
+| FR-N16 | Diff export | `Text/DiffHtmlExporter` | JSON Diff and Text Compare save the side-by-side view as a self-contained HTML page |
+
+Navigation groups in 1.1: Formatters (JSON, SQL, XML), Validators (JSON Diff, Text Compare, Regex), Converters (JSON to C#, JSON to Table, Date), Encoders & Decoders, Generators, Text Tools (Character Counter, Markdown Preview, HTML Viewer), Media Tools, API Tools. Tool options sit in a band at the top of the page; the title bar holds only the tool name and app commands, including a keyboard-shortcuts list.
+
+### Performance work in the same release
+
+| Area | Before | After (2 MB JSON) |
+| --- | --- | --- |
+| JSON parse (every JSON tool, Smart Detect) | 74,488 ms — line and column recounted from the start for every node | 80–100 ms |
+| JSON Diff | 942 ms and an unbounded LCS table in the patch builder (12k × 12k ints) | ~340 ms; common prefix/suffix trimmed, hashes cached, table bounded |
+| Editor keystroke cost | Whole text split into lines twice per keystroke | Allocation-free line count; gutter numbers reused |

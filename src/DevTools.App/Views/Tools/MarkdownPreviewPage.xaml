@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.MarkdownPreviewPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+>
+
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <tkp:Segmented
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Preview theme"
+                    SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Preview theme">
+                    <tkp:SegmentedItem Content="App theme" />
+                    <tkp:SegmentedItem Content="Light" />
+                    <tkp:SegmentedItem Content="Dark" />
+                </tkp:Segmented>
+
+                <Button
+                    Grid.Column="2"
+                    AutomationProperties.Name="Copy the HTML"
+                    Command="{x:Bind ViewModel.CopyOutputCommand}"
+                    Style="{StaticResource DevToolsInlineButtonStyle}"
+                    ToolTipService.ToolTip="Copy the rendered HTML">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <FontIcon FontSize="13" Glyph="&#xE8C8;" />
+                        <TextBlock Text="Copy HTML" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="Markdown"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Write or open Markdown. Tables, task lists, footnotes and the rest of GitHub's extensions render; the preview never loads anything from the network."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <Border Margin="5,0,0,0" Style="{StaticResource DevToolsPreviewCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid
+                            Padding="12,8"
+                            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                            BorderThickness="0,0,0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="Preview" />
+                            <Button
+                                Grid.Column="1"
+                                AutomationProperties.Name="Save as an HTML page"
+                                Command="{x:Bind ViewModel.SaveOutputCommand}"
+                                Style="{StaticResource DevToolsToolbarButtonStyle}"
+                                ToolTipService.ToolTip="Save as an HTML page (Ctrl+S)">
+                                <FontIcon FontSize="14" Glyph="&#xE74E;" />
+                            </Button>
+                        </Grid>
+
+                        <controls:SafeWebPreview
+                            x:Name="Preview"
+                            Grid.Row="1"
+                            AutomationProperties.Name="Rendered Markdown" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Padding="12,6"
+                            Style="{StaticResource DevToolsCaptionStyle}"
+                            Text="{x:Bind ViewModel.StatsText, Mode=OneWay}" />
+                    </Grid>
+                </Border>
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

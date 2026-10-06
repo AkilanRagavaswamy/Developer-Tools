@@ -45,7 +45,7 @@ public sealed partial class ShellPage : UserControl
         _chrome = App.GetService<IToolChrome>();
 
         _chrome.OptionsChanged += OnChromeOptionsChanged;
-        TitleBarDragArea.SizeChanged += (_, _) => PlaceOptions();
+        BandScroller.SizeChanged += (_, e) => BandOptions.MinWidth = e.NewSize.Width;
 
         ApplyPaneMode(_settings.NavigationPaneOpen);
 
@@ -58,6 +58,9 @@ public sealed partial class ShellPage : UserControl
     }
 
     public ShellViewModel ViewModel { get; }
+
+    /// <summary>What the keyboard button in the title bar lists.</summary>
+    public IReadOnlyList<ShortcutEntry> Shortcuts => ShortcutEntry.All;
 
     /// <summary>Handed to <c>Window.SetTitleBar</c> so this row behaves as the caption bar.</summary>
     public UIElement TitleBarElement => TitleBarDragArea;
@@ -373,43 +376,25 @@ public sealed partial class ShellPage : UserControl
 
     // ------------------------------------------------- the tool's options row (FR-T01)
 
-    /// <summary>The row the active tool handed over, whichever of the two hosts is showing it.</summary>
+    /// <summary>The row the active tool handed over.</summary>
     private FrameworkElement? _options;
-
-    /// <summary>
-    /// The width the row needs without its labels, as the page declared it.
-    /// </summary>
-    /// <remarks>
-    /// Declared rather than measured. A row that has never been in a visual tree has no
-    /// templates applied and measures to nearly nothing — and nothing fits anywhere, so the row
-    /// lands in the title bar whatever its real size. Measuring it after a layout pass means
-    /// measuring it somewhere, which is the decision we were trying to make. One number in the
-    /// page beside the row is blunt, but it is right on the first frame, it is where someone
-    /// changing that row will see it, and guessing high only costs a row of height.
-    /// </remarks>
-    private double _optionsWidth;
 
     private void OnChromeOptionsChanged(object? sender, EventArgs e)
     {
-        // Detach from both hosts first. An element has one parent, and the old one still holds
-        // it at this point.
-        TitleBarOptions.Content = null;
+        // Detach first: an element has one parent, and the band still holds the old row.
         BandOptions.Content = null;
-
         _options = _chrome.Options;
-        _optionsWidth = _chrome.OptionsWidth;
 
         PlaceOptions();
     }
 
     /// <summary>
-    /// Puts the options row in the title bar, or in its own band when the title bar is too
-    /// narrow for it, and shows the row's labels if either place has room for them.
+    /// Shows the options row in its band at the top of the page.
     /// </summary>
     /// <remarks>
-    /// The title bar is the better place — it is a row of height the tool gets back — but a
-    /// clipped options row is worse than a second row, which is why there is a band at all.
-    /// Re-run on every resize, so dragging the window edge moves the row between the two.
+    /// It used to move up into the title bar when there was room, but the title bar is the
+    /// window's drag and double-click area: clicking quickly on an option there could maximise
+    /// or restore the window. The title bar now carries only the tool's name and the app commands.
     /// </remarks>
     private void PlaceOptions()
     {
@@ -419,124 +404,55 @@ public sealed partial class ShellPage : UserControl
             return;
         }
 
-        var titleBarRoom = TitleBarDragArea.ActualWidth
-            - ToolIdentity.ActualWidth
-            - TitleBarCommands.ActualWidth
-            - TitleBarCommands.Margin.Right
-            - OptionsGutter;
-
-        var inTitleBar = _optionsWidth > 0 && _optionsWidth <= titleBarRoom;
-
-        if (inTitleBar)
+        if (!ReferenceEquals(BandOptions.Content, _options))
         {
-            if (!ReferenceEquals(TitleBarOptions.Content, _options))
-            {
-                BandOptions.Content = null;
-                TitleBarOptions.Content = _options;
-            }
-        }
-        else if (!ReferenceEquals(BandOptions.Content, _options))
-        {
-            TitleBarOptions.Content = null;
             BandOptions.Content = _options;
         }
 
-        OptionsBand.Visibility = inTitleBar ? Visibility.Collapsed : Visibility.Visible;
+        OptionsBand.Visibility = Visibility.Visible;
     }
 
-    /// <summary>The margins around the options host, which the sums have to allow for.</summary>
-    private const double OptionsGutter = 28;
+    // ------------------------------------------------------------- jump to tool
 
-    // ------------------------------------------------------------- palette
+    /// <summary>Ctrl+K: puts the caret in Jump to Tool, wherever it was.</summary>
+    private void FocusJumpBox() => JumpBox.Focus(FocusState.Keyboard);
 
-    private void OnPaletteClick(object sender, RoutedEventArgs e) => OpenPalette();
-
-    private void OpenPalette()
+    /// <summary>An empty box lists the recent tools first, so the commonest jump is one key away.</summary>
+    private void OnJumpBoxGotFocus(object sender, RoutedEventArgs e)
     {
-        ViewModel.OpenPalette();
-        PaletteOverlay.Visibility = Visibility.Visible;
-        PaletteInput.Text = string.Empty;
-        PaletteInput.Focus(FocusState.Programmatic);
-
-        if (ViewModel.PaletteResults.Count > 0)
+        if (string.IsNullOrEmpty(JumpBox.Text))
         {
-            PaletteList.SelectedIndex = 0;
+            ViewModel.OpenPalette();
+        }
+
+        JumpBox.IsSuggestionListOpen = ViewModel.PaletteResults.Count > 0;
+    }
+
+    private void OnJumpBoxTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            ViewModel.PaletteQuery = sender.Text;
+            sender.IsSuggestionListOpen = ViewModel.PaletteResults.Count > 0;
         }
     }
 
-    private void ClosePalette()
+    /// <summary>Enter, or a click on a result: opens the chosen tool, or the best match for what was typed.</summary>
+    private void OnJumpBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        ViewModel.ClosePalette();
-        PaletteOverlay.Visibility = Visibility.Collapsed;
-    }
-
-    private void OnPaletteBackdropTapped(object sender, TappedRoutedEventArgs e) => ClosePalette();
-
-    /// <summary>Stops a tap inside the palette card from reaching the dismissing backdrop.</summary>
-    private void OnPaletteContentTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
-
-    private void OnPaletteKeyDown(object sender, KeyRoutedEventArgs e)
-    {
-        switch (e.Key)
-        {
-            case VirtualKey.Escape:
-                ClosePalette();
-                e.Handled = true;
-                break;
-
-            case VirtualKey.Down:
-                MovePaletteSelection(1);
-                e.Handled = true;
-                break;
-
-            case VirtualKey.Up:
-                MovePaletteSelection(-1);
-                e.Handled = true;
-                break;
-
-            case VirtualKey.Enter:
-                ActivatePaletteSelection();
-                e.Handled = true;
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    private void MovePaletteSelection(int delta)
-    {
-        var count = ViewModel.PaletteResults.Count;
-        if (count == 0)
+        var target = args.ChosenSuggestion as ToolSearchResult ?? ViewModel.PaletteResults.FirstOrDefault();
+        if (target is null)
         {
             return;
         }
 
-        var index = PaletteList.SelectedIndex + delta;
-        index = ((index % count) + count) % count;
-        PaletteList.SelectedIndex = index;
-        PaletteList.ScrollIntoView(PaletteList.SelectedItem);
-    }
+        sender.Text = string.Empty;
+        sender.IsSuggestionListOpen = false;
+        ViewModel.ClosePalette();
+        _navigation.NavigateToTool(target.Tool.Id);
 
-    private void ActivatePaletteSelection()
-    {
-        var selected = PaletteList.SelectedItem as ToolSearchResult
-                       ?? ViewModel.PaletteResults.FirstOrDefault();
-
-        if (selected is not null)
-        {
-            ClosePalette();
-            _navigation.NavigateToTool(selected.Tool.Id);
-        }
-    }
-
-    private void OnPaletteItemClick(object sender, ItemClickEventArgs e)
-    {
-        if (e.ClickedItem is ToolSearchResult result)
-        {
-            ClosePalette();
-            _navigation.NavigateToTool(result.Tool.Id);
-        }
+        // Hand the keyboard to the tool that just opened rather than leaving it in the box.
+        ContentFrame.Focus(FocusState.Programmatic);
     }
 
     // ------------------------------------------------------------- suggestions
@@ -564,12 +480,11 @@ public sealed partial class ShellPage : UserControl
     {
         // No Ctrl+F here. It belongs to whichever pane has the caret (FR-T12), and the shell
         // claiming it for a search box was the one place the two could disagree.
-        Add(VirtualKey.K, VirtualKeyModifiers.Control, OpenPalette);
+        Add(VirtualKey.K, VirtualKeyModifiers.Control, FocusJumpBox);
         Add((VirtualKey)188, VirtualKeyModifiers.Control, () => _navigation.NavigateTo(typeof(SettingsPage)));
         Add(VirtualKey.Left, VirtualKeyModifiers.Menu, () => _navigation.GoBack());
         Add(VirtualKey.Right, VirtualKeyModifiers.Menu, () => _navigation.GoForward());
         Add(VirtualKey.F1, VirtualKeyModifiers.None, () => _navigation.NavigateTo(typeof(SettingsPage)));
-        Add(VirtualKey.Escape, VirtualKeyModifiers.None, ClosePalette);
 
         // App-wide shortcuts on the whole shell: an automatic tooltip would follow the pointer
         // everywhere. They are listed in Settings instead.

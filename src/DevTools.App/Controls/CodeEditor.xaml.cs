@@ -758,10 +758,16 @@ public sealed partial class CodeEditor : UserControl
             columns = (int)Math.Floor(width / Math.Max(1, MeasureCharacterWidth()));
         }
 
-        GutterText.Text = GutterBuilder.Build(Editor.Text, _settings.EditorWordWrap, columns);
+        // Typing within a line leaves the numbers as they were; re-assigning them would still
+        // make the gutter lay itself out again on every keystroke.
+        var numbers = GutterBuilder.Build(Editor.Text, _settings.EditorWordWrap, columns);
+        if (!string.Equals(GutterText.Text, numbers, StringComparison.Ordinal))
+        {
+            GutterText.Text = numbers;
+        }
 
         // Widen the gutter once the line count needs more digits, so numbers never clip.
-        var lineCount = Core.Text.TextUtil.SplitLines(Editor.Text, keepTrailingEmpty: true).Length;
+        var lineCount = Core.Text.TextUtil.CountLines(Editor.Text, keepTrailingEmpty: true);
         var digits = Math.Max(2, lineCount.ToString(System.Globalization.CultureInfo.InvariantCulture).Length);
         GutterClip.Width = 16 + (digits * MeasureCharacterWidth());
     }

@@ -11,6 +11,9 @@ public interface IClipboardService
     Task<byte[]?> GetImageBytesAsync();
 
     void SetText(string? text);
+
+    /// <summary>Puts an encoded image (PNG, JPEG…) on the clipboard as a bitmap.</summary>
+    Task<bool> SetImageAsync(byte[] encodedImage);
 }
 
 /// <summary>
@@ -74,6 +77,31 @@ public sealed class ClipboardService : IClipboardService
         catch (Exception)
         {
             // Another process is holding the clipboard; the user can retry.
+        }
+    }
+
+    public async Task<bool> SetImageAsync(byte[] encodedImage)
+    {
+        try
+        {
+            var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+            using (var writer = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
+            {
+                writer.WriteBytes(encodedImage);
+                await writer.StoreAsync();
+                await writer.FlushAsync();
+                writer.DetachStream();
+            }
+
+            var package = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+            package.SetBitmap(Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(stream));
+            Clipboard.SetContent(package);
+            Clipboard.Flush();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 }

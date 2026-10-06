@@ -1,6 +1,6 @@
 # ForgeKitRk - Developer Toolkit — Privacy Policy
 
-**Effective date:** 5 October 2026
+**Effective date:** 6 October 2026
 **Publisher:** Akilan Ragavaswamy
 **Application:** ForgeKitRk - Developer Toolkit (Microsoft Store)
 **Contact:** _[add your public contact email before publishing]_
@@ -19,7 +19,12 @@ ForgeKitRk does not have a server and does not phone home. The developer receive
 
 ### Tools that are fully offline
 
-The JSON Formatter, JSON Diff Checker, JSON-to-C# generator, and SVG-to-XAML converter run entirely on your device and have no network code. Any text, JSON, SVG, or files you paste, open, or drop into them are processed in memory on your machine and are not sent anywhere.
+Every tool other than API Builder runs entirely on your device and has no network code: the JSON Formatter, JSON Diff Checker, JSON to C#, JSON to Table, SQL Formatter, XML Formatter, Date & Unix Time converter, Base64 Text, Base64 Image, URL Encoder, HTML Encoder, UUID Generator, QR Code Generator, Text Compare, Regex Validator, Character Counter and SVG to XAML. (Markdown Preview and HTML Viewer are offline too, but they render with a web component, so they are described separately below.) Any text, images or files you paste, open or drop into them are processed in memory on your machine and are not sent anywhere.
+
+### Markdown Preview and HTML Viewer
+
+Markdown Preview and HTML Viewer show the rendered document in Microsoft Edge WebView2, the web-rendering component that is part of Windows. ForgeKitRk turns off script in the preview (in HTML Viewer you can turn on the page's own scripts, which still cannot fetch anything), gives the page a Content-Security-Policy that allows only its own inline styling and embedded `data:` images, and refuses every request the page makes — so a document cannot make the preview load an image, a stylesheet or anything else from the internet. If you click a link in the preview, it opens in your own web browser, which is then subject to that browser's own privacy terms. WebView2 itself is a Microsoft component; any diagnostic data it may send is governed by Microsoft's privacy statement and your Windows diagnostic-data settings, not by ForgeKitRk.
+
 
 ### API Builder
 

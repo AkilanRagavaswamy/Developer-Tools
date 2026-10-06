@@ -16,7 +16,7 @@
         IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
         Message="{x:Bind ViewModel.Message, Mode=OneWay}"
         MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
-        OptionsWidth="760">
+>
 
         <!--
             Options. Arrays first because it changes what "the same element" means; the six
@@ -224,11 +224,21 @@
                             Style="{StaticResource DevToolsCaptionStyle}"
                             Text="{x:Bind ViewModel.SummaryText, Mode=OneWay}" />
 
-                        <Button
-                            Grid.Column="2"
-                            AutomationProperties.Name="Copy the result"
-                            Command="{x:Bind ViewModel.CopyPatchCommand}"
-                            Content="Copy" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <Button
+                                AutomationProperties.Name="Export the side-by-side view as HTML"
+                                Command="{x:Bind ViewModel.ExportHtmlCommand}"
+                                ToolTipService.ToolTip="Save the side-by-side view as an HTML page">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <FontIcon FontSize="13" Glyph="&#xEDE1;" />
+                                    <TextBlock Text="Export HTML" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                AutomationProperties.Name="Copy the result"
+                                Command="{x:Bind ViewModel.CopyPatchCommand}"
+                                Content="Copy" />
+                        </StackPanel>
                     </Grid>
 
                     <!--

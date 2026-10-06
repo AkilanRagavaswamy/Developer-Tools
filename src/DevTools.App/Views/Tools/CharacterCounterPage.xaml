@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.CharacterCounterPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tools="using:DevTools.App.ViewModels.Tools"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}">
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    CopyCommand="{x:Bind ViewModel.CopyInputCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="Text"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Type or paste text. Characters are counted the way people count them, so an emoji with a skin tone is one."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <ScrollViewer Margin="5,0,0,0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.Tiles}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout
+                                    ItemsStretch="Fill"
+                                    MinColumnSpacing="10"
+                                    MinItemWidth="150"
+                                    MinRowSpacing="10" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="tools:StatTile">
+                                    <Border Style="{StaticResource DevToolsCardStyle}">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Style="{StaticResource DevToolsCaptionStyle}" Text="{x:Bind Label}" />
+                                            <TextBlock
+                                                FontSize="26"
+                                                FontWeight="SemiBold"
+                                                IsTextSelectionEnabled="True"
+                                                Text="{x:Bind Value}" />
+                                            <TextBlock
+                                                Style="{StaticResource DevToolsCaptionStyle}"
+                                                Text="{x:Bind Detail}"
+                                                Visibility="{x:Bind HasDetail}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+
+                        <Border Style="{StaticResource DevToolsCardStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Margin="0" Style="{StaticResource DevToolsSectionHeaderStyle}" Text="Limits" />
+                                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Limits}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Spacing="10" />
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="tools:LimitRow">
+                                            <Grid ColumnSpacing="12" RowSpacing="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Text="{x:Bind Name}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource DevToolsCaptionStyle}"
+                                                    Text="{x:Bind Remaining}" />
+                                                <ProgressBar
+                                                    Grid.Row="1"
+                                                    Grid.ColumnSpan="2"
+                                                    Maximum="1"
+                                                    ShowError="{x:Bind IsOver}"
+                                                    Value="{x:Bind Ratio}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource DevToolsCardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Margin="0" Style="{StaticResource DevToolsSectionHeaderStyle}" Text="Most frequent characters" />
+                                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Characters}">
+                                    <ItemsRepeater.Layout>
+                                        <UniformGridLayout
+                                            ItemsStretch="Fill"
+                                            MinColumnSpacing="8"
+                                            MinItemWidth="140"
+                                            MinRowSpacing="4" />
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="tools:FrequencyRow">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                                    Text="{x:Bind Text}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource DevToolsCaptionStyle}"
+                                                    Text="{x:Bind Count}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

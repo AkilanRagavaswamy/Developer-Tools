@@ -6,7 +6,25 @@ using Microsoft.UI.Xaml;
 namespace DevTools.App.ViewModels;
 
 /// <summary>One row in the keyboard-shortcut reference shown in Settings (FR-S14).</summary>
-public sealed record ShortcutEntry(string Keys, string Action);
+public sealed record ShortcutEntry(string Keys, string Action)
+{
+    /// <summary>Every shortcut the app responds to — shown in Settings and from the title bar.</summary>
+    public static IReadOnlyList<ShortcutEntry> All { get; } =
+    [
+        new("Ctrl + K", "Jump to a tool"),
+        new("Ctrl + ,", "Open Settings"),
+        new("Ctrl + Enter", "Run the current tool"),
+        new("Ctrl + S", "Save the current tool's output"),
+        new("Ctrl + L", "Clear the current tool"),
+        new("Ctrl + D", "Pin or unpin the current tool"),
+        new("Ctrl + F", "Find in the text pane that has focus"),
+        new("Enter / Shift + Enter", "Next / previous match while finding"),
+        new("Esc", "Close the tool list or the find bar; stop a running request"),
+        new("Alt + Left", "Back"),
+        new("Alt + Right", "Forward"),
+        new("F1", "About ForgeKitRk"),
+    ];
+}
 
 /// <summary>Backs the Settings page (FR-S13). Every change applies immediately.</summary>
 public sealed partial class SettingsViewModel : ObservableObject
@@ -234,7 +252,22 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     // ---------------------------------------------------------------- about
 
-    public string AppVersion => "1.0.0";
+    /// <summary>Read from the package, so About can never disagree with what the Store installed.</summary>
+    public string AppVersion
+    {
+        get
+        {
+            try
+            {
+                var v = Windows.ApplicationModel.Package.Current.Id.Version;
+                return $"{v.Major}.{v.Minor}.{v.Build}";
+            }
+            catch (InvalidOperationException)
+            {
+                return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.1.0";
+            }
+        }
+    }
 
     public string RuntimeVersion => $".NET {Environment.Version}";
 
@@ -272,25 +305,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         "IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR " +
         "THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 
-    public IReadOnlyList<ShortcutEntry> Shortcuts { get; } =
-    [
-        new("Ctrl + K", "Open the command palette"),
-        new("Ctrl + ,", "Open Settings"),
-        new("Ctrl + D", "Pin or unpin the current tool"),
-        new("Ctrl + Enter", "Run the current tool"),
-        new("Ctrl + L", "Clear the current tool input"),
-        new("Ctrl + S", "Save the current tool output"),
-        new("Alt + Left", "Back"),
-        new("Alt + Right", "Forward"),
-        new("F1", "About DevTools"),
-        new("Esc", "Close the palette or an overlay"),
-    ];
+    public IReadOnlyList<ShortcutEntry> Shortcuts => ShortcutEntry.All;
 
     public IReadOnlyList<string> Licenses { get; } =
     [
         "Windows App SDK — MIT License, © Microsoft Corporation",
         "CommunityToolkit.Mvvm — MIT License, © .NET Foundation",
         "CommunityToolkit.WinUI Controls — MIT License, © .NET Foundation",
+        "Microsoft.Extensions.DependencyInjection — MIT License, © .NET Foundation",
+        "ZXing.Net (QR encoding) — Apache License 2.0, © the ZXing.Net and ZXing authors",
+        "Markdig (Markdown) — BSD 2-Clause License, © 2016–2026 Alexandre Mutel",
+        "SQL formatter keyword tables and layout rules — MIT License, © 2021 DevToys, derived from sql-formatter © ZeroTurnaround LLC and contributors",
+        "Full licence texts ship with the app in THIRD-PARTY-NOTICES.md.",
     ];
 
     /// <summary>
@@ -299,7 +325,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// </summary>
     public IReadOnlyList<string> PrivacyNotes { get; } =
     [
-        "The JSON, SVG and code-generation tools run entirely on this machine. They have no network code at all.",
+        "Every tool except API Builder runs entirely on this machine and has no network code at all.",
+        "Markdown Preview and HTML Viewer refuse every request the page makes, so a document cannot make them load an image, a script or anything else from the internet.",
         "API Builder sends exactly the requests you compose, to the addresses you give it, and nowhere else.",
         "No telemetry, no analytics, no crash reporting and no update checks — ever.",
         "Passwords, tokens and client secrets are held in the Windows credential vault, never written into a collection file.",

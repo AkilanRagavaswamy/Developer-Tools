@@ -15,7 +15,7 @@
         IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
         Message="{x:Bind ViewModel.Message, Mode=OneWay}"
         MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
-        OptionsWidth="880">
+>
 
         <!--
             Options. The four that change the shape of the emitted type stay in the open; the

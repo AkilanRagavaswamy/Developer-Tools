@@ -135,9 +135,22 @@ public sealed record JsonObject(IReadOnlyList<JsonMember> Members, JsonPosition 
     {
         // Sorted, so two objects that differ only in member order hash identically. That is
         // what lets the differ call them equal in semantic mode.
-        var ordered = Members
-            .OrderBy(static m => m.Name, StringComparer.Ordinal)
-            .ToList();
+        var ordered = Members.ToArray();
+        if (ordered.Length > 1)
+        {
+            // Stable, like the ordering it replaces, so duplicate names keep their source order.
+            var keys = new (string Name, int Index)[ordered.Length];
+            for (var i = 0; i < keys.Length; i++)
+            {
+                keys[i] = (ordered[i].Name, i);
+            }
+
+            Array.Sort(keys, ordered, Comparer<(string Name, int Index)>.Create(static (x, y) =>
+            {
+                var byName = string.CompareOrdinal(x.Name, y.Name);
+                return byName != 0 ? byName : x.Index.CompareTo(y.Index);
+            }));
+        }
 
         sink.Append('{');
         foreach (var member in ordered)

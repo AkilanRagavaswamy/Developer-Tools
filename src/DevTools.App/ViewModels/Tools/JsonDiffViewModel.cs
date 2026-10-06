@@ -425,6 +425,24 @@ public sealed partial class JsonDiffViewModel : DualTextToolViewModelBase
         SetSuccess("Copied to clipboard.");
     }
 
+    /// <summary>Saves the side-by-side view as a self-contained HTML page.</summary>
+    [RelayCommand]
+    private async Task ExportHtmlAsync()
+    {
+        if (Layout is not { Rows.Count: > 0 } layout)
+        {
+            SetInfo("Compare two documents first.");
+            return;
+        }
+
+        var html = Core.Text.DiffHtmlExporter.FromJson(layout, LeftLabel, RightLabel);
+        var path = await Services.Files.SaveTextFileAsync("json-diff.html", html, ".html");
+        if (path is not null)
+        {
+            SetSuccess($"Saved to {path}.");
+        }
+    }
+
     // ---------------------------------------------------------------- state
 
     protected override void CaptureState(ToolState state)
