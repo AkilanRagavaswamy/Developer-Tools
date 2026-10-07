@@ -191,6 +191,7 @@
                                     <Border
                                         Padding="8,2"
                                         HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
                                         Background="{ThemeResource DevToolsCardBackgroundBrush}"
                                         BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
                                         BorderThickness="1"
@@ -198,7 +199,8 @@
                                         <TextBlock
                                             FontFamily="{StaticResource DevToolsMonospaceFont}"
                                             FontSize="12"
-                                            Text="{x:Bind Keys}" />
+                                            Text="{x:Bind Keys}"
+                                            TextWrapping="Wrap" />
                                     </Border>
                                     <TextBlock
                                         Grid.Column="1"

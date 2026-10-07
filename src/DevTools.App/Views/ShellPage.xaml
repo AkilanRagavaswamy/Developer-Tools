@@ -87,50 +87,52 @@
             </Grid>
 
             <!--
-                Jump to Tool (FR-S04): the search over every tool, in the middle of the title bar.
-                Focusing it lists recent tools first; typing ranks every tool by name, keyword and
-                description; Enter opens the first. The space either side of it stays the window's
-                drag area. The tool's own options live in the page.
+                Jump to Tool (FR-S04), in the middle of the title bar; it opens the command palette.
+                The space either side of it stays the window's drag area. The tool's own options
+                live in the page.
             -->
-            <AutoSuggestBox
+            <!--
+                Looks like a search box, behaves as the door to the palette: a click (or Ctrl+K)
+                opens the overlay below, whose own box takes the typing, so the keyboard flow -
+                type, Up and Down, Enter - is the same however it was opened.
+            -->
+            <Button
                 x:Name="JumpBox"
                 Grid.Column="1"
                 Width="380"
+                Height="32"
                 Margin="16,0"
+                Padding="12,0,10,0"
                 HorizontalAlignment="Center"
+                HorizontalContentAlignment="Stretch"
                 VerticalAlignment="Center"
                 AutomationProperties.Name="Jump to tool"
-                GotFocus="OnJumpBoxGotFocus"
-                ItemsSource="{x:Bind ViewModel.PaletteResults, Mode=OneWay}"
-                PlaceholderText="Jump to Tool"
-                QueryIcon="Find"
-                QuerySubmitted="OnJumpBoxQuerySubmitted"
-                TextChanged="OnJumpBoxTextChanged"
-                ToolTipService.ToolTip="Jump to a tool (Ctrl+K)"
-                UpdateTextOnSelect="False">
-                <AutoSuggestBox.ItemTemplate>
-                    <DataTemplate x:DataType="services:ToolSearchResult">
-                        <Grid Padding="0,6" ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <FontIcon
-                                FontFamily="{x:Bind Tool.GlyphFont}"
-                                FontSize="16"
-                                Foreground="{ThemeResource DevToolsAccentBrush}"
-                                Glyph="{x:Bind Tool.Glyph}" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="{x:Bind Tool.Name}" />
-                                <TextBlock
-                                    Style="{StaticResource DevToolsCaptionStyle}"
-                                    Text="{x:Bind Tool.Description}"
-                                    TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </Grid>
-                    </DataTemplate>
-                </AutoSuggestBox.ItemTemplate>
-            </AutoSuggestBox>
+                Click="OnPaletteClick"
+                ToolTipService.ToolTip="Jump to a tool (Ctrl+K)">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Jump to Tool" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        FontSize="11"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                        Text="Ctrl+K" />
+                    <FontIcon
+                        Grid.Column="2"
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xE721;" />
+                </Grid>
+            </Button>
 
             <!--
                 Right: the active tool's own commands, then the app commands, then the system's
@@ -183,11 +185,12 @@
                                         <DataTemplate x:DataType="vm:ShortcutEntry">
                                             <Grid Padding="0,5" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="170" />
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
                                                 <Border
                                                     HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
                                                     Padding="7,2"
                                                     Background="{ThemeResource DevToolsCardBackgroundBrush}"
                                                     BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
@@ -196,7 +199,8 @@
                                                     <TextBlock
                                                         FontFamily="{StaticResource DevToolsMonospaceFont}"
                                                         FontSize="12"
-                                                        Text="{x:Bind Keys}" />
+                                                        Text="{x:Bind Keys}"
+                                                        TextWrapping="Wrap" />
                                                 </Border>
                                                 <TextBlock
                                                     Grid.Column="1"
@@ -347,5 +351,81 @@
             </Grid>
         </NavigationView>
 
+        <!-- ============================ Command palette (FR-S04) ============================ -->
+        <Grid
+            x:Name="PaletteOverlay"
+            Grid.RowSpan="2"
+            Background="{ThemeResource SmokeFillColorDefaultBrush}"
+            Tapped="OnPaletteBackdropTapped"
+            Visibility="Collapsed">
+
+            <!-- Opaque on purpose: a layer fill let the document show through the palette. -->
+            <Border
+                Width="620"
+                MaxHeight="480"
+                Margin="0,96,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Shadow="{ThemeResource CommandBarFlyoutOverflowShadow}"
+                Tapped="OnPaletteContentTapped">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox
+                        x:Name="PaletteInput"
+                        Margin="12"
+                        AutomationProperties.Name="Command palette search"
+                        KeyDown="OnPaletteKeyDown"
+                        PlaceholderText="Jump to a tool..."
+                        Text="{x:Bind ViewModel.PaletteQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <ListView
+                        x:Name="PaletteList"
+                        Grid.Row="1"
+                        Margin="4,0,4,4"
+                        IsItemClickEnabled="True"
+                        ItemClick="OnPaletteItemClick"
+                        ItemsSource="{x:Bind ViewModel.PaletteResults, Mode=OneWay}"
+                        SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="services:ToolSearchResult">
+                                <Grid Padding="0,6" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon
+                                        FontSize="16"
+                                        Foreground="{ThemeResource DevToolsAccentBrush}"
+                                        FontFamily="{x:Bind Tool.GlyphFont}"
+                                        Glyph="{x:Bind Tool.Glyph}" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{x:Bind Tool.Name}" />
+                                        <TextBlock
+                                            Style="{StaticResource DevToolsCaptionStyle}"
+                                            Text="{x:Bind Tool.Description}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Margin="14,0,14,10"
+                        Style="{StaticResource DevToolsCaptionStyle}"
+                        Text="Up and Down to move, Enter to open, Esc to close" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

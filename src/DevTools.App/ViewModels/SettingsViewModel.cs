@@ -18,7 +18,7 @@ public sealed record ShortcutEntry(string Keys, string Action)
         new("Ctrl + L", "Clear the current tool"),
         new("Ctrl + D", "Pin or unpin the current tool"),
         new("Ctrl + F", "Find in the text pane that has focus"),
-        new("Enter / Shift + Enter", "Next / previous match while finding"),
+        new("Enter / Shift+Enter", "Next / previous match while finding"),
         new("Esc", "Close the tool list or the find bar; stop a running request"),
         new("Alt + Left", "Back"),
         new("Alt + Right", "Forward"),

@@ -412,47 +412,96 @@ public sealed partial class ShellPage : UserControl
         OptionsBand.Visibility = Visibility.Visible;
     }
 
-    // ------------------------------------------------------------- jump to tool
+    // ------------------------------------------------------------- palette
 
-    /// <summary>Ctrl+K: puts the caret in Jump to Tool, wherever it was.</summary>
-    private void FocusJumpBox() => JumpBox.Focus(FocusState.Keyboard);
+    private void OnPaletteClick(object sender, RoutedEventArgs e) => OpenPalette();
 
-    /// <summary>An empty box lists the recent tools first, so the commonest jump is one key away.</summary>
-    private void OnJumpBoxGotFocus(object sender, RoutedEventArgs e)
+    private void OpenPalette()
     {
-        if (string.IsNullOrEmpty(JumpBox.Text))
-        {
-            ViewModel.OpenPalette();
-        }
+        ViewModel.OpenPalette();
+        PaletteOverlay.Visibility = Visibility.Visible;
+        PaletteInput.Text = string.Empty;
+        PaletteInput.Focus(FocusState.Programmatic);
 
-        JumpBox.IsSuggestionListOpen = ViewModel.PaletteResults.Count > 0;
-    }
-
-    private void OnJumpBoxTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-    {
-        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        if (ViewModel.PaletteResults.Count > 0)
         {
-            ViewModel.PaletteQuery = sender.Text;
-            sender.IsSuggestionListOpen = ViewModel.PaletteResults.Count > 0;
+            PaletteList.SelectedIndex = 0;
         }
     }
 
-    /// <summary>Enter, or a click on a result: opens the chosen tool, or the best match for what was typed.</summary>
-    private void OnJumpBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    private void ClosePalette()
     {
-        var target = args.ChosenSuggestion as ToolSearchResult ?? ViewModel.PaletteResults.FirstOrDefault();
-        if (target is null)
+        ViewModel.ClosePalette();
+        PaletteOverlay.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnPaletteBackdropTapped(object sender, TappedRoutedEventArgs e) => ClosePalette();
+
+    /// <summary>Stops a tap inside the palette card from reaching the dismissing backdrop.</summary>
+    private void OnPaletteContentTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
+
+    private void OnPaletteKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case VirtualKey.Escape:
+                ClosePalette();
+                e.Handled = true;
+                break;
+
+            case VirtualKey.Down:
+                MovePaletteSelection(1);
+                e.Handled = true;
+                break;
+
+            case VirtualKey.Up:
+                MovePaletteSelection(-1);
+                e.Handled = true;
+                break;
+
+            case VirtualKey.Enter:
+                ActivatePaletteSelection();
+                e.Handled = true;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private void MovePaletteSelection(int delta)
+    {
+        var count = ViewModel.PaletteResults.Count;
+        if (count == 0)
         {
             return;
         }
 
-        sender.Text = string.Empty;
-        sender.IsSuggestionListOpen = false;
-        ViewModel.ClosePalette();
-        _navigation.NavigateToTool(target.Tool.Id);
+        var index = PaletteList.SelectedIndex + delta;
+        index = ((index % count) + count) % count;
+        PaletteList.SelectedIndex = index;
+        PaletteList.ScrollIntoView(PaletteList.SelectedItem);
+    }
 
-        // Hand the keyboard to the tool that just opened rather than leaving it in the box.
-        ContentFrame.Focus(FocusState.Programmatic);
+    private void ActivatePaletteSelection()
+    {
+        var selected = PaletteList.SelectedItem as ToolSearchResult
+                       ?? ViewModel.PaletteResults.FirstOrDefault();
+
+        if (selected is not null)
+        {
+            ClosePalette();
+            _navigation.NavigateToTool(selected.Tool.Id);
+        }
+    }
+
+    private void OnPaletteItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is ToolSearchResult result)
+        {
+            ClosePalette();
+            _navigation.NavigateToTool(result.Tool.Id);
+        }
     }
 
     // ------------------------------------------------------------- suggestions
@@ -480,11 +529,12 @@ public sealed partial class ShellPage : UserControl
     {
         // No Ctrl+F here. It belongs to whichever pane has the caret (FR-T12), and the shell
         // claiming it for a search box was the one place the two could disagree.
-        Add(VirtualKey.K, VirtualKeyModifiers.Control, FocusJumpBox);
+        Add(VirtualKey.K, VirtualKeyModifiers.Control, OpenPalette);
         Add((VirtualKey)188, VirtualKeyModifiers.Control, () => _navigation.NavigateTo(typeof(SettingsPage)));
         Add(VirtualKey.Left, VirtualKeyModifiers.Menu, () => _navigation.GoBack());
         Add(VirtualKey.Right, VirtualKeyModifiers.Menu, () => _navigation.GoForward());
         Add(VirtualKey.F1, VirtualKeyModifiers.None, () => _navigation.NavigateTo(typeof(SettingsPage)));
+        Add(VirtualKey.Escape, VirtualKeyModifiers.None, ClosePalette);
 
         // App-wide shortcuts on the whole shell: an automatic tooltip would follow the pointer
         // everywhere. They are listed in Settings instead.
