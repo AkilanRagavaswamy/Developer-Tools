@@ -226,8 +226,9 @@ Added in 1.1, each with its engine in `DevTools.Core` (pure, no network) and its
 | FR-N14 | Markdown Preview | Markdig in the app | WebView2 with script off, CSP, and every resource request refused |
 | FR-N15 | HTML Viewer | App `Controls/SafeWebPreview` | Not a DevToys tool. Live preview of edited HTML; same no-network WebView2 as Markdown Preview; page scripts optional |
 | FR-N16 | Diff export | `Text/DiffHtmlExporter` | JSON Diff and Text Compare save the side-by-side view as a self-contained HTML page |
+| FR-N17 | Scratchpad | `Scratch/ScratchMath`, `Scratch/ScratchNotes`; app `Services/ScratchpadStore` | Not a DevToys tool. The one tool whose input is kept on disk: plain-text notes in LocalState with history, Trash and a Math mode. Full requirements in [03-Scratchpad-Requirements.md](03-Scratchpad-Requirements.md) |
 
-Navigation groups in 1.1: Formatters (JSON, SQL, XML), Validators (JSON Diff, Text Compare, Regex), Converters (JSON to C#, JSON to Table, Date), Encoders & Decoders, Generators, Text Tools (Character Counter, Markdown Preview, HTML Viewer), Media Tools, API Tools. Tool options sit in a band at the top of the page; the title bar holds only the tool name and app commands, including a keyboard-shortcuts list.
+Navigation groups in 1.1: Formatters (JSON, SQL, XML), Validators (JSON Diff, Text Compare, Regex), Converters (JSON to C#, JSON to Table, Date), Encoders & Decoders, Generators, Text Tools (Character Counter, Markdown Preview, HTML Viewer, Scratchpad), Media Tools, API Tools. Tool options sit in a band at the top of the page; the title bar holds only the tool name and app commands, including a keyboard-shortcuts list.
 
 ### Performance work in the same release
 

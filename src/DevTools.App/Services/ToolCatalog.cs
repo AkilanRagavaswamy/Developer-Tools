@@ -270,6 +270,10 @@ public sealed class ToolCatalog
             ToolCategory.Text, "", typeof(HtmlViewerPage),
             ["html", "viewer", "preview", "render", "page", "web", "browser", "htm"]),
 
+        new("scratchpad", "Scratchpad", "Notes that save themselves, keep their history, and do sums line by line",
+            ToolCategory.Text, "", typeof(ScratchpadPage),
+            ["scratchpad", "scratch", "notes", "note", "notepad", "jot", "memo", "draft", "calculator", "math", "sum", "history", "clipboard"]),
+
         // ---------- Vector ----------
         new("svg-to-xaml", "SVG to XAML", "Convert SVG shapes, paths and gradients to WPF or WinUI XAML",
             ToolCategory.Vector, "", typeof(SvgToXamlPage),

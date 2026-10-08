@@ -12,6 +12,11 @@ public sealed record ShortcutEntry(string Keys, string Action)
     public static IReadOnlyList<ShortcutEntry> All { get; } =
     [
         new("Ctrl + K", "Jump to a tool"),
+        new("Ctrl + N", "Scratchpad: new note"),
+        new("Ctrl + Shift + F", "Scratchpad: search notes"),
+        new("Ctrl + Shift + K", "Scratchpad: send to a tool"),
+        new("Shift + Alt + F", "Scratchpad: format the note"),
+        new("Ctrl + Shift + ;", "Scratchpad: insert the date and time"),
         new("Ctrl + ,", "Open Settings"),
         new("Ctrl + Enter", "Run the current tool"),
         new("Ctrl + S", "Save the current tool's output"),
@@ -35,6 +40,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly IRecentToolsService _recents;
     private readonly IFavoritesService _favorites;
     private readonly IDialogService _dialogs;
+    private readonly IScratchpadStore _scratchpad;
 
     public SettingsViewModel(
         ISettingsService settings,
@@ -42,8 +48,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         IToolStateService state,
         IRecentToolsService recents,
         IFavoritesService favorites,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        IScratchpadStore scratchpad)
     {
+        _scratchpad = scratchpad;
         _settings = settings;
         _theme = theme;
         _state = state;
@@ -166,6 +174,39 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    // ---------------------------------------------------------------- scratchpad
+
+    public double ScratchpadRetentionDays
+    {
+        get => _settings.ScratchpadRetentionDays;
+        set
+        {
+            // A cleared NumberBox reports NaN; keep the current value rather than jump to 1.
+            if (double.IsNaN(value))
+            {
+                OnPropertyChanged();
+                return;
+            }
+
+            _settings.ScratchpadRetentionDays = (int)Math.Round(value);
+            OnPropertyChanged();
+        }
+    }
+
+    public double MinimumRetentionDays => DevTools.Core.Scratch.ScratchRetention.MinDays;
+
+    public double MaximumRetentionDays => DevTools.Core.Scratch.ScratchRetention.MaxDays;
+
+    public int ScratchpadStartIndex
+    {
+        get => _settings.ScratchpadStartWithNewNote ? 1 : 0;
+        set
+        {
+            _settings.ScratchpadStartWithNewNote = value == 1;
+            OnPropertyChanged();
+        }
+    }
+
     [ObservableProperty]
     public partial string? StatusMessage { get; set; }
 
@@ -206,6 +247,38 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ClearScratchpadHistoryAsync()
+    {
+        if (!await _dialogs.ConfirmAsync(
+                "Clear Scratchpad history",
+                "Every earlier version of every note will be removed. The notes themselves are kept. This cannot be undone.",
+                "Clear"))
+        {
+            return;
+        }
+
+        await _scratchpad.InitializeAsync();
+        _scratchpad.ClearHistory();
+        StatusMessage = "Scratchpad history cleared.";
+    }
+
+    [RelayCommand]
+    private async Task TrashAllScratchNotesAsync()
+    {
+        if (!await _dialogs.ConfirmAsync(
+                "Move all notes to Trash",
+                $"Every Scratchpad note will move to Trash. They can be restored from there for {_settings.ScratchpadRetentionDays} days.",
+                "Move to Trash"))
+        {
+            return;
+        }
+
+        await _scratchpad.InitializeAsync();
+        var count = _scratchpad.TrashAll();
+        StatusMessage = count == 1 ? "1 note moved to Trash." : $"{count:N0} notes moved to Trash.";
+    }
+
+    [RelayCommand]
     private async Task ResetAllSettingsAsync()
     {
         if (!await _dialogs.ConfirmAsync(
@@ -229,6 +302,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SyntaxColouring));
         OnPropertyChanged(nameof(PersistToolState));
         OnPropertyChanged(nameof(JsonDiffTextViews));
+        OnPropertyChanged(nameof(ScratchpadRetentionDays));
+        OnPropertyChanged(nameof(ScratchpadStartIndex));
 
         StatusMessage = "Settings reset.";
     }
@@ -264,7 +339,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             }
             catch (InvalidOperationException)
             {
-                return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.1.0";
+                return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.2.0";
             }
         }
     }
@@ -326,6 +401,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<string> PrivacyNotes { get; } =
     [
         "Every tool except API Builder runs entirely on this machine and has no network code at all.",
+        "What you enter in a tool is forgotten when the app closes, with one exception: Scratchpad notes and their earlier versions are saved as plain, unencrypted text in the app's folder on this PC, and nowhere else.",
         "Markdown Preview and HTML Viewer refuse every request the page makes, so a document cannot make them load an image, a script or anything else from the internet.",
         "API Builder sends exactly the requests you compose, to the addresses you give it, and nowhere else.",
         "No telemetry, no analytics, no crash reporting and no update checks — ever.",

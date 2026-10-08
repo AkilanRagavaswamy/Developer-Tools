@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     private readonly ISettingsService _settings;
     private readonly IThemeService _theme;
     private readonly IToolStateService _state;
+    private readonly IScratchpadStore _scratchpad;
 
     public MainWindow()
     {
@@ -27,6 +28,7 @@ public sealed partial class MainWindow : Window
         _settings = App.GetService<ISettingsService>();
         _theme = App.GetService<IThemeService>();
         _state = App.GetService<IToolStateService>();
+        _scratchpad = App.GetService<IScratchpadStore>();
 
         var handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
         _shell.Attach(this, handle);
@@ -127,6 +129,19 @@ public sealed partial class MainWindow : Window
     private async void OnClosed(object sender, WindowEventArgs args)
     {
         SavePlacement();
+
+        // Scratch notes are the user's work, so they are written before the window is allowed to go:
+        // an async void handler gets no guarantee the process waits for it. The store never
+        // resumes on the UI thread, so blocking here cannot deadlock.
+        try
+        {
+            _scratchpad.FlushAsync().Wait(TimeSpan.FromSeconds(5));
+        }
+        catch (Exception ex)
+        {
+            App.LogError("Saving scratch notes on close", ex);
+        }
+
         await _state.FlushAsync();
     }
 

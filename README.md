@@ -1,6 +1,6 @@
 # ForgeKitRk – Developer Toolkit
 
-A Windows desktop workbench for **API and payload work** — twenty tools that cover the loop
+A Windows desktop workbench for **API and payload work** — twenty-one tools that cover the loop
 you actually run: compose a request, send it, format the response, model it in C#, diff it
 against what it used to be, and the dozen small conversions that happen in between.
 
@@ -31,6 +31,7 @@ Built as a WinUI 3 packaged (MSIX) application on .NET 10.
 | **Regex Validator** | Tests a .NET regular expression against text: every match with its line, column and groups, an optional replacement preview, the usual flags and a JavaScript mode. A two-second limit stops a catastrophically backtracking pattern instead of freezing the app. |
 | **HTML Viewer** | Open or write HTML and see the page update as you edit. The preview never goes online, and the page's own scripts run only if you allow them. |
 | **Markdown Preview** | GitHub-flavoured Markdown rendered as you type, in light or dark, saved as a standalone HTML page. The preview runs no script and loads nothing from the network. |
+| **Scratchpad** | Notes that save as you type and stay between sessions, each in plain text, Markdown, JSON, XML, SQL, C#, HTML or Math. A Math note shows a result for every line — variables, percentages, data sizes, time, hex. Earlier versions are kept, restorable and comparable in Text Compare; deleted notes wait in Trash; any note can be sent to another tool, and any tool's result can be sent here. Notes are plain text files in the app's own folder. |
 | **API Builder** | Collections, folders, environments and `{{variables}}`; five auth schemes; JSON, form, multipart and binary bodies; a response viewer with timing, headers and cookies; cURL, OpenAPI 3 and Postman import. |
 
 They are one app because they are one workflow: every response can be formatted, modelled or

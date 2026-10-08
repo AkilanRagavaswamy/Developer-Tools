@@ -5,13 +5,13 @@
 		 xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
 		 IgnorableNamespaces="uap uap3 rescap">
 
-	<Identity Name="AkilanRagavaswamy.ForgeKitRk-DeveloperToolkit" Publisher="CN=4FEF7FAB-6AD4-4C46-88A8-05AFF705DD4C" Version="1.1.0.0" />
+	<Identity Name="AkilanRagavaswamy.ForgeKitRk-DeveloperToolkit" Publisher="CN=4FEF7FAB-6AD4-4C46-88A8-05AFF705DD4C" Version="1.2.0.0" />
 
 	<Properties>
 		<DisplayName>ForgeKitRk - Developer Toolkit</DisplayName>
 		<PublisherDisplayName>Akilan Ragavaswamy</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
-		<Description>Twenty developer tools in one native Windows app: JSON, SQL and XML formatters, diff and regex validators, converters, encoders, UUID and QR generators, Markdown and HTML viewers, SVG to XAML and an HTTP request builder.</Description>
+		<Description>Twenty-one developer tools in one native Windows app: JSON, SQL and XML formatters, diff and regex validators, converters, encoders, UUID and QR generators, Markdown and HTML viewers, a scratchpad that saves itself, SVG to XAML and an HTTP request builder.</Description>
 	</Properties>
 
 	<Dependencies>
@@ -27,7 +27,7 @@
 
 	<Applications>
 		<Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-			<uap:VisualElements DisplayName="ForgeKitRk - Dev Tools" Description="Twenty offline developer tools: formatters, validators, converters, encoders, generators, text viewers, SVG to XAML and an HTTP request builder."
+			<uap:VisualElements DisplayName="ForgeKitRk - Dev Tools" Description="Twenty-one offline developer tools: formatters, validators, converters, encoders, generators, text viewers, a scratchpad, SVG to XAML and an HTTP request builder."
 								BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
 				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="ForgeKitRk">
 					<uap:ShowNameOnTiles>

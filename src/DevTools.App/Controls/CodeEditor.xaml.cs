@@ -455,6 +455,9 @@ public sealed partial class CodeEditor : UserControl
         ClearButton.Visibility = ClearCommand is null ? Visibility.Collapsed : Visibility.Visible;
         CopyButton.Visibility = CopyCommand is null ? Visibility.Collapsed : Visibility.Visible;
         SaveButton.Visibility = SaveCommand is null ? Visibility.Collapsed : Visibility.Visible;
+
+        // Every result pane can hand its text to Scratchpad (SP-41); input panes already hold the user's text.
+        ScratchButton.Visibility = IsReadOnly && CanSendToScratchpad ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
@@ -885,8 +888,9 @@ public sealed partial class CodeEditor : UserControl
     }
 
     /// <summary>A brief, non-blocking confirmation that the copy happened (FR-T03).</summary>
-    private void ShowCopiedToast()
+    private void ShowCopiedToast(string text = "Copied")
     {
+        ToastText.Text = text;
         CopiedToast.Visibility = Visibility.Visible;
         CopiedToast.Opacity = 1;
 
@@ -903,4 +907,59 @@ public sealed partial class CodeEditor : UserControl
 
     /// <summary>Moves keyboard focus into the text surface.</summary>
     public void FocusEditor() => Editor.Focus(FocusState.Programmatic);
+
+    /// <summary>Whether a read-only pane offers Send to Scratchpad. On by default.</summary>
+    public bool CanSendToScratchpad { get; set; } = true;
+
+    /// <summary>The selected text, or empty when nothing is selected.</summary>
+    public string SelectedText => Editor.SelectedText ?? string.Empty;
+
+    /// <summary>Where the caret is, as a character offset into <see cref="Text"/>.</summary>
+    public int CaretIndex
+    {
+        get => Editor.SelectionStart;
+        set => Editor.Select(Math.Clamp(value, 0, Editor.Text.Length), 0);
+    }
+
+    /// <summary>Types <paramref name="text"/> at the caret, replacing any selection, as a paste would.</summary>
+    public void InsertAtCaret(string text)
+    {
+        if (IsReadOnly)
+        {
+            return;
+        }
+
+        var start = Editor.SelectionStart;
+        Editor.SelectedText = text;
+        Editor.Select(start + text.Length, 0);
+    }
+
+    private async void OnSendToScratchpadClick(object sender, RoutedEventArgs e)
+    {
+        var text = Editor.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        try
+        {
+            var tool = App.GetService<IToolChrome>().Active?.Title ?? "a tool";
+            var language = Syntax switch
+            {
+                SyntaxLanguage.Json => Core.Scratch.ScratchLanguage.Json,
+                SyntaxLanguage.Xml => Core.Scratch.ScratchLanguage.Xml,
+                SyntaxLanguage.Sql => Core.Scratch.ScratchLanguage.Sql,
+                SyntaxLanguage.CSharp => Core.Scratch.ScratchLanguage.CSharp,
+                _ => Core.Scratch.ScratchLanguage.Plain,
+            };
+
+            await App.GetService<IScratchpadStore>().CreateFromToolAsync(text, tool, language);
+            ShowCopiedToast("Sent to Scratchpad");
+        }
+        catch (Exception ex)
+        {
+            App.LogError("Send to Scratchpad", ex);
+        }
+    }
 }

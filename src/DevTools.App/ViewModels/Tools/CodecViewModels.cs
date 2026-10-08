@@ -32,11 +32,27 @@ public abstract partial class CodecViewModelBase : TextToolViewModelBase
 
     protected abstract string EncodedLabel { get; }
 
+    /// <summary>The input that produced the current <see cref="TextToolViewModelBase.Output"/>, or null when it is stale.</summary>
+    private string? _outputSource;
+
     partial void OnDirectionIndexChanged(int value)
     {
         OnPropertyChanged(nameof(Direction));
         OnPropertyChanged(nameof(InputHeader));
         OnPropertyChanged(nameof(OutputHeader));
+
+        // Turning the direction round turns the panes round, so their text has to go with them:
+        // the headers relabel, and what was the result is now what gets decoded (or encoded).
+        // Leaving the text where it was fed plain text to the decoder. Only a result that belongs
+        // to the input on screen moves; a stale or failed one would replace the input with junk.
+        if (!IsRestoring && !string.IsNullOrEmpty(Output) && _outputSource is not null && _outputSource == Input)
+        {
+            var output = Output;
+            Output = Input;
+            _outputSource = null;
+            Input = output;
+        }
+
         OnOptionChanged();
     }
 
@@ -45,8 +61,16 @@ public abstract partial class CodecViewModelBase : TextToolViewModelBase
     private void Swap()
     {
         var output = Output;
+        var moves = !string.IsNullOrEmpty(output) && _outputSource == Input;
+
         DirectionIndex = DirectionIndex == 0 ? 1 : 0;
-        Input = output;
+
+        // The direction change has already moved a current result; a stale one is still moved
+        // here, because the Swap button says it moves the result in.
+        if (!moves && !string.IsNullOrEmpty(output))
+        {
+            Input = output;
+        }
     }
 
     protected async Task RunCodecAsync(Func<string, OperationResult<string>> run, CancellationToken token)
@@ -56,12 +80,16 @@ public abstract partial class CodecViewModelBase : TextToolViewModelBase
             Output = string.Empty;
             ClearMessage();
             OutputStats = string.Empty;
+            _outputSource = null;
             return;
         }
 
         var input = Input;
         var result = await ComputeAsync(() => run(input), token);
         Apply(result);
+
+        // A failure leaves the previous output on screen (FR-T05), which no longer belongs to this input.
+        _outputSource = result.IsSuccess ? input : null;
 
         if (result.IsSuccess)
         {

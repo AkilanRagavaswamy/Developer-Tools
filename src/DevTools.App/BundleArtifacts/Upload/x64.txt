@@ -1,6 +1,6 @@
-MainPackage=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0_x64.msix
-SymbolPackage=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0\DevTools.App_1.0.0.0_x64.appxsym
-ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0_scale-100.msix
-ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0_scale-125.msix
-ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0_scale-150.msix
-ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.0.0.0_scale-400.msix
+MainPackage=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0_x64.msix
+SymbolPackage=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0\DevTools.App_1.2.0.0_x64.appxsym
+ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0_scale-100.msix
+ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0_scale-125.msix
+ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0_scale-150.msix
+ResourcePack=D:\Projects\Developer-Tools\src\DevTools.App\bin\x64\Release\net10.0-windows10.0.26100.0\Upload\DevTools.App_1.2.0.0_scale-400.msix
