@@ -595,9 +595,36 @@ public static class JsonDiffer
                 rightHashes[j] = Hash(b[j]);
             }
 
-            // Table-based LCS. Bounded by MaxDiffNodes so a pathological pair cannot allocate
-            // an enormous table; beyond that we fall back to index pairing.
-            if ((long)(n + 1) * (m + 1) > Limits.MaxDiffNodes)
+            var children = new List<JsonDiffNode>();
+
+            // The run both arrays start with, and the run both end with, match as they stand.
+            // Only what lies between needs aligning — usually a handful of elements, however
+            // long the arrays are.
+            var head = 0;
+            while (head < n && head < m && string.Equals(leftHashes[head], rightHashes[head], StringComparison.Ordinal))
+            {
+                children.Add(Compare($"{path}[{head}]", $"[{head}]", a[head], b[head]));
+                head++;
+            }
+
+            var tail = 0;
+            while (tail < n - head && tail < m - head &&
+                   string.Equals(leftHashes[n - 1 - tail], rightHashes[m - 1 - tail], StringComparison.Ordinal))
+            {
+                tail++;
+            }
+
+            var endLeft = n - tail;
+            var endRight = m - tail;
+            var midLeft = endLeft - head;
+            var midRight = endRight - head;
+
+            var gapLeft = new List<int>();
+            var gapRight = new List<int>();
+
+            // Table-based LCS over the middle, bounded so a pathological pair cannot allocate
+            // an enormous table; beyond that the middle is paired by position.
+            if ((long)(midLeft + 1) * (midRight + 1) > MaxLcsCells)
             {
                 var message = $"{path} is too large for best-match pairing ({n:N0} × {m:N0}); elements were paired by position instead.";
                 if (!_warnings.Contains(message, StringComparer.Ordinal))
@@ -605,59 +632,72 @@ public static class JsonDiffer
                     _warnings.Add(message);
                 }
 
-                return PairByIndex(path, left, right);
-            }
-
-            var table = new int[n + 1, m + 1];
-            for (var i = n - 1; i >= 0; i--)
-            {
-                for (var j = m - 1; j >= 0; j--)
+                for (var k = head; k < Math.Max(endLeft, endRight); k++)
                 {
-                    table[i, j] = string.Equals(leftHashes[i], rightHashes[j], StringComparison.Ordinal)
-                        ? table[i + 1, j + 1] + 1
-                        : Math.Max(table[i + 1, j], table[i, j + 1]);
+                    var l = k < endLeft ? a[k] : null;
+                    var r = k < endRight ? b[k] : null;
+                    children.Add(Compare($"{path}[{k}]", $"[{k}]", l, r));
                 }
             }
-
-            var children = new List<JsonDiffNode>();
-            var gapLeft = new List<int>();
-            var gapRight = new List<int>();
-            var x = 0;
-            var y = 0;
-
-            while (x < n && y < m)
+            else
             {
-                if (string.Equals(leftHashes[x], rightHashes[y], StringComparison.Ordinal))
+                var table = new int[midLeft + 1, midRight + 1];
+                for (var i = midLeft - 1; i >= 0; i--)
                 {
-                    FlushGap(path, a, b, gapLeft, gapRight, children);
-                    children.Add(Compare($"{path}[{x}]", $"[{x}]", a[x], b[y]));
-                    x++;
-                    y++;
+                    for (var j = midRight - 1; j >= 0; j--)
+                    {
+                        table[i, j] = string.Equals(leftHashes[head + i], rightHashes[head + j], StringComparison.Ordinal)
+                            ? table[i + 1, j + 1] + 1
+                            : Math.Max(table[i + 1, j], table[i, j + 1]);
+                    }
                 }
-                else if (table[x + 1, y] >= table[x, y + 1])
+
+                var x = 0;
+                var y = 0;
+
+                while (x < midLeft && y < midRight)
                 {
-                    gapLeft.Add(x++);
+                    if (string.Equals(leftHashes[head + x], rightHashes[head + y], StringComparison.Ordinal))
+                    {
+                        FlushGap(path, a, b, gapLeft, gapRight, children);
+                        children.Add(Compare($"{path}[{head + x}]", $"[{head + x}]", a[head + x], b[head + y]));
+                        x++;
+                        y++;
+                    }
+                    else if (table[x + 1, y] >= table[x, y + 1])
+                    {
+                        gapLeft.Add(head + x++);
+                    }
+                    else
+                    {
+                        gapRight.Add(head + y++);
+                    }
                 }
-                else
+
+                while (x < midLeft)
                 {
-                    gapRight.Add(y++);
+                    gapLeft.Add(head + x++);
                 }
+
+                while (y < midRight)
+                {
+                    gapRight.Add(head + y++);
+                }
+
+                FlushGap(path, a, b, gapLeft, gapRight, children);
             }
 
-            while (x < n)
+            for (var k = 0; k < tail; k++)
             {
-                gapLeft.Add(x++);
+                var l = endLeft + k;
+                children.Add(Compare($"{path}[{l}]", $"[{l}]", a[l], b[endRight + k]));
             }
-
-            while (y < m)
-            {
-                gapRight.Add(y++);
-            }
-
-            FlushGap(path, a, b, gapLeft, gapRight, children);
 
             return children;
         }
+
+        /// <summary>The most cells an alignment table may have (16 MB of ints) before positions are used.</summary>
+        private const long MaxLcsCells = 4_000_000;
 
         /// <summary>The least similarity at which two unequal elements are treated as one that changed.</summary>
         private const double PairingThreshold = 0.25;
@@ -888,18 +928,37 @@ public static class JsonDiffer
             }
         }
 
+        // By reference: nodes are records, so default equality would compare whole subtrees.
+        private readonly Dictionary<JsonNode, string> _hashes = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>
+        /// The node's hash, built once. Array pairing asks for the same element's hash at every
+        /// level of nesting and for every candidate it is weighed against.
+        /// </summary>
         private string Hash(JsonNode node)
         {
+            if (_hashes.TryGetValue(node, out var known))
+            {
+                return known;
+            }
+
+            string hash;
+
             // Under the loosening options, two nodes that compare equal must hash equal, or
             // the pairing would contradict the comparison that follows it.
             if (options is { IgnoreCaseInValues: false, NumericTolerance: null, IgnoreCaseInKeys: false })
             {
-                return node.StructuralHash();
+                hash = node.StructuralHash();
+            }
+            else
+            {
+                var sink = new System.Text.StringBuilder();
+                HashLoose(node, sink);
+                hash = sink.ToString();
             }
 
-            var sink = new System.Text.StringBuilder();
-            HashLoose(node, sink);
-            return sink.ToString();
+            _hashes[node] = hash;
+            return hash;
         }
 
         private void HashLoose(JsonNode node, System.Text.StringBuilder sink)

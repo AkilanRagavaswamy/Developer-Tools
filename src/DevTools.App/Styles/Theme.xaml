@@ -21,6 +21,8 @@
             <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="#000000" Opacity="0.035" />
             <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="#000000" Opacity="0.40" />
             <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="#22C55E" Opacity="0.22" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedStrongBrush" Color="#22C55E" Opacity="0.50" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedStrongBrush" Color="#EF4444" Opacity="0.45" />
             <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="#EF4444" Opacity="0.20" />
             <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="#F59E0B" Opacity="0.22" />
             <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="#4F46E5" Opacity="0.25" />
@@ -62,6 +64,8 @@
             <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="#FFFFFF" Opacity="0.035" />
             <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="#FFFFFF" Opacity="0.45" />
             <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="#22C55E" Opacity="0.28" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedStrongBrush" Color="#22C55E" Opacity="0.55" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedStrongBrush" Color="#EF4444" Opacity="0.52" />
             <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="#EF4444" Opacity="0.26" />
             <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="#F59E0B" Opacity="0.26" />
             <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="#818CF8" Opacity="0.32" />
@@ -101,6 +105,8 @@
             <SolidColorBrush x:Key="DevToolsGutterBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
             <SolidColorBrush x:Key="DevToolsGutterForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="DevToolsDiffAddedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffAddedStrongBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="DevToolsDiffRemovedStrongBrush" Color="{ThemeResource SystemColorHotlightColor}" />
             <SolidColorBrush x:Key="DevToolsDiffRemovedBrush" Color="{ThemeResource SystemColorHotlightColor}" />
             <SolidColorBrush x:Key="DevToolsDiffChangedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
             <SolidColorBrush x:Key="DevToolsMatchHighlightBrush" Color="{ThemeResource SystemColorHighlightColor}" />

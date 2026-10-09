@@ -17,10 +17,9 @@
         </Grid.RowDefinitions>
 
         <!--
-            Title bar (FR-S09). It carries the tool's identity, the tool's own options row and
-            the app commands, which is what lets every page drop both its 90 px header and its
-            options band. Three columns: identity at its natural width, the options row taking
-            the leftover middle, the commands against the caption buttons.
+            Title bar (FR-S09). It carries the tool's identity and the app commands, which is
+            what lets every page drop its 90 px header. Three columns: identity at its natural
+            width, an empty drag area in the middle, the commands against the caption buttons.
         -->
         <Grid x:Name="TitleBarDragArea" Height="48">
             <Grid.ColumnDefinitions>
@@ -43,8 +42,13 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <!--
+                    Width and margin put this icon on the same vertical line as the navigation
+                    rail's icons beneath it; the caption-button width alone sat it 7 px to the right.
+                -->
                 <Button
-                    Margin="6,0,0,0"
+                    Width="44"
+                    Margin="0"
                     AutomationProperties.Name="Show or hide the tool names"
                     Click="OnPaneToggleClick"
                     Style="{StaticResource DevToolsCaptionButtonStyle}"
@@ -83,15 +87,52 @@
             </Grid>
 
             <!--
-                The active tool's options row (FR-T01), moved up out of the page. Nothing is
-                bound here: the page declares the row and the shell parents it, because an
-                element has one parent and the band below is the other place it can go.
+                Jump to Tool (FR-S04), in the middle of the title bar; it opens the command palette.
+                The space either side of it stays the window's drag area. The tool's own options
+                live in the page.
             -->
-            <ContentPresenter
-                x:Name="TitleBarOptions"
+            <!--
+                Looks like a search box, behaves as the door to the palette: a click (or Ctrl+K)
+                opens the overlay below, whose own box takes the typing, so the keyboard flow -
+                type, Up and Down, Enter - is the same however it was opened.
+            -->
+            <Button
+                x:Name="JumpBox"
                 Grid.Column="1"
-                Margin="16,0,12,0"
-                VerticalContentAlignment="Center" />
+                Width="380"
+                Height="32"
+                Margin="16,0"
+                Padding="12,0,10,0"
+                HorizontalAlignment="Center"
+                HorizontalContentAlignment="Stretch"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Jump to tool"
+                Click="OnPaletteClick"
+                ToolTipService.ToolTip="Jump to a tool (Ctrl+K)">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Jump to Tool" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                        FontSize="11"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                        Text="Ctrl+K" />
+                    <FontIcon
+                        Grid.Column="2"
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xE721;" />
+                </Grid>
+            </Button>
 
             <!--
                 Right: the active tool's own commands, then the app commands, then the system's
@@ -131,11 +172,48 @@
                     Visibility="{x:Bind ViewModel.HasActiveTool, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
                 <Button
-                    AutomationProperties.Name="Open the command palette"
-                    Click="OnPaletteClick"
+                    AutomationProperties.Name="Keyboard shortcuts"
                     Style="{StaticResource DevToolsCaptionButtonStyle}"
-                    ToolTipService.ToolTip="Command palette (Ctrl+K)">
-                    <FontIcon FontSize="14" Glyph="&#xE756;" />
+                    ToolTipService.ToolTip="Keyboard shortcuts">
+                    <FontIcon FontSize="15" Glyph="&#xE765;" />
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <StackPanel Width="380" Spacing="10">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Keyboard shortcuts" />
+                                <ItemsControl ItemsSource="{x:Bind Shortcuts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ShortcutEntry">
+                                            <Grid Padding="0,5" ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Padding="7,2"
+                                                    Background="{ThemeResource DevToolsCardBackgroundBrush}"
+                                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4">
+                                                    <TextBlock
+                                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                                        FontSize="12"
+                                                        Text="{x:Bind Keys}"
+                                                        TextWrapping="Wrap" />
+                                                </Border>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Text="{x:Bind Action}"
+                                                    TextWrapping="Wrap" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
                 </Button>
 
                 <Button
@@ -180,11 +258,18 @@
                     Style="{StaticResource DevToolsOptionsBarStyle}"
                     Visibility="Collapsed">
                     <!--
-                        No ScrollViewer here on purpose: one measures its child at infinite
-                        width, which lets a row's star column take far more than the window has
-                        and pushes everything after it out of sight. The row is sized to fit.
+                        Scrolls sideways only when the window is too narrow for the row. The
+                        row is given at least the visible width (see the code-behind), so when it
+                        does fit its star column still stretches to fill the band.
                     -->
-                    <ContentPresenter x:Name="BandOptions" VerticalContentAlignment="Center" />
+                    <ScrollViewer
+                        x:Name="BandScroller"
+                        HorizontalScrollBarVisibility="Auto"
+                        HorizontalScrollMode="Auto"
+                        VerticalScrollBarVisibility="Disabled"
+                        VerticalScrollMode="Disabled">
+                        <ContentPresenter x:Name="BandOptions" VerticalContentAlignment="Center" />
+                    </ScrollViewer>
                 </Border>
 
                 <!-- Clipboard suggestion banner (FR-S07) -->

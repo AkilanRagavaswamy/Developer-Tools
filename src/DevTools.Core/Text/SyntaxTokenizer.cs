@@ -24,6 +24,7 @@ public enum SyntaxLanguage
     Json,
     Xml,
     CSharp,
+    Sql,
 }
 
 /// <summary>
@@ -63,8 +64,52 @@ public static class SyntaxTokenizer
             SyntaxLanguage.Json => TokenizeJson(text),
             SyntaxLanguage.Xml => TokenizeXml(text),
             SyntaxLanguage.CSharp => TokenizeCSharp(text),
+            SyntaxLanguage.Sql => TokenizeSql(text),
             _ => [new SyntaxToken(0, text.Length, TokenKind.Plain)],
         };
+    }
+
+    // ---- SQL ----------------------------------------------------------------------------
+
+    /// <summary>
+    /// Colours SQL with the formatter's own scanner, in Standard SQL, so a word is coloured as a
+    /// keyword exactly when the formatter would treat it as one.
+    /// </summary>
+    private static List<SyntaxToken> TokenizeSql(string text)
+    {
+        var tokens = new List<SyntaxToken>();
+        var at = 0;
+
+        foreach (var token in Sql.SqlTokenizer.Tokenize(text, Sql.SqlDialectDefinition.For(Sql.SqlDialect.StandardSql)))
+        {
+            if (token.Index > at)
+            {
+                tokens.Add(new SyntaxToken(at, token.Index - at, TokenKind.Plain));
+            }
+
+            var kind = token.Type switch
+            {
+                Sql.SqlTokenType.Reserved or Sql.SqlTokenType.ReservedTopLevel or Sql.SqlTokenType.ReservedTopLevelNoIndent or
+                    Sql.SqlTokenType.ReservedNewLine => TokenKind.Keyword,
+                Sql.SqlTokenType.OpenParen or Sql.SqlTokenType.CloseParen when token.Length > 1 => TokenKind.Keyword,
+                Sql.SqlTokenType.String => TokenKind.String,
+                Sql.SqlTokenType.Number => TokenKind.Number,
+                Sql.SqlTokenType.LineComment or Sql.SqlTokenType.BlockComment => TokenKind.Comment,
+                Sql.SqlTokenType.Placeholder => TokenKind.PropertyName,
+                Sql.SqlTokenType.Operator or Sql.SqlTokenType.OpenParen or Sql.SqlTokenType.CloseParen => TokenKind.Punctuation,
+                _ => TokenKind.Plain,
+            };
+
+            tokens.Add(new SyntaxToken(token.Index, token.Length, kind));
+            at = token.Index + token.Length;
+        }
+
+        if (at < text.Length)
+        {
+            tokens.Add(new SyntaxToken(at, text.Length - at, TokenKind.Plain));
+        }
+
+        return tokens;
     }
 
     // ---- JSON ---------------------------------------------------------------------------

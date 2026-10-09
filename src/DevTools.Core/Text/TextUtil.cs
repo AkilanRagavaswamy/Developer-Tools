@@ -146,6 +146,55 @@ public static class TextUtil
     }
 
     /// <summary>
+    /// The number of entries <see cref="SplitLines"/> would return, without building them.
+    /// </summary>
+    /// <remarks>
+    /// Editors count lines on every keystroke; splitting a large document into strings just to
+    /// read the array's length costs two full copies of it each time.
+    /// </remarks>
+    public static int CountLines(string? text, bool keepTrailingEmpty = false)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        var span = text.AsSpan();
+        if (span[0] == Bom)
+        {
+            span = span[1..];
+        }
+
+        if (span.IsEmpty)
+        {
+            return 1;
+        }
+
+        var lines = 1;
+        var at = 0;
+        while (true)
+        {
+            var next = span[at..].IndexOfAny('\r', '\n');
+            if (next < 0)
+            {
+                break;
+            }
+
+            at += next;
+            at += span[at] == '\r' && at + 1 < span.Length && span[at + 1] == '\n' ? 2 : 1;
+            lines++;
+
+            if (at >= span.Length)
+            {
+                // The text ends in a newline, which leaves one empty entry after it.
+                return keepTrailingEmpty || lines == 1 ? lines : lines - 1;
+            }
+        }
+
+        return lines;
+    }
+
+    /// <summary>
     /// Counts user-perceived characters. An emoji with a skin-tone modifier is one grapheme
     /// but several UTF-16 units, and users count the former (edge case 7).
     /// </summary>
@@ -154,6 +203,23 @@ public static class TextUtil
         if (string.IsNullOrEmpty(text))
         {
             return 0;
+        }
+
+        // Plain ASCII has one grapheme per character, except that CR LF is a single one. The
+        // counter runs on every keystroke, and the general enumerator is far slower than this.
+        var span = text.AsSpan();
+        if (!span.ContainsAnyExceptInRange('\0', '\u007f'))
+        {
+            var pairs = 0;
+            var at = 0;
+            int found;
+            while ((found = span[at..].IndexOf("\r\n")) >= 0)
+            {
+                pairs++;
+                at += found + 2;
+            }
+
+            return text.Length - pairs;
         }
 
         var count = 0;
@@ -212,14 +278,24 @@ public static class TextUtil
             return string.Empty;
         }
 
-        return style switch
+        // Formatters ask for an indent on every line, so the common depths are built once.
+        var cache = IndentCache[style switch { IndentStyle.Tab => 2, IndentStyle.FourSpaces => 1, _ => 0 }];
+        if (level < cache.Length)
         {
-            IndentStyle.Tab => new string('\t', level),
-            IndentStyle.FourSpaces => new string(' ', level * 4),
-            IndentStyle.TwoSpaces => new string(' ', level * 2),
-            _ => new string(' ', level * 2),
-        };
+            return cache[level] ??= BuildIndent(style, level);
+        }
+
+        return BuildIndent(style, level);
     }
+
+    private static readonly string?[][] IndentCache = [new string?[64], new string?[64], new string?[64]];
+
+    private static string BuildIndent(IndentStyle style, int level) => style switch
+    {
+        IndentStyle.Tab => new string('\t', level),
+        IndentStyle.FourSpaces => new string(' ', level * 4),
+        _ => new string(' ', level * 2),
+    };
 
     /// <summary>The literal text of one indent unit.</summary>
     public static string IndentUnit(IndentStyle style) => style switch

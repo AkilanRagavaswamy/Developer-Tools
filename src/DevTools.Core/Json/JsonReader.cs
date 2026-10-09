@@ -111,10 +111,40 @@ public static class JsonReader
 
         private JsonParseException ErrorAt(string message, int offset) => new(message, offset);
 
+        // Where line counting has reached. Positions are only ever asked for moving forward, so
+        // each one continues from the last instead of rescanning from the start — recounting
+        // from offset 0 for every node made a 2 MB document take over a minute to parse.
+        private int _lineScan;
+        private int _line = 1;
+        private int _lineStart;
+
         private JsonPosition PositionHere()
         {
-            var (line, column) = TextUtil.OffsetToLineColumn(Text, Index);
-            return new JsonPosition(line, column, Index);
+            if (Index < _lineScan)
+            {
+                var (line, column) = TextUtil.OffsetToLineColumn(Text, Index);
+                return new JsonPosition(line, column, Index);
+            }
+
+            var text = Text;
+            for (var i = _lineScan; i < Index; i++)
+            {
+                var c = text[i];
+                if (c == '\n')
+                {
+                    _line++;
+                    _lineStart = i + 1;
+                }
+                else if (c == '\r' && (i + 1 >= text.Length || text[i + 1] != '\n'))
+                {
+                    // A CR on its own ends a line; the CR of a CRLF leaves that to the LF.
+                    _line++;
+                    _lineStart = i + 1;
+                }
+            }
+
+            _lineScan = Index;
+            return new JsonPosition(_line, Index - _lineStart + 1, Index);
         }
 
         public void SkipTrivia()
@@ -348,7 +378,20 @@ public static class JsonReader
         {
             var openedAt = Index;
             Index++; // opening quote
-            var builder = new StringBuilder();
+
+            // Most strings have no escapes: find the closing quote and slice it out in one go,
+            // and only fall back to building character by character when a backslash or a
+            // control character turns up.
+            var rest = Text.AsSpan(Index);
+            var special = rest.IndexOfAny('"', '\\');
+            if (special >= 0 && rest[special] == '"' && !HasControl(rest[..special]))
+            {
+                var value = Text.Substring(Index, special);
+                Index += special + 1;
+                return value;
+            }
+
+            var builder = new StringBuilder(Math.Max(16, special));
 
             while (true)
             {
@@ -404,6 +447,23 @@ public static class JsonReader
                 builder.Append(c);
                 Index++;
             }
+        }
+
+        /// <summary>True when the span holds a control character a JSON string may not carry raw.</summary>
+        private static bool HasControl(ReadOnlySpan<char> span)
+        {
+            foreach (var c in span)
+            {
+                if (c < ' ' || (c >= '\u007f' && c <= '\u009f'))
+                {
+                    if (c is not ('\t' or '\n' or '\r'))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -462,7 +522,7 @@ public static class JsonReader
                 }
             }
 
-            var value = (char)Convert.ToInt32(span.ToString(), 16);
+            var value = (char)int.Parse(span, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture);
             Index += 4;
             return value;
         }
@@ -486,7 +546,7 @@ public static class JsonReader
                 }
             }
 
-            value = (char)Convert.ToInt32(span.ToString(), 16);
+            value = (char)int.Parse(span, System.Globalization.NumberStyles.AllowHexSpecifier, System.Globalization.CultureInfo.InvariantCulture);
             return true;
         }
 

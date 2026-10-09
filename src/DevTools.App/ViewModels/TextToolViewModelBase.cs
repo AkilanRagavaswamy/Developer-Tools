@@ -62,7 +62,7 @@ public abstract partial class TextToolViewModelBase : ToolViewModelBase
         }
 
         var characters = TextUtil.GraphemeCount(text);
-        var lines = TextUtil.SplitLines(text).Length;
+        var lines = TextUtil.CountLines(text);
         var bytes = Encoding.UTF8.GetByteCount(text);
 
         return $"{characters:N0} characters · {lines:N0} lines · {Limits.Describe(bytes)}";

@@ -20,6 +20,13 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup Label="Tools">
+    <!-- QR encoding only; the codes are drawn by the app, so no imaging library comes with it. Apache-2.0. -->
+    <PackageVersion Include="ZXing.Net" Version="0.16.11" />
+    <!-- Markdown to HTML for Markdown Preview. BSD-2-Clause. -->
+    <PackageVersion Include="Markdig" Version="1.4.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
     <!-- The C# generator's acceptance test compiles its own output. -->

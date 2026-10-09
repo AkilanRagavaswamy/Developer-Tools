@@ -16,7 +16,7 @@
         IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
         Message="{x:Bind ViewModel.Message, Mode=OneWay}"
         MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
-        OptionsWidth="890">
+>
 
         <!--
             Options. Target first, because it decides which output shapes even exist; the chip

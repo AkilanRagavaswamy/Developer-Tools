@@ -15,7 +15,7 @@
         IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
         Message="{x:Bind ViewModel.Message, Mode=OneWay}"
         MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
-        OptionsWidth="880">
+>
 
         <!--
             Options, ordered by how often they are touched: the action, then the one setting
@@ -51,9 +51,9 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBox BorderThickness="1,1,1,2"
+                    <TextBox
                         Grid.Column="1"
-                        MinWidth="140" Padding="5,5,5,0"
+                        MinWidth="140"
                         AutomationProperties.Name="JSONPath query"
                         ToolTipService.ToolTip="JSONPath query"
                         FontFamily="{StaticResource DevToolsMonospaceFont}"

@@ -83,6 +83,16 @@
                     </Button>
 
                     <Button
+                        x:Name="ScratchButton"
+                        AutomationProperties.Name="Send to Scratchpad"
+                        Click="OnSendToScratchpadClick"
+                        Style="{StaticResource DevToolsToolbarButtonStyle}"
+                        ToolTipService.ToolTip="Send to Scratchpad as a new note"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="14" Glyph="&#xE70B;" />
+                    </Button>
+
+                    <Button
                         x:Name="SaveButton"
                         AutomationProperties.Name="Save as a file"
                         Command="{x:Bind SaveCommand, Mode=OneWay}"
@@ -313,6 +323,7 @@
                 Opacity="0"
                 Visibility="Collapsed">
                 <TextBlock
+                    x:Name="ToastText"
                     FontSize="12"
                     Foreground="White"
                     Text="Copied" />

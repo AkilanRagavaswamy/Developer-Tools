@@ -59,6 +59,7 @@ public partial class App : Application
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IProtocolActivationService, ProtocolActivationService>();
         services.AddSingleton<IToolHandoffService, ToolHandoffService>();
+        services.AddSingleton<IScratchpadStore, ScratchpadStore>();
         services.AddSingleton<IToolChrome, ToolChromeService>();
         services.AddSingleton<ToolCatalog>();
         services.AddSingleton<ToolServices>();

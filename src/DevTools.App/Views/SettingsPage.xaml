@@ -123,7 +123,7 @@
                 <ToggleSwitch AutomationProperties.Name="Smart detect" IsOn="{x:Bind ViewModel.SmartDetect, Mode=TwoWay}" />
             </tk:SettingsCard>
 
-            <tk:SettingsCard Description="Remember each tool's options between sessions. The data you enter in a tool is always cleared when DevTools closes." Header="Remember tool state">
+            <tk:SettingsCard Description="Remember each tool's options between sessions. The data you enter in a tool is cleared when ForgeKitRk closes — except Scratchpad notes, which are kept until you delete them." Header="Remember tool state">
                 <tk:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE81C;" />
                 </tk:SettingsCard.HeaderIcon>
@@ -144,6 +144,12 @@
                     </tk:SettingsCard>
                     <tk:SettingsCard Header="Favorites">
                         <Button Command="{x:Bind ViewModel.ClearFavoritesCommand}" Content="Clear" />
+                    </tk:SettingsCard>
+                    <tk:SettingsCard Description="Earlier versions of every note. The notes themselves stay." Header="Scratchpad history">
+                        <Button Command="{x:Bind ViewModel.ClearScratchpadHistoryCommand}" Content="Clear" />
+                    </tk:SettingsCard>
+                    <tk:SettingsCard Description="Moves every note to Scratchpad's Trash, where it can still be restored." Header="Scratchpad notes">
+                        <Button Command="{x:Bind ViewModel.TrashAllScratchNotesCommand}" Content="Move all to Trash" />
                     </tk:SettingsCard>
                     <tk:SettingsCard Description="{x:Bind ViewModel.DataFolder}" Header="Location" />
                     <tk:SettingsCard Header="All settings">
@@ -169,6 +175,38 @@
                     IsChecked="{x:Bind ViewModel.JsonDiffTextViews, Mode=TwoWay}" />
             </tk:SettingsCard>
 
+            <tk:SettingsExpander Description="Notes are saved as plain text in this app's own folder on this PC. Uninstalling ForgeKitRk removes them, so use Export all in Scratchpad to keep a copy." Header="Scratchpad" IsExpanded="True">
+                <tk:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE70B;" />
+                </tk:SettingsExpander.HeaderIcon>
+                <tk:SettingsExpander.Items>
+                    <tk:SettingsCard Description="How long a deleted note stays in Trash, and how long earlier versions of a note are kept. 1 to 60 days." Header="Keep Trash and history for">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <NumberBox
+                                MinWidth="120"
+                                AutomationProperties.Name="Days to keep Trash and history"
+                                LargeChange="10"
+                                Maximum="{x:Bind ViewModel.MaximumRetentionDays}"
+                                Minimum="{x:Bind ViewModel.MinimumRetentionDays}"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Inline"
+                                ValidationMode="InvalidInputOverwritten"
+                                Value="{x:Bind ViewModel.ScratchpadRetentionDays, Mode=TwoWay}" />
+                            <TextBlock VerticalAlignment="Center" Text="days" />
+                        </StackPanel>
+                    </tk:SettingsCard>
+                    <tk:SettingsCard Description="Pick up the last note, or start each session on a fresh one. Nothing is discarded either way." Header="When Scratchpad opens">
+                        <ComboBox
+                            MinWidth="220"
+                            AutomationProperties.Name="When Scratchpad opens"
+                            SelectedIndex="{x:Bind ViewModel.ScratchpadStartIndex, Mode=TwoWay}">
+                            <ComboBoxItem Content="Continue where I left off" />
+                            <ComboBoxItem Content="Start with a new note" />
+                        </ComboBox>
+                    </tk:SettingsCard>
+                </tk:SettingsExpander.Items>
+            </tk:SettingsExpander>
+
             <!-- ======================= Shortcuts ======================= -->
             <TextBlock
                 Margin="0,16,0,4"
@@ -191,6 +229,7 @@
                                     <Border
                                         Padding="8,2"
                                         HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
                                         Background="{ThemeResource DevToolsCardBackgroundBrush}"
                                         BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
                                         BorderThickness="1"
@@ -198,7 +237,8 @@
                                         <TextBlock
                                             FontFamily="{StaticResource DevToolsMonospaceFont}"
                                             FontSize="12"
-                                            Text="{x:Bind Keys}" />
+                                            Text="{x:Bind Keys}"
+                                            TextWrapping="Wrap" />
                                     </Border>
                                     <TextBlock
                                         Grid.Column="1"

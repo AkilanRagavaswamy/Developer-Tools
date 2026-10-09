@@ -167,34 +167,121 @@ public sealed class ToolCatalog
     }
 
 
+    /// <summary>For tools whose glyph is a few characters of text — "C#", "64" — rather than a symbol.</summary>
+    private static readonly Microsoft.UI.Xaml.Media.FontFamily TextGlyphFont = new("Segoe UI Black,Segoe UI Variable Display,Segoe UI");
+
     private static IReadOnlyList<ToolDescriptor> BuildCatalog() =>
     [
-        // ---------- JSON ----------
+        // ---------- Formatters ----------
         new("json-formatter", "JSON Formatter", "Format, minify and validate JSON, and query it with JSONPath",
-            ToolCategory.Json, "\uE943", typeof(JsonFormatterPage),
+            ToolCategory.Formatters, "", typeof(JsonFormatterPage),
             ["json", "format", "pretty", "beautify", "minify", "validate", "jsonpath", "lint", "sort"]),
 
+        new("sql-formatter", "SQL Formatter", "Lay out SQL one clause per line, in ten dialects",
+            ToolCategory.Formatters, "", typeof(SqlFormatterPage),
+            ["sql", "format", "pretty", "beautify", "query", "tsql", "mysql", "postgres", "postgresql", "oracle", "plsql", "db2", "spark", "redshift"]),
+
+        new("xml-formatter", "XML Formatter", "Indent, minify and validate XML",
+            ToolCategory.Formatters, "</>", typeof(XmlFormatterPage),
+            ["xml", "format", "pretty", "beautify", "minify", "validate", "indent", "xsd", "soap", "config"])
+        {
+            GlyphFont = TextGlyphFont,
+        },
+
+        // ---------- Validators ----------
         new("json-diff", "JSON Diff Checker", "Compare two JSON documents semantically and emit a JSON Patch",
-            ToolCategory.Json, "\uE8AB", typeof(JsonDiffPage),
+            ToolCategory.Validators, "", typeof(JsonDiffPage),
             ["json", "diff", "compare", "difference", "patch", "rfc6902", "merge", "changes", "semantic"]),
 
+        new("text-compare", "Text Compare", "Compare two texts line by line, side by side or inline",
+            ToolCategory.Validators, "", typeof(TextComparePage),
+            ["text", "compare", "diff", "difference", "merge", "changes", "side by side"]),
+
+        new("regex-validator", "Regex Validator", "Test a .NET regular expression against text: matches, groups and replacements",
+            ToolCategory.Validators, ".*", typeof(RegexValidatorPage),
+            ["regex", "regexp", "regular expression", "pattern", "match", "test", "validate", "replace", "groups", "capture"])
+        {
+            GlyphFont = TextGlyphFont,
+        },
+
+        // ---------- Converters ----------
         // "C#" drawn as a mark, because what the tool does is turn JSON into C#: a blank page
         // glyph said nothing about that, and the icon font has no symbol that does.
         new("json-to-csharp", "JSON to C#", "Generate compilable C# models from a JSON sample",
-            ToolCategory.Json, "C#", typeof(JsonToCSharpPage),
+            ToolCategory.Converters, "C#", typeof(JsonToCSharpPage),
             ["json", "csharp", "c#", "class", "record", "poco", "dto", "model", "generate", "codegen", "deserialize"])
         {
-            GlyphFont = new("Segoe UI Black,Segoe UI Variable Display,Segoe UI"),
+            GlyphFont = TextGlyphFont,
         },
+
+        new("json-to-table", "JSON to Table", "Lay a JSON array out as rows and columns, and copy it as CSV, TSV or Markdown",
+            ToolCategory.Converters, "", typeof(JsonToTablePage),
+            ["json", "table", "grid", "csv", "tsv", "markdown", "excel", "spreadsheet", "flatten", "rows", "columns"]),
+
+        new("date-converter", "Date & Unix Time", "Convert between Unix timestamps and dates in any time zone",
+            ToolCategory.Converters, "", typeof(DateConverterPage),
+            ["date", "time", "unix", "epoch", "timestamp", "utc", "iso", "8601", "timezone", "milliseconds", "now", "convert"]),
+
+        // ---------- Encoders & decoders ----------
+        new("base64-text", "Base64 Text", "Encode and decode Base64 in any text encoding, URL-safe or standard",
+            ToolCategory.Encoders, "64", typeof(Base64TextPage),
+            ["base64", "encode", "decode", "b64", "text", "utf8", "url-safe", "base64url"])
+        {
+            GlyphFont = TextGlyphFont,
+        },
+
+        new("base64-image", "Base64 Image", "Turn an image into Base64 or a data URI, and back into an image",
+            ToolCategory.Encoders, "", typeof(Base64ImagePage),
+            ["base64", "image", "data uri", "datauri", "png", "jpeg", "gif", "webp", "svg", "encode", "decode", "picture"]),
+
+        new("url-encoder", "URL Encoder", "Percent-encode and decode URLs, query values and form data",
+            ToolCategory.Encoders, "", typeof(UrlEncoderPage),
+            ["url", "uri", "encode", "decode", "percent", "escape", "query", "form", "urlencode"]),
+
+        new("html-encoder", "HTML Encoder", "Escape and unescape HTML entities",
+            ToolCategory.Encoders, "&;", typeof(HtmlEncoderPage),
+            ["html", "entity", "entities", "encode", "decode", "escape", "unescape", "amp", "xss"])
+        {
+            GlyphFont = TextGlyphFont,
+        },
+
+        // ---------- Generators ----------
+        new("uuid-generator", "UUID Generator", "Generate version 1, 4 and 7 UUIDs in bulk",
+            ToolCategory.Generators, "", typeof(UuidGeneratorPage),
+            ["uuid", "guid", "generate", "random", "v4", "v7", "v1", "id", "identifier", "unique"]),
+
+        new("qr-code", "QR Code Generator", "Make a QR code from text or a URL, and save it as PNG or SVG",
+            ToolCategory.Generators, "", typeof(QrCodePage),
+            ["qr", "qrcode", "barcode", "generate", "png", "svg", "url", "wifi", "scan"]),
+
+        // ---------- Text ----------
+        new("character-counter", "Character Counter", "Count characters, words, lines and bytes, and check them against common limits",
+            ToolCategory.Text, "", typeof(CharacterCounterPage),
+            ["character", "count", "counter", "words", "length", "letters", "bytes", "tweet", "sms", "limit", "statistics", "frequency"]),
+
+        new("markdown-preview", "Markdown Preview", "Write or open Markdown and see it rendered as you type",
+            ToolCategory.Text, "M↓", typeof(MarkdownPreviewPage),
+            ["markdown", "md", "preview", "readme", "render", "gfm", "github"])
+        {
+            GlyphFont = TextGlyphFont,
+        },
+
+        new("html-viewer", "HTML Viewer", "Open or write HTML and see the page as you edit it",
+            ToolCategory.Text, "", typeof(HtmlViewerPage),
+            ["html", "viewer", "preview", "render", "page", "web", "browser", "htm"]),
+
+        new("scratchpad", "Scratchpad", "Notes that save themselves, keep their history, and do sums line by line",
+            ToolCategory.Text, "", typeof(ScratchpadPage),
+            ["scratchpad", "scratch", "notes", "note", "notepad", "jot", "memo", "draft", "calculator", "math", "sum", "history", "clipboard"]),
 
         // ---------- Vector ----------
         new("svg-to-xaml", "SVG to XAML", "Convert SVG shapes, paths and gradients to WPF or WinUI XAML",
-            ToolCategory.Vector, "\uE91B", typeof(SvgToXamlPage),
+            ToolCategory.Vector, "", typeof(SvgToXamlPage),
             ["svg", "xaml", "wpf", "winui", "vector", "icon", "path", "geometry", "convert", "pathicon"]),
 
         // ---------- API ----------
         new("api-builder", "API Builder", "Compose, organise and send HTTP requests with environments and auth",
-            ToolCategory.Api, "\uE968", typeof(ApiBuilderPage),
+            ToolCategory.Api, "", typeof(ApiBuilderPage),
             ["api", "http", "rest", "request", "postman", "curl", "openapi", "collection", "environment", "send", "client"]),
     ];
 }

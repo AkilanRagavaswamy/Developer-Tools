@@ -18,6 +18,12 @@ public static class GutterBuilder
     /// </summary>
     public static string Build(string? text, bool wrap, int columns)
     {
+        // Without wrapping only the count matters, and the numbers for a count never change.
+        if (!wrap || columns <= 0)
+        {
+            return Numbers(Math.Max(1, Core.Text.TextUtil.CountLines(text, keepTrailingEmpty: true)));
+        }
+
         var lines = Core.Text.TextUtil.SplitLines(text, keepTrailingEmpty: true);
         if (lines.Length == 0)
         {
@@ -48,6 +54,33 @@ public static class GutterBuilder
         }
 
         return builder.ToString();
+    }
+
+    private static int _cachedCount;
+    private static string _cachedNumbers = "1";
+
+    /// <summary>"1\n2\n…\n<paramref name="count"/>", reused while the line count stays the same.</summary>
+    private static string Numbers(int count)
+    {
+        if (count == _cachedCount)
+        {
+            return _cachedNumbers;
+        }
+
+        var builder = new StringBuilder(count * 4);
+        for (var i = 1; i <= count; i++)
+        {
+            if (i > 1)
+            {
+                builder.Append('\n');
+            }
+
+            builder.Append(i);
+        }
+
+        _cachedNumbers = builder.ToString();
+        _cachedCount = count;
+        return _cachedNumbers;
     }
 
     /// <summary>

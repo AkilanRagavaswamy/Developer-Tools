@@ -493,15 +493,55 @@ public static class JsonPatch
             var n = a.Count;
             var m = b.Count;
 
-            var lcs = BuildLcsTable(a, b);
+            // Each element is hashed once. Comparing hashes inside the walk used to rebuild both
+            // strings on every step.
+            var leftHashes = new string[n];
+            for (var k = 0; k < n; k++)
+            {
+                leftHashes[k] = a[k].StructuralHash();
+            }
+
+            var rightHashes = new string[m];
+            for (var k = 0; k < m; k++)
+            {
+                rightHashes[k] = b[k].StructuralHash();
+            }
+
+            // The elements both ends share need no operations and no table: an edit in the
+            // middle of a 10,000-element array leaves a handful to align, not 10,000 squared.
+            var head = 0;
+            while (head < n && head < m && string.Equals(leftHashes[head], rightHashes[head], StringComparison.Ordinal))
+            {
+                head++;
+            }
+
+            var tail = 0;
+            while (tail < n - head && tail < m - head &&
+                   string.Equals(leftHashes[n - 1 - tail], rightHashes[m - 1 - tail], StringComparison.Ordinal))
+            {
+                tail++;
+            }
+
+            var midLeft = n - head - tail;
+            var midRight = m - head - tail;
+
+            if ((long)(midLeft + 1) * (midRight + 1) > MaxLcsCells)
+            {
+                WalkArrayByPosition(pointer, jsonPath, a, b, head, midLeft, midRight);
+                return;
+            }
+
+            var lcs = BuildLcsTable(leftHashes, rightHashes, head, midLeft, midRight);
 
             var i = 0;
             var j = 0;
-            var cursor = 0;
+            var cursor = head;
+            n = midLeft;
+            m = midRight;
 
             while (i < n && j < m)
             {
-                if (string.Equals(a[i].StructuralHash(), b[j].StructuralHash(), StringComparison.Ordinal))
+                if (string.Equals(leftHashes[head + i], rightHashes[head + j], StringComparison.Ordinal))
                 {
                     i++;
                     j++;
@@ -518,7 +558,7 @@ public static class JsonPatch
                 }
                 else
                 {
-                    Add($"{pointer}/{cursor}", b[j]);
+                    Add($"{pointer}/{cursor}", b[head + j]);
                     j++;
                     cursor++;
                 }
@@ -532,37 +572,58 @@ public static class JsonPatch
 
             while (j < m)
             {
-                Add($"{pointer}/{cursor}", b[j]);
+                Add($"{pointer}/{cursor}", b[head + j]);
                 j++;
                 cursor++;
             }
-
-            _ = jsonPath;
         }
 
-        private static int[,] BuildLcsTable(IReadOnlyList<JsonNode> a, IReadOnlyList<JsonNode> b)
+        /// <summary>The most cells an alignment table may have before positions are used instead.</summary>
+        private const long MaxLcsCells = 4_000_000;
+
+        /// <summary>
+        /// The fallback for a middle too large to align: the elements are patched in place,
+        /// position by position, and the longer side's surplus is removed or appended.
+        /// </summary>
+        /// <remarks>
+        /// Every index stays valid as the patch applies, because nothing is inserted or removed
+        /// ahead of an element that is still to be visited.
+        /// </remarks>
+        private void WalkArrayByPosition(
+            string pointer, string jsonPath, IReadOnlyList<JsonNode> a, IReadOnlyList<JsonNode> b,
+            int head, int midLeft, int midRight)
         {
-            var n = a.Count;
-            var m = b.Count;
+            var paired = Math.Min(midLeft, midRight);
+
+            for (var k = 0; k < paired; k++)
+            {
+                var index = head + k;
+                Walk($"{pointer}/{index}", $"{jsonPath}[{index}]", a[index], b[index]);
+            }
+
+            var at = head + paired;
+
+            for (var k = paired; k < midLeft; k++)
+            {
+                _operations.Add($"{{ \"op\": \"remove\", \"path\": \"{pointer}/{at}\" }}");
+            }
+
+            for (var k = paired; k < midRight; k++)
+            {
+                Add($"{pointer}/{at}", b[head + k]);
+                at++;
+            }
+        }
+
+        private static int[,] BuildLcsTable(string[] leftHashes, string[] rightHashes, int offset, int n, int m)
+        {
             var table = new int[n + 1, m + 1];
-
-            var leftHashes = new string[n];
-            for (var i = 0; i < n; i++)
-            {
-                leftHashes[i] = a[i].StructuralHash();
-            }
-
-            var rightHashes = new string[m];
-            for (var j = 0; j < m; j++)
-            {
-                rightHashes[j] = b[j].StructuralHash();
-            }
 
             for (var i = n - 1; i >= 0; i--)
             {
                 for (var j = m - 1; j >= 0; j--)
                 {
-                    table[i, j] = string.Equals(leftHashes[i], rightHashes[j], StringComparison.Ordinal)
+                    table[i, j] = string.Equals(leftHashes[offset + i], rightHashes[offset + j], StringComparison.Ordinal)
                         ? table[i + 1, j + 1] + 1
                         : Math.Max(table[i + 1, j], table[i, j + 1]);
                 }

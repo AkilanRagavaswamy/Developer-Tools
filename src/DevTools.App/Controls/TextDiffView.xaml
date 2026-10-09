@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="DevTools.App.Controls.TextDiffView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Swatches: the code-behind reads its row colours from these, so they follow the window theme. -->
+        <Border x:Name="AddedSwatch" Background="{ThemeResource DevToolsDiffAddedBrush}" Visibility="Collapsed" />
+        <Border x:Name="RemovedSwatch" Background="{ThemeResource DevToolsDiffRemovedBrush}" Visibility="Collapsed" />
+        <Border x:Name="AddedStrongSwatch" Background="{ThemeResource DevToolsDiffAddedStrongBrush}" Visibility="Collapsed" />
+        <Border x:Name="RemovedStrongSwatch" Background="{ThemeResource DevToolsDiffRemovedStrongBrush}" Visibility="Collapsed" />
+
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Comparison summary"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="{x:Bind Summary, Mode=OneWay}"
+                TextTrimming="CharacterEllipsis" />
+
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
+                    AutomationProperties.Name="Previous difference"
+                    Click="OnPreviousClick"
+                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                    ToolTipService.ToolTip="Previous difference">
+                    <FontIcon FontSize="12" Glyph="&#xE76B;" />
+                </Button>
+
+                <TextBlock
+                    MinWidth="72"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Current difference"
+                    Style="{StaticResource DevToolsCaptionStyle}"
+                    Text="{x:Bind Position, Mode=OneWay}"
+                    TextAlignment="Center" />
+
+                <Button
+                    AutomationProperties.Name="Next difference"
+                    Click="OnNextClick"
+                    Style="{StaticResource DevToolsToolbarButtonStyle}"
+                    ToolTipService.ToolTip="Next difference">
+                    <FontIcon FontSize="12" Glyph="&#xE76C;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Border
+            Grid.Row="1"
+            Background="{ThemeResource DevToolsEditorBackgroundBrush}"
+            BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource DevToolsCardCornerRadius}">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid
+                    x:Name="SplitHeader"
+                    Padding="12,6"
+                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind LeftHeader, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="12,0,0,0"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind RightHeader, Mode=OneWay}" />
+                </Grid>
+
+                <!-- Side by side: one list for both texts, so the two sides can never drift apart. -->
+                <ListView
+                    x:Name="SplitList"
+                    Grid.Row="1"
+                    AutomationProperties.Name="Differences, side by side"
+                    SelectionMode="None">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="controls:TextDiffRowView">
+                            <Grid ColumnSpacing="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Padding="0,1" Background="{x:Bind LeftBackground}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Margin="0,0,10,0"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                        Text="{x:Bind LeftLine}"
+                                        TextAlignment="Right" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Margin="0,0,12,0"
+                                        controls:DiffHighlight.Brush="{ThemeResource DevToolsDiffRemovedStrongBrush}"
+                                        controls:DiffHighlight.Spans="{x:Bind LeftSpans}"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        FontSize="12.5"
+                                        IsTextSelectionEnabled="True"
+                                        Text="{x:Bind LeftText}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+
+                                <Grid
+                                    Grid.Column="1"
+                                    Padding="0,1"
+                                    Background="{x:Bind RightBackground}"
+                                    BorderBrush="{ThemeResource DevToolsCardBorderBrush}"
+                                    BorderThickness="1,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Margin="0,0,10,0"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                        Text="{x:Bind RightLine}"
+                                        TextAlignment="Right" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Margin="0,0,12,0"
+                                        controls:DiffHighlight.Brush="{ThemeResource DevToolsDiffAddedStrongBrush}"
+                                        controls:DiffHighlight.Spans="{x:Bind RightSpans}"
+                                        FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                        FontSize="12.5"
+                                        IsTextSelectionEnabled="True"
+                                        Text="{x:Bind RightText}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Inline: one column, both line numbers, a marker. -->
+                <ListView
+                    x:Name="InlineList"
+                    Grid.Row="0"
+                    Grid.RowSpan="2"
+                    AutomationProperties.Name="Differences, inline"
+                    SelectionMode="None"
+                    Visibility="Collapsed">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="controls:TextDiffRowView">
+                            <Grid Padding="0,1" Background="{x:Bind Background}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Margin="0,0,10,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                    Text="{x:Bind LeftLine}"
+                                    TextAlignment="Right" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="0,0,10,0"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource DevToolsGutterForegroundBrush}"
+                                    Text="{x:Bind RightLine}"
+                                    TextAlignment="Right" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12.5"
+                                    FontWeight="SemiBold"
+                                    Text="{x:Bind Marker}" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Margin="0,0,12,0"
+                                    controls:DiffHighlight.Brush="{x:Bind SpanBrush}"
+                                    controls:DiffHighlight.Spans="{x:Bind Spans}"
+                                    FontFamily="{StaticResource DevToolsMonospaceFont}"
+                                    FontSize="12.5"
+                                    IsTextSelectionEnabled="True"
+                                    Text="{x:Bind Text}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

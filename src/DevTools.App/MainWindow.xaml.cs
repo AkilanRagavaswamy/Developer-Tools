@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     private readonly ISettingsService _settings;
     private readonly IThemeService _theme;
     private readonly IToolStateService _state;
+    private readonly IScratchpadStore _scratchpad;
 
     public MainWindow()
     {
@@ -27,6 +28,7 @@ public sealed partial class MainWindow : Window
         _settings = App.GetService<ISettingsService>();
         _theme = App.GetService<IThemeService>();
         _state = App.GetService<IToolStateService>();
+        _scratchpad = App.GetService<IScratchpadStore>();
 
         var handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
         _shell.Attach(this, handle);
@@ -124,10 +126,37 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void OnClosed(object sender, WindowEventArgs args)
+    private void OnClosed(object sender, WindowEventArgs args)
     {
         SavePlacement();
-        await _state.FlushAsync();
+
+        // Everything still waiting to be written goes to disk before the window is allowed to go.
+        // This handler used to be async void, and the process does not wait for one: it ended at
+        // the first await, so a closing write could simply be lost.
+        //
+        // The work runs on the thread pool and this thread waits for it. Starting it here, on the
+        // UI thread, and blocking would let any await without ConfigureAwait(false) anywhere
+        // underneath queue its continuation onto the very thread that is waiting — which is what
+        // made closing take five seconds after Scratchpad had been open.
+        //
+        // Scratch notes first: they are the user's work. Tool options second.
+        try
+        {
+            var flushed = Task.Run(async () =>
+            {
+                await _scratchpad.FlushAsync().ConfigureAwait(false);
+                await _state.FlushAsync().ConfigureAwait(false);
+            }).Wait(TimeSpan.FromSeconds(5));
+
+            if (!flushed)
+            {
+                App.LogError("Saving on close", new TimeoutException("Saving notes and tool state took more than 5 seconds."));
+            }
+        }
+        catch (Exception ex)
+        {
+            App.LogError("Saving on close", ex);
+        }
     }
 
     // ------------------------------------------------------------- placement

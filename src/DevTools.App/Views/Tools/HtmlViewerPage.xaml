@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.HtmlViewerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}">
+
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <CheckBox
+                    AutomationProperties.Name="Run the page's own scripts"
+                    Content="Run scripts"
+                    IsChecked="{x:Bind ViewModel.AllowScripts, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}"
+                    ToolTipService.ToolTip="Runs the page's inline scripts. They still cannot load or fetch anything from the network." />
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    CopyCommand="{x:Bind ViewModel.CopyInputCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="HTML"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Open, drop or paste an HTML file. The preview follows every edit, and never loads anything from the network — inline styles and data: images work, links open in your browser."
+                    SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <Border Margin="5,0,0,0" Style="{StaticResource DevToolsPreviewCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock
+                            Padding="12,10"
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Text="Preview" />
+
+                        <controls:SafeWebPreview
+                            x:Name="Preview"
+                            Grid.Row="1"
+                            AllowScripts="{x:Bind ViewModel.AllowScripts, Mode=OneWay}"
+                            AutomationProperties.Name="Rendered page" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Padding="12,6"
+                            Style="{StaticResource DevToolsCaptionStyle}"
+                            Text="{x:Bind ViewModel.StatsText, Mode=OneWay}" />
+                    </Grid>
+                </Border>
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

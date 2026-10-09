@@ -1,6 +1,6 @@
 # ForgeKitRk - Developer Toolkit — Privacy Policy
 
-**Effective date:** 5 October 2026
+**Effective date:** 7 October 2026
 **Publisher:** Akilan Ragavaswamy
 **Application:** ForgeKitRk - Developer Toolkit (Microsoft Store)
 **Contact:** _[add your public contact email before publishing]_
@@ -19,7 +19,16 @@ ForgeKitRk does not have a server and does not phone home. The developer receive
 
 ### Tools that are fully offline
 
-The JSON Formatter, JSON Diff Checker, JSON-to-C# generator, and SVG-to-XAML converter run entirely on your device and have no network code. Any text, JSON, SVG, or files you paste, open, or drop into them are processed in memory on your machine and are not sent anywhere.
+Every tool other than API Builder runs entirely on your device and has no network code: the JSON Formatter, JSON Diff Checker, JSON to C#, JSON to Table, SQL Formatter, XML Formatter, Date & Unix Time converter, Base64 Text, Base64 Image, URL Encoder, HTML Encoder, UUID Generator, QR Code Generator, Text Compare, Regex Validator, Character Counter, Scratchpad and SVG to XAML. (Markdown Preview and HTML Viewer are offline too, but they render with a web component, so they are described separately below.) Any text, images or files you paste, open or drop into them are processed in memory on your machine and are not sent anywhere.
+
+### Scratchpad
+
+Scratchpad is the one tool that keeps what you type. Its notes, and the earlier versions it saves of them, are written as plain, unencrypted text files in the app's own storage on your device (Settings → Stored data → Open folder, then `Scratchpad`). They are never sent anywhere. Deleted notes stay in Scratchpad's Trash, and earlier versions are kept, for the number of days you choose in Settings (20 by default, at most 60), after which they are removed. Uninstalling ForgeKitRk deletes them; use **Export all** in Scratchpad to keep a copy. Because the files are not encrypted, do not keep passwords or keys in a note — Scratchpad warns you if a note looks like it contains one.
+
+### Markdown Preview and HTML Viewer
+
+Markdown Preview and HTML Viewer show the rendered document in Microsoft Edge WebView2, the web-rendering component that is part of Windows. ForgeKitRk turns off script in the preview (in HTML Viewer you can turn on the page's own scripts, which still cannot fetch anything), gives the page a Content-Security-Policy that allows only its own inline styling and embedded `data:` images, and refuses every request the page makes — so a document cannot make the preview load an image, a stylesheet or anything else from the internet. If you click a link in the preview, it opens in your own web browser, which is then subject to that browser's own privacy terms. WebView2 itself is a Microsoft component; any diagnostic data it may send is governed by Microsoft's privacy statement and your Windows diagnostic-data settings, not by ForgeKitRk.
+
 
 ### API Builder
 
@@ -40,7 +49,7 @@ ForgeKitRk is a full-trust Windows desktop app (the `runFullTrust` capability). 
 ## Storage and security
 
 - Your tool options, and data such as the API Builder workspace you save, are stored **locally** in the app's per-user storage on your device.
-- Data you type or paste into a tool is cleared when you close ForgeKitRk; saved options persist according to your settings.
+- Data you type or paste into a tool is cleared when you close ForgeKitRk, except Scratchpad notes, which are kept until you delete them; saved options persist according to your settings.
 - Secrets are stored in the **Windows Credential Manager**, protected by the operating system.
 - Network requests you make with the API Builder use the security of the protocol you choose; HTTPS requests are encrypted in transit by the operating system's TLS stack.
 - Because no data is sent to the developer, there is no developer-side database to breach.
@@ -53,6 +62,7 @@ ForgeKitRk does **not** sell, rent, or share your information, and does not disc
 
 - Use only the offline tools if you do not want any network activity.
 - Clear saved tool state, recent items, and favourites, and reset all settings, from **Settings → Stored data**.
+- Clear Scratchpad's saved versions, or move every note to Trash, from **Settings → Stored data**; empty Scratchpad's Trash from Scratchpad itself.
 - Access or delete everything the app has stored by opening the data folder (Settings → Stored data → Open folder) or by uninstalling ForgeKitRk, which removes its local data.
 - All of your information is on your own device; you have direct access to it.
 

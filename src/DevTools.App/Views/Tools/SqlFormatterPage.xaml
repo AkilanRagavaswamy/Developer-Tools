@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ToolPageBase
+    x:Class="DevTools.App.Views.Tools.SqlFormatterPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:DevTools.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tkp="using:CommunityToolkit.WinUI.Controls"
+    xmlns:views="using:DevTools.App.Views"
+    mc:Ignorable="d">
+
+    <controls:ToolShell
+        HasMessage="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+        IsBusy="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+        Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        MessageSeverity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+>
+
+        <!-- The dialect first: it decides which words are keywords and how names are quoted. -->
+        <controls:ToolShell.OptionsContent>
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox
+                    MinWidth="170"
+                    AutomationProperties.Name="SQL dialect"
+                    ItemsSource="{x:Bind ViewModel.DialectNames}"
+                    SelectedIndex="{x:Bind ViewModel.DialectIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="SQL dialect" />
+
+                <tkp:Segmented
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Keyword case"
+                    SelectedIndex="{x:Bind ViewModel.KeywordCaseIndex, Mode=TwoWay}"
+                    ToolTipService.ToolTip="How keywords are written">
+                    <tkp:SegmentedItem Content="UPPER" />
+                    <tkp:SegmentedItem Content="lower" />
+                    <tkp:SegmentedItem Content="As written" />
+                </tkp:Segmented>
+
+                <ComboBox
+                    Grid.Column="2"
+                    MinWidth="120"
+                    AutomationProperties.Name="Indent"
+                    SelectedIndex="{x:Bind ViewModel.IndentIndex, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineComboStyle}"
+                    ToolTipService.ToolTip="Indent">
+                    <ComboBoxItem Content="2 spaces" />
+                    <ComboBoxItem Content="4 spaces" />
+                    <ComboBoxItem Content="Tab" />
+                </ComboBox>
+
+                <CheckBox
+                    Grid.Column="4"
+                    AutomationProperties.Name="Put commas at the start of lines"
+                    Content="Leading commas"
+                    IsChecked="{x:Bind ViewModel.LeadingCommas, Mode=TwoWay}"
+                    Style="{StaticResource DevToolsInlineCheckBoxStyle}" />
+            </Grid>
+        </controls:ToolShell.OptionsContent>
+
+        <controls:ToolSplitPanel>
+            <controls:ToolSplitPanel.FirstPane>
+                <controls:CodeEditor
+                    Margin="0,0,5,0"
+                    ClearCommand="{x:Bind ViewModel.ClearCommand}"
+                    FooterText="{x:Bind ViewModel.InputStats, Mode=OneWay}"
+                    Header="SQL"
+                    OpenFileCommand="{x:Bind ViewModel.OpenFileCommand}"
+                    PasteCommand="{x:Bind ViewModel.PasteCommand}"
+                    PlaceholderText="Paste one or more SQL statements. Only whitespace and keyword case change — strings, names and comments are left exactly as written."
+                    Text="{x:Bind ViewModel.Input, Mode=TwoWay}" />
+            </controls:ToolSplitPanel.FirstPane>
+
+            <controls:ToolSplitPanel.SecondPane>
+                <controls:CodeEditor
+                    Margin="5,0,0,0"
+                    CopyCommand="{x:Bind ViewModel.CopyOutputCommand}"
+                    FooterText="{x:Bind ViewModel.StatsText, Mode=OneWay}"
+                    Header="Formatted"
+                    IsReadOnly="True"
+                    PlaceholderText="The formatted SQL appears here."
+                    SaveCommand="{x:Bind ViewModel.SaveOutputCommand}"
+                    Syntax="Sql"
+                    Text="{x:Bind ViewModel.Output, Mode=OneWay}" />
+            </controls:ToolSplitPanel.SecondPane>
+        </controls:ToolSplitPanel>
+    </controls:ToolShell>
+</views:ToolPageBase>

@@ -33,6 +33,8 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ZXing.Net" />
+    <PackageReference Include="Markdig" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +45,8 @@
   <ItemGroup>
     <Content Include="Assets\**\*.png" />
     <Content Include="Assets\**\*.ico" />
+    <!-- The licences of everything bundled; Apache-2.0 (ZXing.Net) asks for a copy to travel with the app. -->
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

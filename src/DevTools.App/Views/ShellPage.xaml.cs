@@ -45,7 +45,7 @@ public sealed partial class ShellPage : UserControl
         _chrome = App.GetService<IToolChrome>();
 
         _chrome.OptionsChanged += OnChromeOptionsChanged;
-        TitleBarDragArea.SizeChanged += (_, _) => PlaceOptions();
+        BandScroller.SizeChanged += (_, e) => BandOptions.MinWidth = e.NewSize.Width;
 
         ApplyPaneMode(_settings.NavigationPaneOpen);
 
@@ -58,6 +58,9 @@ public sealed partial class ShellPage : UserControl
     }
 
     public ShellViewModel ViewModel { get; }
+
+    /// <summary>What the keyboard button in the title bar lists.</summary>
+    public IReadOnlyList<ShortcutEntry> Shortcuts => ShortcutEntry.All;
 
     /// <summary>Handed to <c>Window.SetTitleBar</c> so this row behaves as the caption bar.</summary>
     public UIElement TitleBarElement => TitleBarDragArea;
@@ -373,43 +376,25 @@ public sealed partial class ShellPage : UserControl
 
     // ------------------------------------------------- the tool's options row (FR-T01)
 
-    /// <summary>The row the active tool handed over, whichever of the two hosts is showing it.</summary>
+    /// <summary>The row the active tool handed over.</summary>
     private FrameworkElement? _options;
-
-    /// <summary>
-    /// The width the row needs without its labels, as the page declared it.
-    /// </summary>
-    /// <remarks>
-    /// Declared rather than measured. A row that has never been in a visual tree has no
-    /// templates applied and measures to nearly nothing — and nothing fits anywhere, so the row
-    /// lands in the title bar whatever its real size. Measuring it after a layout pass means
-    /// measuring it somewhere, which is the decision we were trying to make. One number in the
-    /// page beside the row is blunt, but it is right on the first frame, it is where someone
-    /// changing that row will see it, and guessing high only costs a row of height.
-    /// </remarks>
-    private double _optionsWidth;
 
     private void OnChromeOptionsChanged(object? sender, EventArgs e)
     {
-        // Detach from both hosts first. An element has one parent, and the old one still holds
-        // it at this point.
-        TitleBarOptions.Content = null;
+        // Detach first: an element has one parent, and the band still holds the old row.
         BandOptions.Content = null;
-
         _options = _chrome.Options;
-        _optionsWidth = _chrome.OptionsWidth;
 
         PlaceOptions();
     }
 
     /// <summary>
-    /// Puts the options row in the title bar, or in its own band when the title bar is too
-    /// narrow for it, and shows the row's labels if either place has room for them.
+    /// Shows the options row in its band at the top of the page.
     /// </summary>
     /// <remarks>
-    /// The title bar is the better place — it is a row of height the tool gets back — but a
-    /// clipped options row is worse than a second row, which is why there is a band at all.
-    /// Re-run on every resize, so dragging the window edge moves the row between the two.
+    /// It used to move up into the title bar when there was room, but the title bar is the
+    /// window's drag and double-click area: clicking quickly on an option there could maximise
+    /// or restore the window. The title bar now carries only the tool's name and the app commands.
     /// </remarks>
     private void PlaceOptions()
     {
@@ -419,33 +404,13 @@ public sealed partial class ShellPage : UserControl
             return;
         }
 
-        var titleBarRoom = TitleBarDragArea.ActualWidth
-            - ToolIdentity.ActualWidth
-            - TitleBarCommands.ActualWidth
-            - TitleBarCommands.Margin.Right
-            - OptionsGutter;
-
-        var inTitleBar = _optionsWidth > 0 && _optionsWidth <= titleBarRoom;
-
-        if (inTitleBar)
+        if (!ReferenceEquals(BandOptions.Content, _options))
         {
-            if (!ReferenceEquals(TitleBarOptions.Content, _options))
-            {
-                BandOptions.Content = null;
-                TitleBarOptions.Content = _options;
-            }
-        }
-        else if (!ReferenceEquals(BandOptions.Content, _options))
-        {
-            TitleBarOptions.Content = null;
             BandOptions.Content = _options;
         }
 
-        OptionsBand.Visibility = inTitleBar ? Visibility.Collapsed : Visibility.Visible;
+        OptionsBand.Visibility = Visibility.Visible;
     }
-
-    /// <summary>The margins around the options host, which the sums have to allow for.</summary>
-    private const double OptionsGutter = 28;
 
     // ------------------------------------------------------------- palette
 

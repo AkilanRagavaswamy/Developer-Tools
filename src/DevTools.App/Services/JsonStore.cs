@@ -52,9 +52,15 @@ public static class JsonStore
                 return default;
             }
 
-            await using var stream = new FileStream(
+            // ConfigureAwait on the disposal too: a small file is read synchronously, so without it
+            // the close of the stream would resume on the caller's thread — the UI thread — and a
+            // caller blocking that thread on this task (the app closing) would wait on itself.
+            var stream = new FileStream(
                 path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, useAsync: true);
-            return await JsonSerializer.DeserializeAsync<T>(stream, Options).ConfigureAwait(false);
+            await using (stream.ConfigureAwait(false))
+            {
+                return await JsonSerializer.DeserializeAsync<T>(stream, Options).ConfigureAwait(false);
+            }
         }
         catch (Exception)
         {
@@ -81,8 +87,12 @@ public static class JsonStore
             }
 
             var temp = path + ".tmp";
-            await using (var stream = new FileStream(
-                temp, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+            // The disposal flushes the file and is awaited too, so it needs ConfigureAwait as well:
+            // see LoadAsync. This one was the close-time deadlock — a small index serialises
+            // without yielding, and the flush then tried to resume on the blocked UI thread.
+            var stream = new FileStream(
+                temp, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+            await using (stream.ConfigureAwait(false))
             {
                 await JsonSerializer.SerializeAsync(stream, value, Options).ConfigureAwait(false);
             }

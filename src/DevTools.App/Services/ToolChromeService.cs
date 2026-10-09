@@ -24,7 +24,7 @@ public interface IToolChrome
     void SetActive(ToolViewModelBase? tool);
 
     /// <summary>
-    /// The active tool's options row, on its way to the title bar (FR-T01).
+    /// The active tool's options row, shown by the shell in a band above the page (FR-T01).
     /// </summary>
     /// <remarks>
     /// The page declares the row, the shell decides where it is shown, and the shell is the
@@ -33,19 +33,9 @@ public interface IToolChrome
     /// </remarks>
     FrameworkElement? Options { get; }
 
-    /// <summary>What that row needs across.</summary>
-    /// <remarks>
-    /// Declared by the page rather than measured. A row that has not yet been in a visual tree
-    /// has no templates applied and measures to almost nothing, and measuring it after a layout
-    /// pass means it is already somewhere — which is the question. See
-    /// <c>ToolShell.OptionsWidth</c> for how a page arrives at the number.
-    /// </remarks>
-    double OptionsWidth { get; }
-
-
     event EventHandler? OptionsChanged;
 
-    void SetOptions(FrameworkElement? options, double width);
+    void SetOptions(FrameworkElement? options);
 }
 
 public sealed class ToolChromeService : IToolChrome
@@ -67,12 +57,10 @@ public sealed class ToolChromeService : IToolChrome
 
     public FrameworkElement? Options { get; private set; }
 
-    public double OptionsWidth { get; private set; }
-
 
     public event EventHandler? OptionsChanged;
 
-    public void SetOptions(FrameworkElement? options, double width)
+    public void SetOptions(FrameworkElement? options)
     {
         if (ReferenceEquals(Options, options))
         {
@@ -80,7 +68,6 @@ public sealed class ToolChromeService : IToolChrome
         }
 
         Options = options;
-        OptionsWidth = width;
         OptionsChanged?.Invoke(this, EventArgs.Empty);
     }
 }

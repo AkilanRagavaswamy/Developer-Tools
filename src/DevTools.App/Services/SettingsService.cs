@@ -48,6 +48,12 @@ public interface ISettingsService
     /// <summary>Whether the navigation pane shows tool names. It starts compact (FR-S02).</summary>
     bool NavigationPaneOpen { get; set; }
 
+    /// <summary>Days a note stays in Scratchpad's Trash, and how long its history is kept (1–60).</summary>
+    int ScratchpadRetentionDays { get; set; }
+
+    /// <summary>Whether Scratchpad opens on a fresh note instead of the last one.</summary>
+    bool ScratchpadStartWithNewNote { get; set; }
+
     void Reset();
 }
 
@@ -70,6 +76,8 @@ public sealed class SettingsService : ISettingsService
     private const string KeyWindowPlacement = "WindowPlacement";
     private const string KeySplitterRatio = "SplitterRatio";
     private const string KeyPaneOpen = "NavigationPaneOpen";
+    private const string KeyScratchDays = "ScratchpadRetentionDays";
+    private const string KeyScratchStartNew = "ScratchpadStartWithNewNote";
 
     public const double MinFontSize = 10;
     public const double MaxFontSize = 28;
@@ -168,6 +176,18 @@ public sealed class SettingsService : ISettingsService
     {
         get => Read(KeyPaneOpen, false);
         set => Write(KeyPaneOpen, value);
+    }
+
+    public int ScratchpadRetentionDays
+    {
+        get => DevTools.Core.Scratch.ScratchRetention.ClampDays(Read(KeyScratchDays, DevTools.Core.Scratch.ScratchRetention.DefaultDays));
+        set => Write(KeyScratchDays, DevTools.Core.Scratch.ScratchRetention.ClampDays(value));
+    }
+
+    public bool ScratchpadStartWithNewNote
+    {
+        get => Read(KeyScratchStartNew, false);
+        set => Write(KeyScratchStartNew, value);
     }
 
     public void Reset()

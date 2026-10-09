@@ -59,7 +59,7 @@ public abstract partial class DualTextToolViewModelBase : ToolViewModelBase
         }
 
         var characters = TextUtil.GraphemeCount(text);
-        var lines = TextUtil.SplitLines(text).Length;
+        var lines = TextUtil.CountLines(text);
         return $"{characters:N0} characters · {lines:N0} lines";
     }
 
