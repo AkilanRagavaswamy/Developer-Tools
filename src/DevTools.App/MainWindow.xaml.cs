@@ -126,23 +126,37 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void OnClosed(object sender, WindowEventArgs args)
+    private void OnClosed(object sender, WindowEventArgs args)
     {
         SavePlacement();
 
-        // Scratch notes are the user's work, so they are written before the window is allowed to go:
-        // an async void handler gets no guarantee the process waits for it. The store never
-        // resumes on the UI thread, so blocking here cannot deadlock.
+        // Everything still waiting to be written goes to disk before the window is allowed to go.
+        // This handler used to be async void, and the process does not wait for one: it ended at
+        // the first await, so a closing write could simply be lost.
+        //
+        // The work runs on the thread pool and this thread waits for it. Starting it here, on the
+        // UI thread, and blocking would let any await without ConfigureAwait(false) anywhere
+        // underneath queue its continuation onto the very thread that is waiting — which is what
+        // made closing take five seconds after Scratchpad had been open.
+        //
+        // Scratch notes first: they are the user's work. Tool options second.
         try
         {
-            _scratchpad.FlushAsync().Wait(TimeSpan.FromSeconds(5));
+            var flushed = Task.Run(async () =>
+            {
+                await _scratchpad.FlushAsync().ConfigureAwait(false);
+                await _state.FlushAsync().ConfigureAwait(false);
+            }).Wait(TimeSpan.FromSeconds(5));
+
+            if (!flushed)
+            {
+                App.LogError("Saving on close", new TimeoutException("Saving notes and tool state took more than 5 seconds."));
+            }
         }
         catch (Exception ex)
         {
-            App.LogError("Saving scratch notes on close", ex);
+            App.LogError("Saving on close", ex);
         }
-
-        await _state.FlushAsync();
     }
 
     // ------------------------------------------------------------- placement

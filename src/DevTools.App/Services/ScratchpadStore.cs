@@ -425,7 +425,8 @@ public sealed class ScratchpadStore(ISettingsService settings) : IScratchpadStor
             await SavePendingAsync(id).ConfigureAwait(false);
         }
 
-        if (_indexTimer is { } indexTimer)
+        // Taken, not just read, so a flush with no change since the last one writes nothing.
+        if (Interlocked.Exchange(ref _indexTimer, null) is { } indexTimer)
         {
             indexTimer.Cancel();
             await SaveIndexNowAsync().ConfigureAwait(false);
@@ -753,9 +754,12 @@ public sealed class ScratchpadStore(ISettingsService settings) : IScratchpadStor
                 var entry = zip.CreateEntry(folder + name, CompressionLevel.Optimal);
                 entry.LastWriteTime = note.ModifiedUtc.ToLocalTime();
 
-                await using var stream = entry.Open();
                 var bytes = Utf8.GetBytes(await ReadAsync(note.Id).ConfigureAwait(false));
-                await stream.WriteAsync(bytes).ConfigureAwait(false);
+                var stream = entry.Open();
+                await using (stream.ConfigureAwait(false))
+                {
+                    await stream.WriteAsync(bytes).ConfigureAwait(false);
+                }
             }
         }
 

@@ -43,11 +43,19 @@ Everything runs on your machine. Every tool except the API Builder works with no
 
 ---
 
-## What's new in this version (1.2.0)
+## What's new in this version (1.1.0)
 
-New: Scratchpad — notes that save as you type and are still there next time, in plain text, Markdown, JSON, XML, SQL, C#, HTML or Math. Earlier versions are kept automatically and can be restored or compared; deleted notes wait in Trash (20 days by default, up to 60). Math notes show a result on every line: named values, percentages, data sizes, time and hex. Send any note to another tool, or any tool's result to Scratchpad.
+Sixteen new tools — ForgeKitRk now has twenty-one:
+• Formatters: SQL (ten dialects) and XML, beside JSON
+• Validators: Text Compare and Regex Validator, beside JSON Diff; both diff tools export the side-by-side view as HTML
+• Converters: JSON to Table and Date & Unix Time
+• Encoders: Base64 Text, Base64 Image, URL and HTML
+• Generators: UUID (v1, v4, v7) and QR code (PNG and SVG)
+• Text: Character Counter, Markdown Preview, HTML Viewer, and Scratchpad — notes that save as you type, keep their history, and work out calculations line by line
 
-Fixed: in Base64 Text, URL Encoder and HTML Encoder, switching between Encode and Decode now moves the text with the panes.
+Also new: tools grouped by what they do, a Jump to Tool search box, a keyboard shortcuts list, and Smart Detect for the new tools.
+
+Faster: large JSON opens hundreds of times faster, and JSON Diff handles long arrays properly.
 
 ---
 

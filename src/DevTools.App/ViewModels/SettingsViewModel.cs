@@ -339,7 +339,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             }
             catch (InvalidOperationException)
             {
-                return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.2.0";
+                return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.1.0";
             }
         }
     }

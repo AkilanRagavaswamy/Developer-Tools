@@ -203,7 +203,7 @@ Each is handled and tested.
 
 ---
 
-## Release 1.1 — fifteen new tools
+## Release 1.1 — sixteen new tools
 
 Added in 1.1, each with its engine in `DevTools.Core` (pure, no network) and its tests in
 `DevTools.Core.Tests`. Where a tool follows DevToys, the differences are deliberate and listed.
